@@ -83,6 +83,7 @@ width: 75%;
 export const Form = styled.form`
 ${Flex}
 flex-direction: column;
+align-items: baseline;
 width: 75%;
 @media only screen and (max-width: 748px){
     width: 90%;
@@ -124,12 +125,18 @@ border: none;
 border-radius: 4px;
 cursor: pointer;
 transition: all .4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+${({disabled}) => disabled ?`
+opacity: .5;
+cursor: not-allowed;
+`:`
+
 &:hover{
     background: var(--primary-hover-color);
 }
 &:active{
     transform: var(--for-active-click);
 }
+`}
 width: 100%;
 padding: 15px 16px;
 letter-spacing: 1px;
@@ -143,7 +150,7 @@ margin-bottom: 20px;
 `
 
 export const Text = styled.p`
-color: var(--primary-text-color);
+color:  ${({error}) => error?'var(--primary-color)': 'var(--primary-text-color)'};
 font-size: 18px;
 font-weight: 500;
 margin-right: 17px;

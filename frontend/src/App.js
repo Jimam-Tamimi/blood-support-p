@@ -22,9 +22,14 @@ import Messages from "./pages/dashboard/Messages";
 import Notifications from "./pages/dashboard/Notifications";
 import Favorites from "./pages/dashboard/Favorites";
 import Profile from "./pages/dashboard/Profile";
+import { useSelector } from "react-redux";
 
 
 function App() {
+  
+  const auth = useSelector(state => state.auth)
+  // console.log(auth)
+  
   
   return (
     <>
@@ -32,7 +37,7 @@ function App() {
 
       <Layout>
         <PrivateRoute>
-          <Route path='/dashboard/' component={Home} />
+          <Route path='/' component={Home} />
           <Route path='/make-request/' component={MakeRequest} />
           <Route path='/help-people/' component={HelpPeople} />
           <Route path='/requests/:id/' component={Request} />
@@ -46,13 +51,17 @@ function App() {
           </Route>
           <Route path='/profile/:id/'  component={Profile} />
         </PrivateRoute>
-        <GuestRoute>
+
+
+        <GuestRoute >
           <Route path='/login/' component={Login} />
           <Route path='/signup/' component={Signup} />
           <Route path='/reset-password/' component={ResetPassword} />
           <Route path='/activate/:uid/:token/' component={Activate} />
 
         </GuestRoute>
+
+
       </Layout>
     </DesignConfig>
     </>

@@ -1,10 +1,10 @@
-import React, {useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import LoginImg from '../../assets/img/login.svg'
 import Switch from "react-switch";
 import {
-    FormWrap, 
-    FormPictureWrap, 
-    FromImg, 
+    FormWrap,
+    FormPictureWrap,
+    FromImg,
     FormHeading,
     Form,
     InputDiv,
@@ -17,73 +17,101 @@ import {
     TextBox,
 } from './Account.styles'
 
-import { useDispatch } from 'react-redux';
-// import { hideLoader, showLoader, login } from '../../redux/';
-// import axios from 'axios'
-// import alert from '../../redux/alert/actions';
-import REACT_APP_API_URL from '../../testurl'
+import { useDispatch } from 'react-redux'; 
+import { login } from '../../redux/auth/actions';
 
 
 export default function Login() {
     const [formData, setformData] = useState({
         email: '',
         password: '',
+        cpassword: '',
     })
-    const [checked, setchecked] = useState(false)
+    const [showSubmit, setShowSubmit] = useState(false)
+    const { email, password, cpassword } = formData
+    const [checked, setChecked] = useState(true)
     const dispatch = useDispatch()
-    const {email, password} = formData
-    const changeFormData = e => setformData({...formData, [e.target.name]: e.target.value})
 
-    const onSubmit = async (e) => {
-        e.preventDefault()
-        // dispatch(login(email, password, checked))
+    const onSubmit = e => {
+        e.preventDefault();
+        if(password === cpassword) {
+            dispatch(login(email, password, cpassword))
+        }
     }
+
+    const changeFormData = e => setformData({ ...formData, [e.target.name]: e.target.value })
+
+    useEffect(() => {
+        console.log(formData)
+        if(cpassword===password && password.length >= 4 && email.length >= 4 ) {
+            setShowSubmit(true)
+        } else {
+            setShowSubmit(false)
+        }
+    }, [ formData])
+
     
-    
-    
+
     return (
         <>
             <FormCont>
 
                 <FormPictureWrap>
-                    <FromImg src={LoginImg}/>
+                    <FromImg src={LoginImg} />
                 </FormPictureWrap>
                 <FormWrap>
                     <FormHeading>Please Enter Your Email And Password To Login</FormHeading>
                     <Form onSubmit={onSubmit}>
                         <InputDiv>
-                            <Input name="email" onChange={changeFormData} type="email" placeholder="Email"/>
+                            <Input required name="email" onChange={changeFormData} type="email" placeholder="Email" />
                         </InputDiv>
-                        <InputDiv>
-                            <Input name="password" onChange={changeFormData} type="password" placeholder="Password"/>
+                        <InputDiv  style={{ flexDirection: 'column', alignItems: 'flex-start' }} >
+                            <Input minLength={4} required name="password" onChange={changeFormData} type="password" placeholder="Password" />
+                            {
+                                password.length<4 && password !== '' ? <Text style={{ marginTop: '8px' }} error>Password must be at least 4 characters</Text> : null
+                            }
+                        </InputDiv>
+                        <InputDiv style={{ flexDirection: 'column', alignItems: 'flex-start' }} >
+                            <Input minLength={4} required name="cpassword" onChange={changeFormData} type="password" placeholder="Confirm Password" />
+                            {
+                                password !== cpassword && cpassword !== '' && password !== '' ? <Text style={{ marginTop: '8px' }} error>Password and Confirm Password do not match</Text> : null
+
+                                
+                            }
+
+                            
                         </InputDiv>
                         <TextBox>
                             <Label>Keep Me Logged In</Label>
-                            <Switch  
-                            onColor="#dc3545"
-                            onHandleColor="#ffffff"
-                            handleDiameter={25}
-                            uncheckedIcon={false}
-                            checkedIcon={false}
-                            height={25}
-                            width={45}
-                            checked={checked}
-                            onChange={e => setchecked(!checked)}
-                            
+                            <Switch
+                                onColor="#dc3545"
+                                onHandleColor="#ffffff"
+                                handleDiameter={25}
+                                uncheckedIcon={false}
+                                checkedIcon={false}
+                                height={25}
+                                width={45}
+                                checked={checked}
+                                onChange={e => setChecked(!checked)}
+
                             />
                         </TextBox>
                         <TextBox>
                             <Text>Don't Have An Account? <NewLink to="/signup/">Create An Account</NewLink> </Text>
                         </TextBox>
-                        {/* <TextBox>
+                        <TextBox>
                             <Text>Forgot Password? <NewLink to="/reset-password/">Reset Password</NewLink> </Text>
-                        </TextBox> */}
-
-                        <SubmitBtn type="submit">Login</SubmitBtn>
+                        </TextBox>
+                        { showSubmit?
+                        <SubmitBtn  type="submit">Login</SubmitBtn>
+                        : 
+                        <SubmitBtn disabled type="submit">Login</SubmitBtn>
+                        }
+                        
 
                     </Form>
                 </FormWrap>
-                    
+
             </FormCont>
 
         </>
