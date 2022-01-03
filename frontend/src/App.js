@@ -22,13 +22,18 @@ import Messages from "./pages/dashboard/Messages";
 import Notifications from "./pages/dashboard/Notifications";
 import Favorites from "./pages/dashboard/Favorites";
 import Profile from "./pages/dashboard/Profile";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { authenticate } from "./redux/auth/actions";
+import { useEffect, useState } from "react";
+import VerifyEmail from "./pages/dashboard/VerifyEmail";
 
 
 function App() {
-  
-  const auth = useSelector(state => state.auth)
-  // console.log(auth)
+   const dispatch = useDispatch()
+   const [state, setState] = useState(false)
+   useEffect(() => {
+      dispatch(authenticate())
+   }, [])
   
   
   return (
@@ -50,6 +55,8 @@ function App() {
             <Redirect to='/profile/43434/' />
           </Route>
           <Route path='/profile/:id/'  component={Profile} />
+          <Route path='/email/verify/:id/' component={VerifyEmail} />
+
         </PrivateRoute>
 
 

@@ -163,7 +163,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': False, 
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('JWT',),
     
 }
 
@@ -176,7 +176,7 @@ EMAIL_HOST_USER = 'jimamdrive.vid@gmail.com'
 EMAIL_HOST_PASSWORD = "google.drive.jimam.storage"
 
 
-BASE_URL = "http://127.0.0.1:8000/"
+BASE_URL = "http://127.0.0.1:3000/"
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',

@@ -1,14 +1,14 @@
+from django.db import connections
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes
-
+from rest_framework.decorators import api_view, permission_classes 
 
 
 from account.models import *
@@ -49,9 +49,12 @@ class UserViewSets(ModelViewSet):
     
     
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def verify(request, code):
     if(request.method == "GET"):
+        print(request.user)
+        print(request.user.is_authenticated)
+ 
         try:
             verification = Verification.objects.get(code=code)
         except Verification.DoesNotExist:
@@ -83,3 +86,7 @@ def resend_verification_code(request):
         pass
     verification = Verification.objects.create(user=user)
     return Response({"success": True, 'message': 'Verification code sent', }, status=status.HTTP_200_OK)
+
+
+def vallidateToken(request):
+    return Response({"vallied": True, 'message': 'Token is vallied', }, status=status.HTTP_200_OK)

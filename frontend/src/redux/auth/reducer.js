@@ -13,15 +13,13 @@ if(auth){
     initialState = {
         access: auth?.access || null,
         refresh: auth?.refresh || null,
-        isAuthenticated: auth?.isAuthenticated || false,
-        user: auth?.user || null
+        isAuthenticated: auth?.isAuthenticated || false, 
     } 
 } else {
     initialState = {
         access: auth?.access || null,
         refresh: auth?.refresh || null,
-        isAuthenticated: auth?.isAuthenticated || false,
-        user: null
+        isAuthenticated: auth?.isAuthenticated || false, 
     }
 } 
 
@@ -29,13 +27,35 @@ if(auth){
 const authReducer = (state=initialState, action) => {
     if(action.type === "LOGIN_SUCCESS") {
         console.log(action)
-        const { access, refresh, id } = action.payload
+        const { access, refresh } = action.payload
         state = {
             ...state,
             access: access,
             refresh: refresh,
-            isAuthenticated: true,
-            user: id
+            isAuthenticated: true, 
+        }
+        localStorage.setItem('auth', JSON.stringify(state))
+        console.log(state)
+        return state
+    }
+    else if (action.type === "LOGOUT") { 
+        state = {
+            ...state,
+            access: null,
+            refresh: null,
+            isAuthenticated: false, 
+        }
+        localStorage.setItem('auth', JSON.stringify(state))
+        console.log(state)
+        return state
+    }
+    else if (action.type === "REFRESH_TOKEN_SUCCESS") { 
+        const payload = action.payload
+        state = {
+            ...state,
+            access: payload.access,
+            refresh: payload.refresh,
+            isAuthenticated: true, 
         }
         localStorage.setItem('auth', JSON.stringify(state))
         console.log(state)

@@ -24,26 +24,23 @@ import { login } from '../../redux/auth/actions';
 export default function Login() {
     const [formData, setformData] = useState({
         email: '',
-        password: '',
-        cpassword: '',
+        password: '', 
     })
     const [showSubmit, setShowSubmit] = useState(false)
-    const { email, password, cpassword } = formData
+    const { email, password } = formData
     const [checked, setChecked] = useState(true)
     const dispatch = useDispatch()
 
     const onSubmit = e => {
-        e.preventDefault();
-        if(password === cpassword) {
-            dispatch(login(email, password, cpassword))
-        }
+        e.preventDefault(); 
+            dispatch(login(email, password)) 
     }
 
     const changeFormData = e => setformData({ ...formData, [e.target.name]: e.target.value })
 
     useEffect(() => {
         console.log(formData)
-        if(cpassword===password && password.length >= 4 && email.length >= 4 ) {
+        if(password.length >= 4 && email.length >= 4 ) {
             setShowSubmit(true)
         } else {
             setShowSubmit(false)
@@ -71,16 +68,7 @@ export default function Login() {
                                 password.length<4 && password !== '' ? <Text style={{ marginTop: '8px' }} error>Password must be at least 4 characters</Text> : null
                             }
                         </InputDiv>
-                        <InputDiv style={{ flexDirection: 'column', alignItems: 'flex-start' }} >
-                            <Input minLength={4} required name="cpassword" onChange={changeFormData} type="password" placeholder="Confirm Password" />
-                            {
-                                password !== cpassword && cpassword !== '' && password !== '' ? <Text style={{ marginTop: '8px' }} error>Password and Confirm Password do not match</Text> : null
-
-                                
-                            }
-
-                            
-                        </InputDiv>
+  
                         <TextBox>
                             <Label>Keep Me Logged In</Label>
                             <Switch
@@ -110,7 +98,7 @@ export default function Login() {
                         
 
                     </Form>
-                </FormWrap>
+                </FormWrap> 
 
             </FormCont>
 

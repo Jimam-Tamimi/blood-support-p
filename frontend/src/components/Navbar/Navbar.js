@@ -216,7 +216,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               </NavNotificationCont>
             </Transition>
           </NavNotificationWrap>
-          <NavLogout>
+          <NavLogout onClick={e => dispatch({type: 'LOGOUT'})}>
             <IoMdLogOut />
           </NavLogout>
         </NavEndSection>
