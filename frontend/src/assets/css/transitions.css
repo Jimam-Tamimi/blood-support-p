@@ -1,0 +1,48 @@
+.page {
+  position: absolute !important;
+}
+
+.page-enter {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: scale(1);
+
+}
+
+
+.page-exit {
+  opacity: 1;
+  transform: scale(1);
+
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: scale(0);
+
+}
+
+
+.component {
+  position: absolute;
+}
+
+.component-enter {
+  opacity: 0;
+}
+
+.component-enter-active {
+  opacity: 1;
+}
+
+.component-exit {
+  opacity: 1;
+}
+
+.component-exit-active {
+  opacity: 0;
+}
