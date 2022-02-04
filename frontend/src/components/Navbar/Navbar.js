@@ -37,6 +37,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addMessage } from "../../redux";
 import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
+import { logOut } from "../../redux/auth/actions";
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
   // redux
@@ -216,7 +217,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               </NavNotificationCont>
             </Transition>
           </NavNotificationWrap>
-          <NavLogout onClick={e => dispatch({type: 'LOGOUT'})}>
+          <NavLogout onClick={e => dispatch(logOut())}>
             <IoMdLogOut />
           </NavLogout>
         </NavEndSection>

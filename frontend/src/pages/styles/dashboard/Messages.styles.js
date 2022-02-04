@@ -66,7 +66,7 @@ export const MessageWrapper = styled.div`
   justify-content: flex-start;
   box-shadow: 0px 0px 15px 2px var(--main-box-shadow-color);
   ${({ closeMessageId, msgId }) => {
-    if (closeMessageId == msgId) {
+    if (closeMessageId === msgId) {
       return `
                 opacity: 0;
                 transform: scale(.7) translateY(100%);

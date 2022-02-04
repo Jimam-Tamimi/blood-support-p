@@ -8,19 +8,10 @@ import {
   ProfileImg,
   ButtonDiv,
   Badge,
-  Button,
   Profile,
   ButtonLink,
 } from "../../styles/Essentials.styles";
-
-import {
-  FormWrap,
-  Form,
-  InputDiv,
-  Input,
-  TextArea,
-  Label,
-} from "../../styles/Form.styles";
+ 
 import {
   Detail,
   DetailHeader,
@@ -36,9 +27,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr,
-  Option,
-  Select,
+  Tr, 
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -52,10 +41,10 @@ import Map from "../../components/Map/Map";
 import { NavWrap, NavTab } from "../../styles/Nav.styles";
 import { Wrap } from "../styles/dashboard/Request.styles";
 
-import { Redirect, useHistory, useLocation } from "react-router";
+import {  useHistory, useLocation } from "react-router";
 import { Marker } from "@react-google-maps/api";
 
-export default function () {
+export default  function AllRequest () {
   const location = useLocation();
   const history = useHistory();
   useEffect(() => {
@@ -65,6 +54,7 @@ export default function () {
     ) {
       history.push("/all-requests/blood-requests/");
     }
+      // eslint-disable-next-line
   }, [location.pathname]);
 
   return (
@@ -91,13 +81,16 @@ export default function () {
 
 const BloodRequest = () => {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
+    // eslint-disable-next-line
   const report = () => {
     // call api to report this request
     console.log("report request");
   };
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     // { name: "Report", icon: FaBan, onClick: report },
   ]);
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",
@@ -258,6 +251,7 @@ const DonorRequests = () => {
     ) {
       history.push("/all-requests/donor-requests/requested/");
     }
+    // eslint-disable-next-line
   }, [location.pathname]);
 
   return (
@@ -311,6 +305,7 @@ const DonorRequests = () => {
 
 const Requested = () => {
   const [showDonorRequest, setShowDonorRequest] = useState(false);
+  
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
 
   const [dropDownOptions, setDropDownOptions] = useState([

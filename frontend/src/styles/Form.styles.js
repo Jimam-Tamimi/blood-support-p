@@ -72,11 +72,7 @@ text-transform: capitalize;
 
 // custom styling for React Select Component
 export const customStyles = {
-    option: (provided, state) => ({
-      ...provided,
-      //   borderBottom: "1px dotted pink",
-      //   color: state.isSelected ? "red" : "blue",
-    }),
+ 
     control: (provided) => ({
       ...provided,
       height: "48px",

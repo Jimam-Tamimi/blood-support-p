@@ -4,7 +4,6 @@ import OffCanvas from "../../components/OffCanvas/OffCanvas";
 import styled from "styled-components";
 import {
   Badge,
-  Button,
   ButtonLink,
   Profile,
   ProfileImg,
@@ -29,6 +28,7 @@ import Dropdown from "../../components/Dropdown/Dropdown";
 
 export default function HelpPeople() {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
+  // eslint-disable-next-line
   const [requestId, setRequestId] = useState(null);
   return (
     <>
@@ -82,6 +82,7 @@ export default function HelpPeople() {
 }
 
 const RequestDetails = () => {
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",
@@ -97,11 +98,11 @@ const RequestDetails = () => {
     // call api to report this request
     console.log("report request");
   };
-
+// eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
-
+// eslint-disable-next-line
   const [cords, setCords] = useState({ lat: 24.0077202, lng: 89.2429551 });
 
   return (

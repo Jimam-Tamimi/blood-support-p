@@ -150,7 +150,7 @@ margin-bottom: 20px;
 `
 
 export const Text = styled.p`
-color:  ${({error}) => error?'var(--primary-color)': 'var(--primary-text-color)'};
+color:  ${({error}) => error?'var(--primary-color)': 'var(--secendory-text-color)'};
 font-size: 18px;
 font-weight: 500;
 margin-right: 17px;

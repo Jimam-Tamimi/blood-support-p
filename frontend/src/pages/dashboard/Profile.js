@@ -9,9 +9,7 @@ import Map from "../../components/Map/Map";
 import {
   ProfileImg,
   ButtonDiv,
-  Badge,
-  Button,
-  Profile as ProfileStyle,
+  Badge, 
 } from "../../styles/Essentials.styles";
 
 
@@ -53,6 +51,7 @@ export default function Profile({match}) {
     if(location.pathname === `/profile/${match.params.id}/` || location.pathname === `/profile/${match.params.id}`) {
       history.push(`/profile/${match.params.id}/details/`)
     }
+    // eslint-disable-next-line
   }, [location]) 
   
   return (
@@ -99,7 +98,7 @@ function Details() {
     // call api to report this request
     console.log("report request");
   };
-
+// eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
@@ -166,6 +165,7 @@ function Review({match}) {
     if(location.pathname === `/profile/${match.params.id}/review/` || location.pathname === `/profile/${match.params.id}/review`) {
       history.push(`/profile/${match.params.id}/review/as-requestor/`)
     }
+    // eslint-disable-next-line
   }, [location]) 
   
   return (

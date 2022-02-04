@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Badge, Profile, ProfileImg } from '../../styles/Essentials.styles'
-import { Notification, NotificationBody, NotificationContent, NotificationsWrapper, NotificationTitle } from '../styles/dashboard/Notifications.styles'
+import { Badge,  ProfileImg } from '../../styles/Essentials.styles'
+import { Notification,  NotificationContent, NotificationsWrapper } from '../styles/dashboard/Notifications.styles'
 import prof from '../../assets/img/prof.jpg'
 
 
@@ -11,6 +11,7 @@ export default function Notifications() {
     useEffect(() => {
         // call api to get all notifications
         setAllNotification([...allNotification, {},{},{},{},{},{},{},{},{},{},]);
+        // eslint-disable-next-line
     }, [])
 
 

@@ -14,23 +14,34 @@ import {Autocomplete} from '@react-google-maps/api'
 import {Marker} from "react-google-maps";
 import Select from "react-select";
 import Map from "../../components/Map/Map"; 
+import axios from 'axios'
+import {useDispatch, useSelector} from 'react-redux'
+import alert from '../../redux/alert/actions'
+
+import {setProgress} from '../../redux/progress/actions'
 
 export default function MakeRequest() {
   const bloodGroups = [
     { value: "Select", label: "Select" },
-    { value: "a+", label: "A+" },
-    { value: "b+", label: "B+" },
-    { value: "ab+", label: "AB+" },
-    { value: "o+", label: "O+" },
-    { value: "a-", label: "A-" },
-    { value: "b-", label: "B-" },
-    { value: "ab-", label: "AB-" },
-    { value: "o-", label: "O-" },
+    { value: "A+", label: "A+" },
+    { value: "B+", label: "B+" },
+    { value: "AB+", label: "AB+" },
+    { value: "O+", label: "O+" },
+    { value: "A-", label: "A-" },
+    { value: "B-", label: "B-" },
+    { value: "AB-", label: "AB-" },
+    { value: "O-", label: "O-" },
   ];
-
+  // states
   const [autoComplete, setAutoComplete] = useState(null)
   const [coords, setCoords] = useState({})
   const [mark, setMark] = useState(false)
+
+
+  // hooks
+  const auth = useSelector(state => state.auth)
+  const dispatch = useDispatch()
+
   function setCurrentLocation(){
     
     navigator.geolocation.getCurrentPosition((location) => {
@@ -53,26 +64,69 @@ export default function MakeRequest() {
       
     }
   } 
+
+
+  // form data submit
+
+  const [makeRequestFormData, setMakeRequestFormData] = useState({
+    name: "",
+    email: "",
+    user: auth.user_id,
+    date_time: "",
+    number: "",
+    add_number: "",
+    blood_group: "",
+    location: mark,
+    location_name: "",
+  });
+  useEffect(() => {
+    setMakeRequestFormData({...makeRequestFormData, location: mark})
+  }, [mark]);
+  
+  const { name, email, date_time, number, add_number, blood_group,  timestamp } = makeRequestFormData;
+
+  const onChange = (e) => setMakeRequestFormData({ ...makeRequestFormData, [e.target.name]: e.target.value });
+
+  const submitMakeRequest = async e => {
+    e.preventDefault()
+    dispatch(setProgress(10))
+    console.log(makeRequestFormData);
+    try {
+    dispatch(setProgress(20))
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}api/blood/blood-request/`, makeRequestFormData)
+    dispatch(setProgress(70))
+      console.log(res);
+      if(res?.status === 201){
+        dispatch(alert('Your Blood Request Was Posted Successfully', 'success'))
+    dispatch(setProgress(90))
+      }
+      
+    } catch (err) {
+      console.log(err);
+      dispatch(alert('Failed to post your blood request', 'danger'))
+    }
+    dispatch(setProgress(100))
+  }
   
   return (
     <>
       <FormWrap>
-        <Form onSubmit={e => {  e.preventDefault()}}>
+        <Form onSubmit={submitMakeRequest}>
           <InputDiv size={4}>
             <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="Name" type="text" />
+            <Input id="name" placeholder="Name" type="text" name="name" onChange={onChange} value={name} />
           </InputDiv>
           <InputDiv size={5}>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" placeholder="Email" type="email" />
+            <Input id="email" placeholder="Email" type="email"  name="email" onChange={onChange} value={email} />
           </InputDiv>
           <InputDiv size={3}>
             <Label htmlFor="time">When Do You Need Blood</Label>
-            <Input id="time" placeholder="Time" type="datetime-local" />
+            <Input id="time" placeholder="Time" type="datetime-local"  name="date_time" onChange={onChange} value={date_time} />
           </InputDiv>
           <InputDiv size={3}>
             <Label htmlFor="number">Phone Number</Label>
-            <Input id="number" placeholder="Phone Number" type="tel" />
+            <Input id="number" placeholder="Phone Number" type="tel"   name="number" onChange={onChange} value={number} />
           </InputDiv>
           <InputDiv size={3}>
             <Label htmlFor="add-number">Additional Phone Number</Label>
@@ -80,6 +134,7 @@ export default function MakeRequest() {
               id="add-number"
               placeholder="Additional Phone Number"
               type="tel"
+              name="add_number" onChange={onChange} value={add_number}
             />
           </InputDiv>
           <InputDiv size={6}>
@@ -97,6 +152,7 @@ export default function MakeRequest() {
               name="blood-group"
               options={bloodGroups}
               styles={customStyles}
+              onChange={e => setMakeRequestFormData({ ...makeRequestFormData, blood_group: e.value })}
             />
           </InputDiv>
           

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Route, Link } from "react-router-dom";
 import "../../assets/css/transitions.css";
 import { Autocomplete } from "@react-google-maps/api";
@@ -47,9 +47,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr,
-  Option,
-  Select,
+  Tr, 
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -94,6 +92,7 @@ export default function Request({ match }) {
  
 
 const RequestDetails = () => {
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",
@@ -109,11 +108,11 @@ const RequestDetails = () => {
     // call api to report this request
     console.log("report request");
   };
-
+// eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
-
+// eslint-disable-next-line
   const [cords, setCords] = useState({ lat: 24.0077202, lng: 89.2429551 });
 
   return (
@@ -410,6 +409,7 @@ const Complete = () => {
 };
 
 const DonorRequests = () => {
+  // eslint-disable-next-line
   const [donorRequestData, setDonorRequestData] = useState([]);
   const [showDonorRequest, setShowDonorRequest] = useState(false);
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
@@ -418,6 +418,8 @@ const DonorRequests = () => {
     // call api to report this request
     console.log("report request");
   };
+  
+  // eslint-disable-next-line
   const [dropDownOptions, setDropDownOptions] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
@@ -595,6 +597,7 @@ const DonorRequests = () => {
 };
 
 const YourDonorRequest = () => {
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",

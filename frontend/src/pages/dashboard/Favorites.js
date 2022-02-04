@@ -18,17 +18,14 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr,
-  Option,
-  Select,
+  Tr, 
   OrderedBySection,
   BottomSection,
   SearchForm,
   SearchInp,
   TopSection,
 } from "../../styles/Table.styles";
-
-import { Wrapper } from "../../globalStyles";
+ 
 import { FaBan } from "react-icons/fa";
 import OffCanvas from "../../components/OffCanvas/OffCanvas";
 import Map from "../../components/Map/Map";
@@ -88,9 +85,11 @@ const Requests = () => {
     // call api to report this request
     console.log("report request");
   };
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",
@@ -243,8 +242,9 @@ const Requests = () => {
 
 const DonorRequests = () => {
   const [showDonorRequest, setShowDonorRequest] = useState(false);
+  // eslint-disable-next-line
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
-
+// eslint-disable-next-line
   const [dropDownOptions, setDropDownOptions] = useState([
     // { name: "Report", icon: FaBan, onClick: report },
   ]);
@@ -402,9 +402,11 @@ const Profiles = () => {
     // call api to report this request
     console.log("report request");
   };
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",

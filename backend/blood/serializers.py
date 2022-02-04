@@ -1,9 +1,11 @@
 from rest_framework.serializers import ModelSerializer
-from django.contrib.auth.models import User
+from rest_framework import serializers
+from .models import *
+from account.serializers import UserSerializer
 
-
-
-class TestSerializer(ModelSerializer):
+class BloodRequestSerializer(ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    timestamp = serializers.DateTimeField(read_only=True)
     class Meta:
-        model = User 
+        model = BloodRequest
         fields = "__all__"

@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class MyUser(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -45,6 +45,6 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
      
      
 class Verification(models.Model):
-    user = models.ForeignKey(MyUser, on_delete=models.CASCADE, blank=False, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
     code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     

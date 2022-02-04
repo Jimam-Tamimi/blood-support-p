@@ -51,14 +51,11 @@ class UserViewSets(ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def verify(request, code):
-    if(request.method == "GET"):
-        print(request.user)
-        print(request.user.is_authenticated)
- 
+    if(request.method == "GET"): 
         try:
             verification = Verification.objects.get(code=code)
         except Verification.DoesNotExist:
-            return Response({'success': False, 'error': 'Verification code does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': False, 'error': 'Verification code does not exist'}, status=status.HTTP_404_NOT_FOUND)
         user = verification.user
         user.email_verified = True
         user.save()    

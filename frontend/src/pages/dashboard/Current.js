@@ -28,9 +28,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr,
-  Option,
-  Select,
+  Tr, 
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -54,6 +52,7 @@ export default function Current() {
     if (location.pathname === "/current/" || location.pathname === "/current") {
       history.push("/current/requests/");
     }
+    // eslint-disable-next-line
   }, [location.pathname]);
 
   return (
@@ -80,13 +79,16 @@ export default function Current() {
 
 const Requests = () => { 
   const [showRequestDetails, setShowRequestDetails] = useState(false)
+  // eslint-disable-next-line
   const report = () => {
     // call api to report this request
     console.log("report request");
   };
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     // { name: "Report", icon: FaBan, onClick: report },
   ]);
+  // eslint-disable-next-line
   const [details, setDetails] = useState({
     name: "Jimam Tamimi",
     time: "02/1/2006",
@@ -241,8 +243,9 @@ const Requests = () => {
 
 const Donations = () => {
   const [showDonorRequest, setShowDonorRequest] = useState(false);
+  // eslint-disable-next-line
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null); 
- 
+ // eslint-disable-next-line
   const [dropDownOptions, setDropDownOptions] = useState([
     // { name: "Report", icon: FaBan, onClick: report },
   ]);

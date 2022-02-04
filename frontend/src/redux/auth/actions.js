@@ -1,14 +1,5 @@
-import {
-    REFRESH_TOKEN_SUCCESS,
-    LOGIN_SUCCESS,
-    LOGIN_FAILED,
-    USER_LOADED_SUCCESS,
-    USER_LOADED_FAIL,
-    AUTHENTICATED_SUCCESS,
-    AUTHENTICATED_FAIL,
-    LOGOUT
-} from './types'
 import axios from 'axios'
+import { setProgress } from '../progress/actions'
 import alert from '../alert/actions'
 
 
@@ -16,10 +7,8 @@ export const signup = (email, password, cpassword) => async dispatch => {
     console.log(`${process.env.REACT_APP_API_URL}api/account/users/`)
     const data = { email, password, cpassword }
     try {
-        const headers = {
-            'Content-Type': 'application/json',
-        }
-        const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/users/`, data, headers)
+ 
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/users/`, data)
         console.log(res.data)
         const payload = res.data
         if (payload.success) {
@@ -43,11 +32,11 @@ export const signup = (email, password, cpassword) => async dispatch => {
 
 export const login = (email, password) => async dispatch => {
     const data = { email, password }
+    dispatch(setProgress(20))
     try {
-        const headers = {
-            'Content-Type': 'application/json',
-        }
-        const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/`, data, headers)
+ 
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/`, data)
+    dispatch(setProgress(60))
         console.log(res.data)
         const payload = res.data 
         dispatch(alert(`Login successful`, 'success'))
@@ -63,18 +52,17 @@ export const login = (email, password) => async dispatch => {
             }
         }
     }
+    dispatch(setProgress(100))
+
 }
  
 export const authenticate = () => async dispatch => {
-    const auth = JSON.parse(localStorage.getItem('auth'))
-    console.log(auth)
+    const auth = JSON.parse(localStorage.getItem('auth')) 
     if(auth?.isAuthenticated) {
         let data = { token: auth.access }
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            }
-            const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/verify/`, data, headers)
+ 
+            await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/verify/`, data)
 
         } catch (error) {
             console.log(error.response);
@@ -93,10 +81,8 @@ export const refreshToken = () => async dispatch => {
     if(auth?.refresh) {
         let data = { refresh: auth.refresh }
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            }
-            const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/refresh/`, data, headers)
+
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/token/refresh/`, data)
             console.log(res.data)
             if(res.status === 200){
 
@@ -112,4 +98,12 @@ export const refreshToken = () => async dispatch => {
             }
         }
     }
+}
+export const logOut = () => async dispatch => {
+    dispatch(setProgress(30))
+   dispatch({type: 'LOGOUT'})
+   dispatch(alert(`Successfully Logged out`))
+   setTimeout(() => {
+       dispatch(setProgress(100))
+   }, 200);
 }

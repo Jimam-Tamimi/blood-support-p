@@ -69,7 +69,7 @@ export default function Login() {
                             }
                         </InputDiv>
   
-                        <TextBox>
+                        {/* <TextBox>
                             <Label>Keep Me Logged In</Label>
                             <Switch
                                 onColor="#dc3545"
@@ -83,7 +83,7 @@ export default function Login() {
                                 onChange={e => setChecked(!checked)}
 
                             />
-                        </TextBox>
+                        </TextBox> */}
                         <TextBox>
                             <Text>Don't Have An Account? <NewLink to="/signup/">Create An Account</NewLink> </Text>
                         </TextBox>

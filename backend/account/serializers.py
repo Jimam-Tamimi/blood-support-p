@@ -15,7 +15,7 @@ class UserSerializer(ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     cpassword = serializers.CharField(required=True, write_only=True)
     class Meta:
-        model = MyUser
+        model = User
         fields = [ "id", "email", "password", "cpassword"]  
         
     
@@ -31,7 +31,7 @@ class UserSerializer(ModelSerializer):
         if(len(password) < 4):
             raise ValidationError("Password must be at least 4 characters")
          
-        user = MyUser.objects.create(email=email)
+        user = User.objects.create(email=email)
         user.set_password(password)
         user.save()
         return user

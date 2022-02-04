@@ -19,7 +19,7 @@ import {
   MessageStatus,
   ChatOptions,
 } from "../styles/dashboard/Messages.styles";
-import { Heading, ProfileImg } from "../../styles/Essentials.styles";
+import {  ProfileImg } from "../../styles/Essentials.styles";
 import Dropdown from "../../components/Dropdown/Dropdown";
 
 import { Picker } from "emoji-mart";
@@ -34,7 +34,7 @@ import Transition from "../../components/Transition/Transition";
 import { Route } from "react-router";
 
 import profile from "../../assets/img/prof.jpg";
-import prof from "../../assets/img/prof.jpg";
+// import prof from "../../assets/img/prof.jpg";
 import { FaBan } from "react-icons/fa";
 
 export default function Messages({ match }) {
