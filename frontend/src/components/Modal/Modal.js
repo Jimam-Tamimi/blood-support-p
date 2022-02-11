@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, ReactDOM } from "react";
 import {
   ModalWrap,
   ModalContainer,
@@ -16,7 +16,9 @@ import Transition from "../Transition/Transition";
 export default function Modal({
   btnText,
   style,
+  wrapStyle,
   info,
+  formId,
   sm,
   md,
   lg,
@@ -34,20 +36,23 @@ export default function Modal({
   center,
   bottom,
   buttonInfo,
-  buttonPrimary
+  buttonPrimary,
+  closeOnOutsideClick=true,
+  unMountOnHide=false,
+  show,
+  setShow
 }) {
   const refCont = useRef(null);
-
-  const [show, setShow] = useState(false);
+ 
   const showModal = (e) => {
     console.log("open modal");
     setShow(true);
   };
 
-  const listener = (e) => {
-    if (refCont && !refCont?.current?.contains(e.target)) {
+  const listener = (e) => {  
+    if (refCont.current && !refCont?.current?.contains(e.target) && closeOnOutsideClick) {
       setShow(false);
-    }
+    }  
   };
 
   useEffect(() => {
@@ -61,14 +66,11 @@ export default function Modal({
 
   return (
     <>
-      <Button onClick={showModal} type="button"  info={buttonInfo} primary={buttonPrimary} style={style}>
-        {btnText}
-      </Button>
-      <ModalWrap top={top} center={center} bottom={bottom} show={show}>
+
+      <ModalWrap style={wrapStyle} top={top} center={center} bottom={bottom} show={show}>
         <ModalContainer scale sm={sm} md={md} lg={lg} ref={refCont}>
           <Transition
             timeout={200}
-            show={show}
             show={show}
             fade={fade}
             leftToRight={leftToRight}
@@ -78,6 +80,7 @@ export default function Modal({
             scale={scale}
             zoom={zoom}
             style={{width:'100%'}}
+            unMountOnHide={unMountOnHide}
           >
             <ModalHead>
               <ModalHeadTitle>{title}</ModalHeadTitle>
@@ -87,7 +90,9 @@ export default function Modal({
             </ModalHead>
             <ModalBody>{children}</ModalBody>
             <ModalFooter>
-              <Button md info>
+              <Button
+              form={formId}
+               md info>
                 {actionText}
               </Button>
               <Button

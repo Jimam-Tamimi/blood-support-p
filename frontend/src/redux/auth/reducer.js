@@ -1,13 +1,20 @@
  
- import jwt_decode from "jwt-decode";
-console.log(jwt_decode(localStorage.getItem('auth')).user_id );
+ import jwt_decode from "jwt-decode"; 
  
 const auth = JSON.parse(localStorage.getItem('auth'))
+const getUserId = (authObj) => {
+    authObj = JSON.parse(authObj)
+    if(authObj?.access){
+        return jwt_decode(authObj.access).user_id
+    } else {
+        return null
+    }
+}
 let initialState = {
         access: auth?.access || null,
         refresh: auth?.refresh || null,
         isAuthenticated: auth?.isAuthenticated || false, 
-        user_id: jwt_decode(JSON.parse(localStorage.getItem('auth')).access).user_id || null,
+        user_id: getUserId(localStorage.getItem('auth')) || null
     } 
   
 const authReducer = (state=initialState, action) => {

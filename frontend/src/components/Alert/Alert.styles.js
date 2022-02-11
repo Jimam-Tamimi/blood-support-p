@@ -31,13 +31,7 @@ export const AlertCont = styled.div`
 
 export const AlertCompo = styled.div`
     ${Flex}
-
-
-
-
-
-
-
+ 
     background-color: rgb(21, 21, 21);
     color: white;
     padding: 10px;
@@ -63,7 +57,7 @@ export const AlertText = styled.p`
 `
 
 export const AlertClose = styled.div`
-     color: ${({alertType}) => alertType=='success'? 'rgb(49, 180, 4)':alertType=='danger'?'rgb(255, 0, 64)':'white'}; 
+     color: ${({alertType}) => alertType==='success'? 'rgb(49, 180, 4)':alertType==='danger'?'rgb(255, 0, 64)':'white'}; 
 
     font-size: 20px;
     margin-left: 20px;

@@ -12,7 +12,8 @@ export default function Transition({
   topToBottom,
   bottomToTop,
   scale,
-  zoom
+  zoom,
+  unMountOnHide,
 }) {
   const [showHere, setShowHere] = useState(show);
   useEffect(() => {
@@ -28,7 +29,13 @@ export default function Transition({
   return (
     <>
       <Wrap style={style} timeout={timeout} show={show} fade={fade} leftToRight={leftToRight} rightToLeft={rightToLeft} topToBottom={topToBottom} bottomToTop={bottomToTop} scale={scale} zoom={zoom}  >
-        {showHere ? children : ""}
+        {
+          unMountOnHide?
+          <>
+          {showHere ? children : ""}
+          </> : children
+        }
+        
       </Wrap>
     </>
   );

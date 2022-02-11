@@ -63,6 +63,19 @@ border: none;
 color: var(--secendory-text-color);
 font-weight: 600;
 text-transform: capitalize;
+&::after {
+  ${({showAlert}) => showAlert && `
+  
+  content: "This field is requires *" ;
+  font-size: 14px;
+    font-weight: 800;
+    display: inline;
+    margin-left: 7px;
+    color: var(--primary-color);
+
+  `}
+
+}
 
 `;
 

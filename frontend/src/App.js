@@ -28,17 +28,13 @@ import VerifyEmail from "./pages/dashboard/VerifyEmail";
 import axios from "axios";
 import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
+import { getProfileDetails } from "./redux/profile/actions";
 
 function App() {
+  // hooks
   const dispatch = useDispatch();
-  const [state, setState] = useState(false);
-
   const progress = useSelector((state) => state.progress);
-
-  useEffect(() => {
-    dispatch(authenticate());
-  }, []);
-
+  const auth = useSelector((state) => state.auth);
   axios.interceptors.request.use(
     function (config) {
       if (JSON.parse(localStorage.getItem("auth"))?.isAuthenticated) {
@@ -66,6 +62,16 @@ function App() {
       }
     );
   }, []);
+  
+  useEffect(() => {
+    dispatch(authenticate());
+  }, []);
+  useEffect(() => {
+    dispatch(getProfileDetails());
+    
+  }, [auth])
+  
+ 
 
   return (
     <>
@@ -82,14 +88,14 @@ function App() {
               <Route path="/" component={Home} />
               <Route path="/make-request/" component={MakeRequest} />
               <Route path="/help-people/" component={HelpPeople} />
-              <Route path="/requests/:id/" component={Request} />
+              <Route path="/requests/:slug/" component={Request} />
               <Route path="/current/" component={Current} />
               <Route path="/all-requests/" component={AllRequests} />
               <Route path="/notifications/" component={Notifications} />
               <Route path="/messages/" component={Messages} />
-              <Route path="/favorites/" component={Favorites} />
-              <Route exact path="/profile/" component={Profile}>
-                <Redirect to="/profile/43434/" />
+              <Route path="/favorites/" component={Favorites} /> 
+              <Route exact path="/profile/" component={Profile} >
+                <Redirect to={`/profile/${auth.user_id}/`} />
               </Route>
               <Route path="/profile/:id/" component={Profile} />
               <Route path="/email/verify/:id/" component={VerifyEmail} />

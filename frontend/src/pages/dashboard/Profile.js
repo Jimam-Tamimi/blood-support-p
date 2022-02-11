@@ -1,18 +1,17 @@
-import { Marker } from "@react-google-maps/api";
+import { Autocomplete } from "@react-google-maps/api";
+import { Marker } from "react-google-maps";
+
 import React, { useState } from "react";
 import ReactStars from "react-rating-stars-component";
 
-
 import Map from "../../components/Map/Map";
-
 
 import {
   ProfileImg,
   ButtonDiv,
-  Badge, 
+  Badge,
+  Button,
 } from "../../styles/Essentials.styles";
-
-
 
 import {
   Detail,
@@ -40,25 +39,59 @@ import {
   ReviewWrap,
 } from "../styles/dashboard/Profile.styles";
 import { useEffect } from "react";
+import Modal from "../../components/Modal/Modal";
+import {
+  customStyles,
+  Form,
+  FormWrap,
+  Input,
+  InputDiv,
+  Label,
+  TextArea,
+} from "../../styles/Form.styles";
+import { getCurrentLocation } from "../../helpers";
+import Select from "react-select";
+import ImageUpload from "../../components/ImageUpload/ImageUpload";
 
+import { useDispatch, useSelector } from "react-redux";
+import alert from "../../redux/alert/actions";
+import axios from "axios";
+import { getProfileDetails } from "../../redux/profile/actions";
 
+const bloodGroups = [
+  { value: "Select", label: "Select" },
+  { value: "A+", label: "A+" },
+  { value: "B+", label: "B+" },
+  { value: "AB+", label: "AB+" },
+  { value: "O+", label: "O+" },
+  { value: "A-", label: "A-" },
+  { value: "B-", label: "B-" },
+  { value: "AB-", label: "AB-" },
+  { value: "O-", label: "O-" },
+];
 
-
-export default function Profile({match}) {
-  const history = useHistory()
-  const location = useLocation()
+export default function Profile({ match }) {
+  // hooks
+  const history = useHistory();
+  const location = useLocation();
+  const profile = useSelector(state => state.profile);
+  
+  
   useEffect(() => {
-    if(location.pathname === `/profile/${match.params.id}/` || location.pathname === `/profile/${match.params.id}`) {
-      history.push(`/profile/${match.params.id}/details/`)
+    if (
+      location.pathname === `/profile/${match.params.id}/` ||
+      location.pathname === `/profile/${match.params.id}`
+    ) {
+      history.push(`/profile/${match.params.id}/details/`);
     }
     // eslint-disable-next-line
-  }, [location]) 
-  
+  }, [location]);
+
   return (
     <>
       <DetailsMap>
         <Map
-          coords={{ lat: 24.0077202, lng: 89.2429551 }}
+          coords={profile?.location}
           isMarkerShown
           googleMapURL=" "
           loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
@@ -66,42 +99,55 @@ export default function Profile({match}) {
           mapElement={<div style={{ height: `350px`, width: "100%" }} />}
           defaultZoom={14}
         >
-          {<Marker position={{ lat: 24.0077202, lng: 89.2429551 }} />}
+          {<Marker position={profile?.location} />}
         </Map>
       </DetailsMap>
       <ProfileImgDiv>
         <ProfileImg
-          src={prof}
+          src={`${process.env.REACT_APP_MEDIA_URL}${profile?.profile_img}`}
           size="130px"
           style={{ position: "absolute", bottom: "15px", left: "15px" }}
         />
       </ProfileImgDiv>
 
       <NavWrap>
-        <NavTab activeClassName="active" exact to={`/profile/${match.params.id}/details/`}>
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/profile/${match.params.id}/details/`}
+        >
           Details
         </NavTab>
-        <NavTab activeClassName="active" to={`/profile/${match.params.id}/review/`}>
+        <NavTab
+          activeClassName="active"
+          to={`/profile/${match.params.id}/review/`}
+        >
           Review
         </NavTab>
       </NavWrap>
 
-      <Route exact path="/profile/:id/details/" component={Details}/>
+      <Route exact path="/profile/:id/details/"  >
+        <Details  profile={profile} />
+      </Route>
 
-      <Route path="/profile/:id/review/" component={Review}/>
+      <Route path="/profile/:id/review/" component={Review} />
     </>
   );
 }
 
-function Details() {
+function Details({profile}) {
+  const [showUpdateProfile, setShowUpdateProfile] = useState(false);
+  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false)
   const report = () => {
     // call api to report this request
     console.log("report request");
   };
-// eslint-disable-next-line
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
+
+  // get profile details
 
   return (
     <>
@@ -110,30 +156,57 @@ function Details() {
           <DetailHeader>Details: </DetailHeader>
           <Detail>
             <DetailField>Name: </DetailField>
-            <DetailFieldValue>Jimam Tamimi</DetailFieldValue>
+            <DetailFieldValue>{profile?.name}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Blood Group: </DetailField>
-            <DetailFieldValue>A+</DetailFieldValue>
+            <DetailFieldValue>{profile?.blood_group}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Email: </DetailField>
-            <DetailFieldValue>jimamtamimi12@gmail.com</DetailFieldValue>
+            <DetailFieldValue>{profile?.email}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Address: </DetailField>
-            <DetailFieldValue>pabna sadar, pabna</DetailFieldValue>
+            <DetailFieldValue>{profile?.address}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Number: </DetailField>
-            <DetailFieldValue>01347584758</DetailFieldValue>
+            <DetailFieldValue>{profile?.number}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Additional Number: </DetailField>
-            <DetailFieldValue>01347585657</DetailFieldValue>
+            <DetailFieldValue>{profile?.add_number}</DetailFieldValue>
+          </Detail>
+          <DetailHeader>Details: </DetailHeader>
+
+          <Detail> 
+            <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
 
-          <ButtonDiv></ButtonDiv>
+          <ButtonDiv style={{marginTop: "20px"}} >
+            <Button
+              onClick={e => setShowUpdateFormModal(true)}
+              type="button" 
+            >
+              Update Profile
+            </Button>
+
+            <Modal
+              btnText="Update Profile"
+              title="Update Profile"
+              actionText="Update"
+              formId="updateProfileForm"
+              md
+              wrapStyle={{ alignItems: "baseline" }}
+              scale
+              closeOnOutsideClick={false}
+              show={showUpdateFormModal}
+              setShow={setShowUpdateFormModal}
+            >
+              <UpdateProfileForm setShowUpdateFormModal={setShowUpdateFormModal} />
+            </Modal>
+          </ButtonDiv>
         </DetailsDiv>
         <ActionDiv>
           <Action>
@@ -158,16 +231,349 @@ function Details() {
   );
 }
 
-function Review({match}) {
-  const history = useHistory()
-  const location = useLocation()
+function UpdateProfileForm({setShowUpdateFormModal}) {
+  // hooks
+  const dispatch = useDispatch();
+  const profile = useSelector(state => state.profile);
+
+  // states
+  const [autoComplete, setAutoComplete] = useState(null);
+  const [submitReq, setSubmitReq] = useState(false);
+  const initialProfileData = {
+    name: '',
+    email: '',
+    address: '',
+    number: '',
+    add_number: '',
+    blood_group: '',
+    description: '',
+    coords: {},
+    profile_img: '',
+  };
+  const [profileFormData, setProfileFormData] = useState(initialProfileData);
+  useEffect(async () => {
+    getCurrentLocation((crds) => {
+      setProfileFormData({ ...profileFormData, coords: crds });
+      setMark(crds);
+    });
+  }, []);
+  const {
+    name,
+    email,
+    address,
+    number,
+    add_number,
+    blood_group,
+    description,
+    coords,
+    profile_img,
+  } = profileFormData;
+  const [mark, setMark] = useState();
+
+
+
+  // get data if profile is completed
+  
+  useEffect( async () => {
+    if(profile?.isCompleted){
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`);
+        if(res.status === 200){
+          setProfileFormData({...res.data, coords: res.data.location, email: res.data?.user?.email, profile_img: null})
+      setMark(res.data.location);
+        }
+      } catch(err){
+        console.log(err)
+      }
+    }
+  }, [profile])
+  
+  
+  
+  const onChange = (e) =>
+    setProfileFormData({ ...profileFormData, [e.target.name]: e.target.value });
+
+  const onPlaceChanged = () => {
+    try {
+      const lat = autoComplete.getPlace().geometry.location.lat();
+      const lng = autoComplete.getPlace().geometry.location.lng();
+      setProfileFormData({
+        ...profileFormData,
+        coords: { lat: lat, lng: lng },
+      });
+    } catch {}
+  };
+
+  const onSubmitUpdateProfile = async (e, values) => {
+    e.preventDefault();
+    setSubmitReq(true);
+    for (let member in profileFormData) {
+      if (!profileFormData[member]) {
+        if(profile?.isCompleted && member === 'profile_img'){
+          continue
+        }
+
+          dispatch(alert(member + " Should Not Be Blank 😒", "danger"));
+        return;
+      }
+    }
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("address", address);
+      formData.append("number", number);
+      formData.append("add_number", add_number);
+      formData.append("blood_group", blood_group);
+      formData.append("description", description);
+      if(profile_img){
+        formData.append("profile_img", profile_img);
+      }
+      formData.append("location", JSON.stringify(mark));
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+      let res = null
+    if(!profile?.isCompleted){
+      res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/account/profile/`,
+        formData,
+        config
+      );
+    } else {
+      res = await axios.put(
+        `${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`,
+        formData,
+        config
+      );
+      }
+      console.log(res);
+      if (res?.status === 201 || res?.status === 200) {
+        dispatch(alert("Profile Updated Successfully 😎", "success"));
+        setShowUpdateFormModal(false);
+        setSubmitReq(false);
+        setProfileFormData(initialProfileData);
+        dispatch(getProfileDetails())
+      }
+    } catch (err) {
+      console.log(err.response);
+    }
+    console.log(profileFormData);
+  };
+
+  return (
+    <>
+      <FormWrap>
+        <Form
+          id="updateProfileForm"
+          onSubmit={onSubmitUpdateProfile}
+          enctype="multipart/form-data"
+        >
+          <InputDiv size={4}>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              placeholder="Name"
+              type="text"
+              name="name"
+              onChange={onChange}
+              value={name}
+            />
+          </InputDiv>
+          <InputDiv size={5}>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              placeholder="Email"
+              type="email"
+              name="email"
+              onChange={onChange}
+              value={email}
+            />
+          </InputDiv>
+
+          <InputDiv size={3}>
+            <Label htmlFor="number">Phone Number</Label>
+            <Input
+              id="number"
+              placeholder="Phone Number"
+              type="tel"
+              name="number"
+              onChange={onChange}
+              value={number}
+            />
+          </InputDiv>
+          <InputDiv size={4}>
+            <Label htmlFor="add-number">Additional Phone Number</Label>
+            <Input
+              id="add-number"
+              placeholder="Additional Phone Number"
+              type="tel"
+              name="add_number"
+              onChange={onChange}
+              value={add_number}
+            />
+          </InputDiv>
+          <InputDiv size={4}>
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              placeholder="Address"
+              type="text"
+              name="address"
+              onChange={onChange}
+              value={address}
+            />
+          </InputDiv>
+          <InputDiv size={4}>
+            <Label
+              htmlFor="blood-group"
+              showAlert={submitReq && !blood_group ? true : false}
+            >
+              Blood Group{" "}
+            </Label>
+            <Select
+              className="basic-single"
+              classNamePrefix="select"
+              defaultValue={bloodGroups[0]}
+              disabledValue={bloodGroups[0]}
+              isDisabled={false}
+              isLoading={false}
+              isClearable={true}
+              isRtl={false}
+              isSearchable={true}
+              name="blood-group"
+              options={bloodGroups}
+              styles={customStyles}
+              onChange={(e) =>
+                setProfileFormData({
+                  ...profileFormData,
+                  blood_group: e.value,
+                })
+              }
+            />
+          </InputDiv>
+
+          <InputDiv>
+            <Label>Description</Label>
+            <TextArea
+              onChange={onChange}
+              name="description"
+              value={description}
+              height="200px"
+              placeholder="Description"
+            ></TextArea>
+          </InputDiv>
+
+          <InputDiv>
+            <Label showAlert={submitReq && !profile_img && !profile?.isCompleted ? true : false}>
+              Profile Image
+            </Label>
+            <ImageUpload
+              style={{ background: "var(--input-bg-color)" }}
+              setImage={(image) =>
+                setProfileFormData({
+                  ...profileFormData,
+                  profile_img: image[0]?.file,
+                })
+              }
+              image={profile_img}
+            />
+          </InputDiv>
+
+          <InputDiv flex style={{ justifyContent: "space-between" }} size={12}>
+            <Button
+              type="button"
+              info
+              blockOnSmall
+              style={{ position: "relative", top: "14px" }}
+              onClick={async (e) => {
+                getCurrentLocation((crds) => {
+                  setProfileFormData({ ...profileFormData, coords: crds });
+                  setMark(crds);
+                });
+              }}
+            >
+              Current Location
+            </Button>
+
+            <Autocomplete
+              onLoad={(autoC) => setAutoComplete(autoC)}
+              onPlaceChanged={onPlaceChanged}
+            >
+              <>
+                <Label htmlFor="add-number">Where do you need blood? *</Label>
+                <Input
+                  id="places"
+                  placeholder="Search Places..."
+                  type="text"
+                  onKeyDown={(e) => {
+                    if (e.keyCode === 13) {
+                      e.preventDefault();
+                    } else {
+                      return true;
+                    }
+                  }}
+                />
+              </>
+            </Autocomplete>
+          </InputDiv>
+
+          <InputDiv
+            style={{
+              boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
+            }}
+            height="400px"
+            size={12}
+          >
+            <Map
+              coords={coords}
+              isMarkerShown
+              googleMapURL=" "
+              loadingElement={<div style={{ height: `100%` }} />}
+              containerElement={<div style={{ height: `100%` }} />}
+              mapElement={<div style={{ height: `100%` }} />}
+              setMark={setMark}
+              click={(e) =>
+                setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+              }
+              defaultZoom={17}
+            >
+              {mark ? <Marker position={mark} /> : ""}
+            </Map>
+          </InputDiv>
+
+          <InputDiv
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              width: "100%",
+            }}
+            size={12}
+          >
+            {/* <Button blockOnSmall>Update</Button> */}
+          </InputDiv>
+        </Form>
+      </FormWrap>
+    </>
+  );
+}
+
+function Review({ match }) {
+  const history = useHistory();
+  const location = useLocation();
   useEffect(() => {
-    if(location.pathname === `/profile/${match.params.id}/review/` || location.pathname === `/profile/${match.params.id}/review`) {
-      history.push(`/profile/${match.params.id}/review/as-requestor/`)
+    if (
+      location.pathname === `/profile/${match.params.id}/review/` ||
+      location.pathname === `/profile/${match.params.id}/review`
+    ) {
+      history.push(`/profile/${match.params.id}/review/as-requestor/`);
     }
     // eslint-disable-next-line
-  }, [location]) 
-  
+  }, [location]);
+
   return (
     <>
       <NavWrap>
@@ -199,110 +605,126 @@ function Review({match}) {
 }
 
 function RequestorReview() {
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState([]);
   useEffect(() => {
-    setReviews([{}, {}, {}, {}, {}, {}, {}, {}, {}, ])
-  }, [])
-  
-  
-  
-  
+    setReviews([{}, {}, {}, {}, {}, {}, {}, {}, {}]);
+  }, []);
+
   const firstExample = {
     size: 30,
     value: 2.5,
     edit: false,
     activeColor: "var(--primary-color)",
   };
-  
+
   return (
     <>
       <ReviewWrap>
-        {
-          reviews?.map((review, index) => (
-            <>
-              <ReviewDiv to="/requests/545/">
-                <ProfileImg size="100px" src={prof} />
-                <ReviewContent>
-                  <div style={{display:"flex", alignItems:'center'}}> 
-                    <h3 style={{ color: "var(--secendory-text-color)" }}>
-                      Jimam Tamimi
-                    </h3>
-                    <div style={{position:"relative", bottom: "2px", left: "18px" }}>
-                      <ReactStars {...firstExample} />
-                    </div>
-
+        {reviews?.map((review, index) => (
+          <>
+            <ReviewDiv key={index} to="/requests/545/">
+              <ProfileImg size="100px" src={prof} />
+              <ReviewContent>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <h3 style={{ color: "var(--secendory-text-color)" }}>
+                    Jimam Tamimi
+                  </h3>
+                  <div
+                    style={{
+                      position: "relative",
+                      bottom: "2px",
+                      left: "18px",
+                    }}
+                  >
+                    <ReactStars {...firstExample} />
                   </div>
-                  <p style={{ fontSize: "14px", color:'var(--secendory-text-color)' }}>
-                    aa quick brown fox jumped over the lazy doga quick brown fox
-                    jumped over the lazy doga quick brown fox jumped over the lazy
-                    doga quick brown fox jumped over the lazy doga quick brown fox
-                    jumped over the lazy doga quick brown fox jumped over the lazy
-                    doga quick brown fox jumped over the lazy dog quick brown fox
-                    jumped over the lazy dog
-                  </p>
-                </ReviewContent>
-                <Badge sm style={{position: "absolute", bottom: '13px', right: "18px"}} >3 days ago</Badge>
-              </ReviewDiv>
-              </>
-
-          ))
-        }
-
+                </div>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--secendory-text-color)",
+                  }}
+                >
+                  aa quick brown fox jumped over the lazy doga quick brown fox
+                  jumped over the lazy doga quick brown fox jumped over the lazy
+                  doga quick brown fox jumped over the lazy doga quick brown fox
+                  jumped over the lazy doga quick brown fox jumped over the lazy
+                  doga quick brown fox jumped over the lazy dog quick brown fox
+                  jumped over the lazy dog
+                </p>
+              </ReviewContent>
+              <Badge
+                sm
+                style={{ position: "absolute", bottom: "13px", right: "18px" }}
+              >
+                3 days ago
+              </Badge>
+            </ReviewDiv>
+          </>
+        ))}
       </ReviewWrap>
     </>
   );
 }
 
 function DonorReview() {
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState([]);
   useEffect(() => {
-    setReviews([{}, {}, {}, {}, {}, {}, {}, {}, {}, ])
-  }, [])
-  
-  
-  
-  
+    setReviews([{}, {}, {}, {}, {}, {}, {}, {}, {}]);
+  }, []);
+
   const firstExample = {
     size: 30,
     value: 2.5,
     edit: false,
     activeColor: "var(--primary-color)",
   };
-  
+
   return (
     <>
       <ReviewWrap>
-        {
-          reviews?.map((review, index) => (
-            <>
-              <ReviewDiv to="/requests/545/">
-                <ProfileImg size="100px" src={prof} />
-                <ReviewContent>
-                  <div style={{display:"flex", alignItems:'center'}}> 
-                    <h3 style={{ color: "var(--secendory-text-color)" }}>
-                      Jimam Tamimi
-                    </h3>
-                    <div style={{position:"relative", bottom: "2px", left: "18px" }}>
-                      <ReactStars {...firstExample} />
-                    </div>
-
+        {reviews?.map((review, index) => (
+          <>
+            <ReviewDiv key={index} to="/requests/545/">
+              <ProfileImg size="100px" src={prof} />
+              <ReviewContent>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <h3 style={{ color: "var(--secendory-text-color)" }}>
+                    Jimam Tamimi
+                  </h3>
+                  <div
+                    style={{
+                      position: "relative",
+                      bottom: "2px",
+                      left: "18px",
+                    }}
+                  >
+                    <ReactStars {...firstExample} />
                   </div>
-                  <p style={{ fontSize: "14px", color:'var(--secendory-text-color)' }}>
-                    aa quick brown fox jumped over the lazy doga quick brown fox
-                    jumped over the lazy doga quick brown fox jumped over the lazy
-                    doga quick brown fox jumped over the lazy doga quick brown fox
-                    jumped over the lazy doga quick brown fox jumped over the lazy
-                    doga quick brown fox jumped over the lazy dog quick brown fox
-                    jumped over the lazy dog
-                  </p>
-                </ReviewContent>
-                <Badge sm style={{position: "absolute", bottom: '13px', right: "18px"}} >3 days ago</Badge>
-              </ReviewDiv>
-              </>
-
-          ))
-        }
-
+                </div>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--secendory-text-color)",
+                  }}
+                >
+                  aa quick brown fox jumped over the lazy doga quick brown fox
+                  jumped over the lazy doga quick brown fox jumped over the lazy
+                  doga quick brown fox jumped over the lazy doga quick brown fox
+                  jumped over the lazy doga quick brown fox jumped over the lazy
+                  doga quick brown fox jumped over the lazy dog quick brown fox
+                  jumped over the lazy dog
+                </p>
+              </ReviewContent>
+              <Badge
+                sm
+                style={{ position: "absolute", bottom: "13px", right: "18px" }}
+              >
+                3 days ago
+              </Badge>
+            </ReviewDiv>
+          </>
+        ))}
       </ReviewWrap>
     </>
   );

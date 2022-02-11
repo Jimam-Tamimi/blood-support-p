@@ -1,3 +1,4 @@
+from typing import Optional
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
@@ -41,9 +42,29 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email   
     
+
+class Profile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    profile_img = models.ImageField(upload_to='profile_imgs', blank=True, null=True)
+    name = models.CharField(max_length=20, blank=False, null=False)
+    email = models.EmailField(max_length=100, unique=False, blank=False, null=False)
+    blood_group = models.CharField(max_length=5, blank=False, null=False)
+    address = models.CharField(max_length=300, blank=False, null=False)
+    number = models.CharField(max_length=25, blank=False, null=False)
+    add_number = models.CharField(max_length=25, blank=False, null=False)
+    location = models.JSONField(blank=False, null=False)
+    isCompleted = models.BooleanField(default=False)
+    description = models.TextField(blank=False, null=False)
+    def save(self, *args, **kwargs):
+        print('save() is called.')
+        if(self.profile_img  and  self.name  and  self.blood_group  and  self.address  and  self.number  and  self.add_number  and  self.location):
+            self.isCompleted = True
+        else:
+            self.isCompleted = False
+            
+        super(Profile, self).save(*args, **kwargs)
     
-     
-     
+    
 class Verification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
     code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)

@@ -1,3 +1,4 @@
+import profile
 from django.db import connections
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
@@ -9,6 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes 
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.decorators import action
 
 
 from account.models import *
@@ -47,6 +50,33 @@ class UserViewSets(ModelViewSet):
         sendVerificationEmail([user.email], code)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers, )
     
+
+class ProfileViewSet(ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    parser_classes = [FormParser, JSONParser, MultiPartParser]
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            Profile.objects.get(user=request.user)
+            return Response({'error': 'Profile already exists 😒'}, status=status.HTTP_400_BAD_REQUEST)
+        except Profile.DoesNotExist:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response({'error': "Something Went Wrong 😐"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], url_path='get-profile-details')
+    def get_profile_details(self, request):
+        try:
+            profile = Profile.objects.get(user=request.user)
+            serializer = ProfileSerializer(profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Profile.DoesNotExist:
+            return Response({'error': 'Profile does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception:
+            return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

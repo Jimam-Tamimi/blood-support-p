@@ -39,7 +39,7 @@ export const login = (email, password) => async dispatch => {
     dispatch(setProgress(60))
         console.log(res.data)
         const payload = res.data 
-        dispatch(alert(`Login successful`, 'success'))
+        dispatch(alert(`Login successful 😀`, 'success'))
         dispatch({
             type: 'LOGIN_SUCCESS',
             payload: payload
@@ -50,6 +50,8 @@ export const login = (email, password) => async dispatch => {
             for (const err in error.response.data) {
                 dispatch(alert(`${err}: ${error.response.data[err]}`, 'danger'))
             }
+        } else {
+            dispatch(alert(`Failed to login 😐`, 'danger'))
         }
     }
     dispatch(setProgress(100))
@@ -68,6 +70,8 @@ export const authenticate = () => async dispatch => {
             console.log(error.response);
             if (error?.response?.status === 401) {
                 dispatch(refreshToken())
+            } else {
+                dispatch({type: 'LOGOUT'})
             }
         }
     }
@@ -102,7 +106,7 @@ export const refreshToken = () => async dispatch => {
 export const logOut = () => async dispatch => {
     dispatch(setProgress(30))
    dispatch({type: 'LOGOUT'})
-   dispatch(alert(`Successfully Logged out`))
+   dispatch(alert(`Successfully Logged out 😀`))
    setTimeout(() => {
        dispatch(setProgress(100))
    }, 200);

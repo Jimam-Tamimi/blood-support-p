@@ -6,7 +6,6 @@ import { Marker } from "react-google-maps";
 import { FaBan } from "react-icons/fa";
 import ReactStars from "react-rating-stars-component";
 
-
 import logo from "../../assets/img/logo.png";
 
 import Modal from "../../components/Modal/Modal";
@@ -16,7 +15,7 @@ import {
   ButtonDiv,
   Badge,
   Button,
-  Profile ,
+  Profile,
 } from "../../styles/Essentials.styles";
 
 import {
@@ -47,7 +46,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr, 
+  Tr,
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -60,66 +59,97 @@ import { Wrap } from "../styles/dashboard/Request.styles";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import { BsStar, BsStarFill, BsStarHalf } from "react-icons/bs";
 
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setProgress } from "../../redux/progress/actions";
+import alert from "../../redux/alert/actions";
+
 export default function Request({ match }) {
   return (
     <>
       <NavWrap>
-        <NavTab activeClassName="active" exact to="/requests/45/">
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/requests/${match.params.slug}/`}
+        >
           Request
         </NavTab>
-        <NavTab activeClassName="active" exact to="/requests/45/donors/">
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/requests/${match.params.slug}/donors/`}
+        >
           Donor Requests
         </NavTab>
-        <NavTab activeClassName="active" exact to="/requests/45/donor-request/">
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/requests/${match.params.slug}/donor-request/`}
+        >
           Your Donor Request
         </NavTab>
       </NavWrap>
 
-      <Route exact path="/requests/:id/">
-        <RequestDetails />
-      </Route>
+      <Route exact path="/requests/:slug/" component={RequestDetails}/>
 
-      <Route exact path="/requests/:id/donors/">
-        <DonorRequests />
-      </Route>
+      <Route exact path="/requests/:slug/donors/" component={DonorRequests}  /> 
 
-      <Route exact path="/requests/:id/donor-request/">
-        <YourDonorRequest />
-      </Route>
+      <Route exact path="/requests/:slug/donor-request/" component={YourDonorRequest} />
     </>
   );
 }
- 
 
-const RequestDetails = () => {
+const RequestDetails = ({match}) => {
   // eslint-disable-next-line
-  const [details, setDetails] = useState({
-    name: "Jimam Tamimi",
-    time: "02/1/2006",
-    bloodGroup: "A+",
-    number: "92374857837",
-    addNumber: "4656564547",
-    email: "jimamtamimi12@gmail.com",
-    description:
-      "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Minima qui minus assumenda, accusantium quidem maiores sapiente ipsum. Eligendi illo dolore ",
-    coords: { lat: 24.0077202, lng: 89.2429551 },
-  });
+
   const report = () => {
     // call api to report this request
     console.log("report request");
   };
-// eslint-disable-next-line
+  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
-// eslint-disable-next-line
+  // eslint-disable-next-line
   const [cords, setCords] = useState({ lat: 24.0077202, lng: 89.2429551 });
+
+  // hooks
+  const dispatch = useDispatch();
+
+  // call the apis and get request data
+
+  // states
+  const [requestData, setRequestData] = useState(null);
+
+  // functions
+  const getRequestData = async () => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${match.params.slug}/`
+      );
+      if (res.status === 200) {
+        setRequestData(res.data);
+
+        console.log(res);
+      }
+    } catch (error) {
+      dispatch(alert("Failed to get blood request details 😕", "danger"));
+      console.log(error);
+    }
+  };
+
+  useEffect(async () => {
+    dispatch(setProgress(30));
+    await getRequestData();
+    dispatch(setProgress(100));
+  }, []);
 
   return (
     <>
       <DetailsMap>
         <Map
-          coords={details.coords}
+          coords={requestData?.coords}
           isMarkerShown
           googleMapURL=" "
           loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
@@ -135,37 +165,37 @@ const RequestDetails = () => {
           <DetailHeader>Posted By: </DetailHeader>
           <Profile to="/">
             <ProfileImg src={""} />
-            <DetailFieldValue>{details.name}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.name}</DetailFieldValue>
           </Profile>
           <DetailHeader>Informations: </DetailHeader>
           <Detail>
             <DetailField>Name: </DetailField>
-            <DetailFieldValue>{details.name}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.name}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Time: </DetailField>
-            <DetailFieldValue>{details.time}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.date_time }</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Blood Group: </DetailField>
-            <DetailFieldValue>{details.bloodGroup}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.bloodGroup}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Number: </DetailField>
-            <DetailFieldValue>{details.number}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.number}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Additional Number: </DetailField>
-            <DetailFieldValue>{details.number}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.number}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Email: </DetailField>
-            <DetailFieldValue>{details.email}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.email}</DetailFieldValue>
           </Detail>
 
           <DetailHeader>Description: </DetailHeader>
           <Detail>
-            <DetailFieldValue>{details.description}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.description}</DetailFieldValue>
           </Detail>
           <ButtonDiv>
             <SendDonorRequestForm />
@@ -354,8 +384,6 @@ const SendDonorRequestForm = () => {
 };
 
 const Complete = () => {
- 
-
   const sendRequest = (e) => {
     e.preventDefault();
   };
@@ -369,10 +397,10 @@ const Complete = () => {
     isHalf: true,
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
-    filledIcon: < BsStarFill/>,
-    onChange: newValue => {
+    filledIcon: <BsStarFill />,
+    onChange: (newValue) => {
       console.log(`Example 2: new value is ${newValue}`);
-    }
+    },
   };
 
   return (
@@ -380,7 +408,7 @@ const Complete = () => {
       <Modal
         actionText="Complete"
         title="Review And Complete Request"
-        md 
+        md
         info
         btnText="Complete"
         fade
@@ -393,14 +421,17 @@ const Complete = () => {
             }}
           >
             <InputDiv>
-              <Label htmlFor="add-number">Express your experience with this Donor</Label>
+              <Label htmlFor="add-number">
+                Express your experience with this Donor
+              </Label>
               <TextArea placeholder="Short Description"></TextArea>
             </InputDiv>
             <InputDiv>
-              <Label htmlFor="add-number">Express your experience with this Donor</Label>
-              <ReactStars style={{marginTop: "11px"}} {...secondExample} />
+              <Label htmlFor="add-number">
+                Express your experience with this Donor
+              </Label>
+              <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
             </InputDiv>
- 
           </Form>
         </FormWrap>
       </Modal>
@@ -418,7 +449,7 @@ const DonorRequests = () => {
     // call api to report this request
     console.log("report request");
   };
-  
+
   // eslint-disable-next-line
   const [dropDownOptions, setDropDownOptions] = useState([
     { name: "Report", icon: FaBan, onClick: report },
@@ -696,7 +727,7 @@ const YourDonorRequest = () => {
           </Detail>
           <ButtonDiv>
             <form onSubmit={upDateRequest}>
-              <Modal 
+              <Modal
                 actionText="Update"
                 title="Update Request Form"
                 lg
@@ -840,4 +871,3 @@ const YourDonorRequest = () => {
     </>
   );
 };
-

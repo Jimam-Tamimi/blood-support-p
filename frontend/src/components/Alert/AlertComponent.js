@@ -10,11 +10,11 @@ export default function AlertComponent() {
         <>
             <AlertCont>
                 {
-                    alerts.map(({message, alertType, id}) => {
+                    alerts.map(({message, alertType='success', id}) => {
                         return (
                             <AlertCompo key={id} alertType={alertType}>
                                 <AlertText>{message}</AlertText> 
-                                <AlertClose onClick={() => dispatch(removeAlert(id))}>
+                                <AlertClose alertType={alertType} onClick={() => dispatch(removeAlert(id))}>
                                     <IoCloseSharp />
                                 </AlertClose>
                             </AlertCompo>

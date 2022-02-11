@@ -1,3 +1,4 @@
+from time import time, sleep
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth import get_user_model
 from .serializers import *
@@ -10,4 +11,7 @@ User = get_user_model()
 class BloodRequestViewSet(ModelViewSet):
     queryset = BloodRequest.objects.all()
     serializer_class = BloodRequestSerializer
+    lookup_field = 'slug'
     
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

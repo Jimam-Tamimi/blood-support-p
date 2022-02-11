@@ -23,7 +23,9 @@ export const ModalContainer = styled.div`
     ${({md}) => md?`width: 65%;`:''}
     ${({lg}) => lg?`width: 85%;`:''}
 
-     
+     @media (max-width: 868px) {
+        width: 90%;
+     }
     ${Flex}
     flex-direction: column;
     border-radius: 5px;
@@ -71,6 +73,8 @@ export const ModalBody = styled.div`
     background: var(--secendory-color);
     ${Flex}
     padding: 20px;
+    background: var(--main-bg-color);
+
 `
 export const ModalFooter = styled.div`
 width: 100%;
@@ -82,6 +86,7 @@ width: 100%;
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    background: var(--main-bg-color);
     padding: 0 20px;
 
 `

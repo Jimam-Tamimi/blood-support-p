@@ -12,6 +12,7 @@ export default withScriptjs(withGoogleMap(function Map({children, coords, setCoo
                 onBoundsChanged={setBounds}
                 onClick={click}
                 
+                
             >
                 {children}
             </GoogleMap>
