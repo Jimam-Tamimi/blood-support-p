@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {AiFillDashboard, AiOutlineForm,} from 'react-icons/ai'
 import {FaHandsHelping,} from 'react-icons/fa'
@@ -22,10 +22,16 @@ import {
     LinkText,
     DashboardLogo,
 } from "./Dashboard.styles";
+import { useSelector } from "react-redux";
 
 
 export default function Dashboard({show, toggleDashOnSmallDevice}) {
-    const dashLinks = [
+    
+    // hooks
+    const profile = useSelector(state => state.profile)
+    
+    
+    const [dashLinks, setDashLinks] = useState([
         {to:"/", name: 'Dashboard', icon: AiFillDashboard,exact: true, count:null },
         {to:"/help-people/", name: 'Help People', icon:FaHandsHelping,exact: true, count:null },
         {to:"/make-request/", name: 'Make Request', icon:AiOutlineForm,exact: true, count:null },
@@ -39,9 +45,21 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
         {to:"/profile/", name: 'Profile', icon:CgProfile,exact: false, count:null },
 
         {to:"/settings/", name: 'Settings', icon:FiSettings,exact: true, count:null },
-    ]
+    ])
  
+    useEffect(() => {
+        setDashLinks(dashLinks.map(link => {
+            if(link.name === 'Profile'){
+                if(profile.isCompleted){
+                    link.count = '!'
+                }
+            }
+            return link
+        }))
+    }, [profile])
     
+    
+
   return (
     <>
       <DashboardWrapper show={show}>

@@ -2,8 +2,7 @@ import React, {useEffect} from 'react'
 import { useDispatch } from 'react-redux';
 import { hideLoader, showLoader } from '../../redux/loader/actions';
 import axios from 'axios'
-import alert from '../../redux/alert/actions';
-import REACT_APP_API_URL from '../../testurl'
+import alert from '../../redux/alert/actions'; 
 import {useHistory} from 'react-router-dom'
 
 export default function Activate({match}) {
@@ -20,7 +19,7 @@ export default function Activate({match}) {
     const body = JSON.stringify({uid, token}) 
     useEffect(() => {
         dispatch(showLoader())
-        axios.post(`${REACT_APP_API_URL}/auth/users/activation/`, body, config)
+        axios.post(`${process.env.REACT_APP_API_URL}/auth/users/activation/`, body, config)
         .then((response) => {
             if(response.status == 204){
                 dispatch(hideLoader())

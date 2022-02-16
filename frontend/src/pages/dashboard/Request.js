@@ -60,67 +60,21 @@ import Dropdown from "../../components/Dropdown/Dropdown";
 import { BsStar, BsStarFill, BsStarHalf } from "react-icons/bs";
 
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
+import { getProfileData } from "../../helpers";
 
 export default function Request({ match }) {
-  return (
-    <>
-      <NavWrap>
-        <NavTab
-          activeClassName="active"
-          exact
-          to={`/requests/${match.params.slug}/`}
-        >
-          Request
-        </NavTab>
-        <NavTab
-          activeClassName="active"
-          exact
-          to={`/requests/${match.params.slug}/donors/`}
-        >
-          Donor Requests
-        </NavTab>
-        <NavTab
-          activeClassName="active"
-          exact
-          to={`/requests/${match.params.slug}/donor-request/`}
-        >
-          Your Donor Request
-        </NavTab>
-      </NavWrap>
-
-      <Route exact path="/requests/:slug/" component={RequestDetails}/>
-
-      <Route exact path="/requests/:slug/donors/" component={DonorRequests}  /> 
-
-      <Route exact path="/requests/:slug/donor-request/" component={YourDonorRequest} />
-    </>
-  );
-}
-
-const RequestDetails = ({match}) => {
-  // eslint-disable-next-line
-
-  const report = () => {
-    // call api to report this request
-    console.log("report request");
-  };
-  // eslint-disable-next-line
-  const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
-  ]);
-  // eslint-disable-next-line
-  const [cords, setCords] = useState({ lat: 24.0077202, lng: 89.2429551 });
-
   // hooks
   const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
 
   // call the apis and get request data
 
   // states
   const [requestData, setRequestData] = useState(null);
+  const [requestorProfileData, setRequestorProfileData] = useState(null);
 
   // functions
   const getRequestData = async () => {
@@ -130,7 +84,7 @@ const RequestDetails = ({match}) => {
       );
       if (res.status === 200) {
         setRequestData(res.data);
-
+        setRequestorProfileData(await getProfileData(res.data.user));
         console.log(res);
       }
     } catch (error) {
@@ -147,9 +101,77 @@ const RequestDetails = ({match}) => {
 
   return (
     <>
+      <NavWrap>
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/requests/${match.params.slug}/`}
+        >
+          Request
+        </NavTab>
+
+        {requestData?.user === auth.user_id ? (
+          <NavTab
+            activeClassName="active"
+            exact
+            to={`/requests/${match.params.slug}/donors/`}
+          >
+            Donor Requests
+          </NavTab>
+        ) : (
+          requestData && (
+            <NavTab
+              activeClassName="active"
+              exact
+              to={`/requests/${match.params.slug}/donor-request/`}
+            >
+              Your Donor Request
+            </NavTab>
+          )
+        )}
+      </NavWrap>
+
+      <Route exact path="/requests/:slug/" component={RequestDetails}>
+        <RequestDetails
+          requestData={requestData}
+          requestorProfileData={requestorProfileData}
+        />
+      </Route>
+
+      {requestData?.user === auth.user_id ? (
+        <Route exact path="/requests/:slug/donors/" component={DonorRequests} />
+      ) : (
+        requestData && (
+          <Route
+            exact
+            path="/requests/:slug/donor-request/"
+            component={YourDonorRequest}
+          />
+        )
+      )}
+    </>
+  );
+}
+
+const RequestDetails = ({ match, requestData, requestorProfileData }) => {
+  // eslint-disable-next-line
+
+  const report = () => {
+    // call api to report this request
+    console.log("report request");
+  };
+  // eslint-disable-next-line
+  const [dropDownOption, setDropDownOption] = useState([
+    { name: "Report", icon: FaBan, onClick: report },
+  ]);
+  // hooks
+  const dispatch = useDispatch();
+
+  return (
+    <>
       <DetailsMap>
         <Map
-          coords={requestData?.coords}
+          coords={requestData?.location}
           isMarkerShown
           googleMapURL=" "
           loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
@@ -157,14 +179,18 @@ const RequestDetails = ({match}) => {
           mapElement={<div style={{ height: `350px`, width: "100%" }} />}
           defaultZoom={14}
         >
-          {<Marker position={cords} />}
+          {<Marker position={requestData?.location} />}
         </Map>
       </DetailsMap>
       <AllDetails>
         <DetailsDiv>
           <DetailHeader>Posted By: </DetailHeader>
-          <Profile to="/">
-            <ProfileImg src={""} />
+          <Profile to={`/profile/${requestData?.user}/`}>
+            <ProfileImg
+              size="55px"
+              style={{ marginRight: "10px" }}
+              src={`${process.env.REACT_APP_MEDIA_URL}${requestorProfileData?.profile_img}`}
+            />
             <DetailFieldValue>{requestData?.name}</DetailFieldValue>
           </Profile>
           <DetailHeader>Informations: </DetailHeader>
@@ -174,11 +200,11 @@ const RequestDetails = ({match}) => {
           </Detail>
           <Detail>
             <DetailField>Time: </DetailField>
-            <DetailFieldValue>{requestData?.date_time }</DetailFieldValue>
+            <DetailFieldValue>{requestData?.date_time}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Blood Group: </DetailField>
-            <DetailFieldValue>{requestData?.bloodGroup}</DetailFieldValue>
+            <DetailFieldValue>{requestData?.blood_group}</DetailFieldValue>
           </Detail>
           <Detail>
             <DetailField>Number: </DetailField>

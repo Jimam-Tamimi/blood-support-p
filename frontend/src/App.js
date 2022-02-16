@@ -29,12 +29,17 @@ import axios from "axios";
 import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
+import alert from "./redux/alert/actions";
 
 function App() {
   // hooks
   const dispatch = useDispatch();
   const progress = useSelector((state) => state.progress);
   const auth = useSelector((state) => state.auth);
+  const profile = useSelector((state) => state.profile);
+  
+  
+  
   axios.interceptors.request.use(
     function (config) {
       if (JSON.parse(localStorage.getItem("auth"))?.isAuthenticated) {
@@ -69,8 +74,7 @@ function App() {
   useEffect(() => {
     dispatch(getProfileDetails());
     
-  }, [auth])
-  
+  }, [auth]) 
  
 
   return (

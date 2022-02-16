@@ -11,7 +11,4 @@ User = get_user_model()
 class BloodRequestViewSet(ModelViewSet):
     queryset = BloodRequest.objects.all()
     serializer_class = BloodRequestSerializer
-    lookup_field = 'slug'
-    
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    lookup_field = 'slug' 

@@ -58,6 +58,8 @@ import alert from "../../redux/alert/actions";
 import axios from "axios";
 import { getProfileDetails } from "../../redux/profile/actions";
 
+import { setProgress } from "../../redux/progress/actions";
+
 const bloodGroups = [
   { value: "Select", label: "Select" },
   { value: "A+", label: "A+" },
@@ -74,15 +76,14 @@ export default function Profile({ match }) {
   // hooks
   const history = useHistory();
   const location = useLocation();
-  const profile = useSelector(state => state.profile);
-  
-  
+  const profile = useSelector((state) => state.profile);
+
   useEffect(() => {
     if (
       location.pathname === `/profile/${match.params.id}/` ||
       location.pathname === `/profile/${match.params.id}`
     ) {
-      history.push(`/profile/${match.params.id}/details/`);
+      history.replace(`/profile/${match.params.id}/details/`, {});
     }
     // eslint-disable-next-line
   }, [location]);
@@ -126,8 +127,8 @@ export default function Profile({ match }) {
         </NavTab>
       </NavWrap>
 
-      <Route exact path="/profile/:id/details/"  >
-        <Details  profile={profile} />
+      <Route exact path="/profile/:id/details/">
+        <Details />
       </Route>
 
       <Route path="/profile/:id/review/" component={Review} />
@@ -135,9 +136,9 @@ export default function Profile({ match }) {
   );
 }
 
-function Details({profile}) {
+function Details() {
   const [showUpdateProfile, setShowUpdateProfile] = useState(false);
-  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false)
+  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false);
   const report = () => {
     // call api to report this request
     console.log("report request");
@@ -148,6 +149,7 @@ function Details({profile}) {
   ]);
 
   // get profile details
+  const profile = useSelector((state) => state.profile);
 
   return (
     <>
@@ -180,16 +182,15 @@ function Details({profile}) {
           </Detail>
           <DetailHeader>Details: </DetailHeader>
 
-          <Detail> 
+          <Detail>
             <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
 
-          <ButtonDiv style={{marginTop: "20px"}} >
-            <Button
-              onClick={e => setShowUpdateFormModal(true)}
-              type="button" 
-            >
-              Update Profile
+          <ButtonDiv style={{ marginTop: "20px" }}>
+            <Button onClick={(e) => setShowUpdateFormModal(true)} type="button">
+              {
+                profile.isCompleted ? "Update Profile" : "Complete Profile"
+              }
             </Button>
 
             <Modal
@@ -204,7 +205,9 @@ function Details({profile}) {
               show={showUpdateFormModal}
               setShow={setShowUpdateFormModal}
             >
-              <UpdateProfileForm setShowUpdateFormModal={setShowUpdateFormModal} />
+              <UpdateProfileForm
+                setShowUpdateFormModal={setShowUpdateFormModal}
+              />
             </Modal>
           </ButtonDiv>
         </DetailsDiv>
@@ -231,24 +234,24 @@ function Details({profile}) {
   );
 }
 
-function UpdateProfileForm({setShowUpdateFormModal}) {
+function UpdateProfileForm({ setShowUpdateFormModal }) {
   // hooks
   const dispatch = useDispatch();
-  const profile = useSelector(state => state.profile);
+  const profile = useSelector((state) => state.profile);
 
   // states
   const [autoComplete, setAutoComplete] = useState(null);
   const [submitReq, setSubmitReq] = useState(false);
   const initialProfileData = {
-    name: '',
-    email: '',
-    address: '',
-    number: '',
-    add_number: '',
-    blood_group: '',
-    description: '',
+    name: "",
+    email: "",
+    address: "",
+    number: "",
+    add_number: "",
+    blood_group: "",
+    description: "",
     coords: {},
-    profile_img: '',
+    profile_img: "",
   };
   const [profileFormData, setProfileFormData] = useState(initialProfileData);
   useEffect(async () => {
@@ -270,26 +273,29 @@ function UpdateProfileForm({setShowUpdateFormModal}) {
   } = profileFormData;
   const [mark, setMark] = useState();
 
-
-
   // get data if profile is completed
-  
-  useEffect( async () => {
-    if(profile?.isCompleted){
+
+  useEffect(async () => {
+    if (profile?.isCompleted) {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`);
-        if(res.status === 200){
-          setProfileFormData({...res.data, coords: res.data.location, email: res.data?.user?.email, profile_img: null})
-      setMark(res.data.location);
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`
+        );
+        if (res.status === 200) {
+          setProfileFormData({
+            ...res.data,
+            coords: res.data.location,
+            email: res.data?.user?.email,
+            profile_img: null,
+          });
+          setMark(res.data.location);
         }
-      } catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       }
     }
-  }, [profile])
-  
-  
-  
+  }, [profile]);
+
   const onChange = (e) =>
     setProfileFormData({ ...profileFormData, [e.target.name]: e.target.value });
 
@@ -309,14 +315,16 @@ function UpdateProfileForm({setShowUpdateFormModal}) {
     setSubmitReq(true);
     for (let member in profileFormData) {
       if (!profileFormData[member]) {
-        if(profile?.isCompleted && member === 'profile_img'){
-          continue
+        if (profile?.isCompleted && member === "profile_img") {
+          continue;
         }
 
-          dispatch(alert(member + " Should Not Be Blank 😒", "danger"));
+        dispatch(alert(member + " Should Not Be Blank 😒", "danger"));
         return;
       }
     }
+    dispatch(setProgress(20));
+
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -326,7 +334,7 @@ function UpdateProfileForm({setShowUpdateFormModal}) {
       formData.append("add_number", add_number);
       formData.append("blood_group", blood_group);
       formData.append("description", description);
-      if(profile_img){
+      if (profile_img) {
         formData.append("profile_img", profile_img);
       }
       formData.append("location", JSON.stringify(mark));
@@ -335,31 +343,34 @@ function UpdateProfileForm({setShowUpdateFormModal}) {
           "Content-Type": "multipart/form-data",
         },
       };
-      let res = null
-    if(!profile?.isCompleted){
-      res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/account/profile/`,
-        formData,
-        config
-      );
-    } else {
-      res = await axios.put(
-        `${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`,
-        formData,
-        config
-      );
+      let res = null;
+      if (!profile?.isCompleted) {
+        res = await axios.post(
+          `${process.env.REACT_APP_API_URL}api/account/profile/`,
+          formData,
+          config
+        );
+      } else {
+        res = await axios.put(
+          `${process.env.REACT_APP_API_URL}api/account/profile/${profile.id}/`,
+          formData,
+          config
+        );
       }
+      dispatch(setProgress(70));
+
       console.log(res);
       if (res?.status === 201 || res?.status === 200) {
         dispatch(alert("Profile Updated Successfully 😎", "success"));
         setShowUpdateFormModal(false);
         setSubmitReq(false);
         setProfileFormData(initialProfileData);
-        dispatch(getProfileDetails())
+        dispatch(getProfileDetails());
       }
     } catch (err) {
       console.log(err.response);
     }
+    dispatch(setProgress(100));
     console.log(profileFormData);
   };
 
@@ -468,7 +479,13 @@ function UpdateProfileForm({setShowUpdateFormModal}) {
           </InputDiv>
 
           <InputDiv>
-            <Label showAlert={submitReq && !profile_img && !profile?.isCompleted ? true : false}>
+            <Label
+              showAlert={
+                submitReq && !profile_img && !profile?.isCompleted
+                  ? true
+                  : false
+              }
+            >
               Profile Image
             </Label>
             <ImageUpload

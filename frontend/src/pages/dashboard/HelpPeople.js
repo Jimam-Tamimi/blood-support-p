@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import BloodRequest from "../../components/BloodRequest/BloodRequest";
 import OffCanvas from "../../components/OffCanvas/OffCanvas";
 import styled from "styled-components";
@@ -25,18 +25,54 @@ import Map from "../../components/Map/Map";
 import { FaBan } from "react-icons/fa";
 import { Marker } from "@react-google-maps/api";
 import Dropdown from "../../components/Dropdown/Dropdown";
+import axios from "axios";
 
 export default function HelpPeople() {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
   // eslint-disable-next-line
   const [requestId, setRequestId] = useState(null);
+
+
+
+  // get all request data
+  const [allRequests, setAllRequests] = useState([])
+  const getAllBloodRequest = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}api/blood/blood-request/`);
+      if(res.status === 200) {
+        console.log(res)
+        setAllRequests(res.data);
+      }
+    } catch (error) {
+        console.log(error.response);
+    }
+  }
+
+  useEffect(() => {
+    getAllBloodRequest();
+  }, [])
+  
+
+  
   return (
     <>
       <OffCanvas setShow={setShowRequestDetails} show={showRequestDetails}>
         <RequestDetails />
       </OffCanvas>
       <Wrap>
-        <BloodRequest
+
+        {
+          allRequests.map((requestData, i) => (
+            <BloodRequest
+            key={i}
+              setShowRequestDetails={setShowRequestDetails}
+              setRequestId={setRequestId}
+              requestData={requestData}
+            />            
+          ))
+        }
+        
+        {/* <BloodRequest
           setShowRequestDetails={setShowRequestDetails}
           setRequestId={setRequestId}
         />
@@ -71,11 +107,7 @@ export default function HelpPeople() {
         <BloodRequest
           setShowRequestDetails={setShowRequestDetails}
           setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
+        /> */}
       </Wrap>
     </>
   );

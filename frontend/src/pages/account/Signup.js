@@ -19,10 +19,7 @@ import {
     TextBox,
 } from './Account.styles'
 import { useDispatch } from 'react-redux';
-import { hideLoader, showLoader } from '../../redux/loader/actions';
-import axios from 'axios'
-import alert from '../../redux/alert/actions';
-import REACT_APP_API_URL from '../../testurl'
+import { hideLoader, showLoader } from '../../redux/loader/actions'; 
 import { useHistory } from 'react-router';
 import { signup } from '../../redux/auth/actions';
 

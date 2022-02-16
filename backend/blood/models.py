@@ -36,7 +36,7 @@ class BloodRequest(models.Model):
     blood_group = models.CharField(max_length=30, blank=False, null=False, choices=BLOOD_GROUP_CHOICES)
     location = models.JSONField(blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
-    
+    description = models.TextField(max_length=500, blank=False, null=False)
     
 @receiver(pre_save, sender=BloodRequest)
 def create_profile(sender, instance, **kwargs):

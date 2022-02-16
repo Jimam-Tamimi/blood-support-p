@@ -7,6 +7,8 @@ export const Wrap = styled.div`
     ${({ show, fade, leftToRight, rightToLeft,  topToBottom, bottomToTop, scale, zoom }) => (
         show ? (
             `
+            visibility: show;
+
                 ${fade? `opacity: 1;` :""}
                 ${leftToRight? `transform: translateX(0);` :""}
                 ${rightToLeft? `transform: translateX(0);` :""}
@@ -18,6 +20,8 @@ export const Wrap = styled.div`
 
         ) : (   
             `
+            visibility: hidden;
+
                 ${fade? `opacity: 0;` :""}
                 ${leftToRight? `transform: translateX(-15px);` :""}
                 ${rightToLeft? `transform: translateX(15px);` :""}

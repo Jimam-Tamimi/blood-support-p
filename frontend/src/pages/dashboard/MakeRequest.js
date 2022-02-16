@@ -41,6 +41,7 @@ export default function MakeRequest() {
 
   // hooks
   const auth = useSelector((state) => state.auth);
+  const profile = useSelector((state) => state.profile);
   const dispatch = useDispatch();
   const history = useHistory()
 
@@ -141,7 +142,7 @@ export default function MakeRequest() {
   return (
     <>
       <FormWrap>
-        <Form onSubmit={submitMakeRequest}>
+        <Form  onSubmit={submitMakeRequest}>
           <InputDiv size={4}>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -151,6 +152,9 @@ export default function MakeRequest() {
               name="name"
               onChange={onChange}
               value={name}
+
+              disabled={!profile.isCompleted}
+              
             />
           </InputDiv>
           <InputDiv size={5}>
@@ -162,6 +166,8 @@ export default function MakeRequest() {
               name="email"
               onChange={onChange}
               value={email}
+              disabled={!profile.isCompleted}
+
             />
           </InputDiv>
           <InputDiv size={3}>
@@ -173,6 +179,8 @@ export default function MakeRequest() {
               name="date_time"
               onChange={onChange}
               value={date_time}
+              disabled={!profile.isCompleted}
+
             />
           </InputDiv>
           <InputDiv size={3}>
@@ -184,6 +192,8 @@ export default function MakeRequest() {
               name="number"
               onChange={onChange}
               value={number}
+              disabled={!profile.isCompleted}
+
             />
           </InputDiv>
           <InputDiv size={3}>
@@ -195,6 +205,8 @@ export default function MakeRequest() {
               name="add_number"
               onChange={onChange}
               value={add_number}
+              disabled={!profile.isCompleted}
+
             />
           </InputDiv>
           <InputDiv size={6}>
@@ -218,13 +230,16 @@ export default function MakeRequest() {
                   blood_group: e.value,
                 })
               }
+              disabled={!profile.isCompleted}
+
             />
           </InputDiv>
 
 
           <InputDiv>
               <Label>Description</Label>
-              <TextArea onChange={onChange} name="description" value={description} height="200px" placeholder="Description"></TextArea>
+              
+              <TextArea disabled={!profile.isCompleted}  onChange={onChange} name="description" value={description} height="200px" placeholder="Description"></TextArea>
           </InputDiv>
 
           
@@ -298,7 +313,7 @@ export default function MakeRequest() {
             }}
             size={12}
           >
-            <Button blockOnSmall>Request</Button>
+            <Button disabled={!profile.isCompleted} blockOnSmall>Request</Button>
           </InputDiv>
         </Form>
       </FormWrap>

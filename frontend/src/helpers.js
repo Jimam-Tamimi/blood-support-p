@@ -34,3 +34,17 @@ export const getLocationName = async (cords) => {
     //     }
     //   );
 };
+
+
+
+export const getProfileData  = async userId => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/profile/${userId}/get-profile-details-by-user/`);
+    if (res.status === 200) {
+      return res.data;
+    }
+  } catch (error) {
+    console.log(error);
+    return false
+  }
+}

@@ -40,6 +40,9 @@ height: 100%;
 color: var(--secendory-text-color);
 height: 48px;
 margin: 10px 0px;
+
+${({disabled}) => disabled && `opacity: .5; cursor: not-allowed;`}
+
 `;
 
 export const TextArea = styled.textarea`

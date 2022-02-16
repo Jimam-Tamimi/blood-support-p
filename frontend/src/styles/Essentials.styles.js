@@ -68,6 +68,13 @@ export const Button = styled.button`
         }
       `
       : ""}
+    ${({ disabled }) =>
+    disabled
+      ? `
+      opacity: .5;
+    cursor: not-allowed;
+      `
+      : ""}
 
   background: var(--primary-color);
   &:hover {

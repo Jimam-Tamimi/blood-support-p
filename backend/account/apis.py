@@ -12,7 +12,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes 
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
-
+from rest_framework.authentication import BasicAuthentication
 
 from account.models import *
 from .serializers import *
@@ -55,7 +55,7 @@ class ProfileViewSet(ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     parser_classes = [FormParser, JSONParser, MultiPartParser]
-    
+    # authentication_classes = [BasicAuthentication]
     def create(self, request, *args, **kwargs):
         try:
             Profile.objects.get(user=request.user)
@@ -74,6 +74,18 @@ class ProfileViewSet(ModelViewSet):
             
         except Profile.DoesNotExist:
             return Response({'error': 'Profile does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception:
+            return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'], url_path='get-profile-details-by-user')
+    def get_profile_details_by_user(self, request, pk=None, *args, **kwargs):
+        try:
+            profile = Profile.objects.get(user__id=pk)
+            serializer = ProfileSerializer(profile)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Profile.DoesNotExist:
+            return Response({'error': 'Profile with this user does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
         except Exception:
             return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)

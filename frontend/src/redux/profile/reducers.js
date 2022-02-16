@@ -1,7 +1,7 @@
 
 
 const  initialState = {
-    isCompleted: false, 
+    isCompleted: true, 
 
 }
 
