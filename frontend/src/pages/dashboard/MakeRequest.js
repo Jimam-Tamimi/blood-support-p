@@ -130,7 +130,7 @@ export default function MakeRequest() {
         dispatch(alert("Your Blood Request Was Posted Successfully", "success"));
         setMakeRequestFormData(defaultRequestFormData)
         dispatch(setProgress(90));
-        history.push(`/requests/${res.data.slug}/`)
+        history.push(`/requests/${res.data.id}/`)
       }
     } catch (err) {
       console.log(err);

@@ -8,8 +8,4 @@ class BloodRequestSerializer(ModelSerializer):
     timestamp = serializers.DateTimeField(read_only=True)
     class Meta:
         model = BloodRequest
-        fields = "__all__"
-        # lookup_field = 'slug'
-        extra_kwargs = {
-            'url': {'lookup_field': 'slug'}
-        }
+        fields = "__all__" 

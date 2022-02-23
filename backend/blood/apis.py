@@ -10,5 +10,4 @@ User = get_user_model()
  
 class BloodRequestViewSet(ModelViewSet):
     queryset = BloodRequest.objects.all()
-    serializer_class = BloodRequestSerializer
-    lookup_field = 'slug' 
+    serializer_class = BloodRequestSerializer 

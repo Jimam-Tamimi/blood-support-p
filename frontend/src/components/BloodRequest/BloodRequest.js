@@ -23,9 +23,12 @@ import { Marker } from "react-google-maps";
 import Dropdown from "../Dropdown/Dropdown";
 import axios from "axios";
 
+import Moment from 'react-moment';
+
+
 export default function BloodRequest({
   setShowRequestDetails,
-  setRequestId,
+  setBloodRequestId,
   requestData,
 }) {
   const report = () => {
@@ -109,7 +112,7 @@ export default function BloodRequest({
             </Profile>
           </Field>
           <Field>
-            Time: <Value>{requestData.date_time}</Value>
+            Time: <Value> <Moment format="DD/MM/YYYY hh:MM A" >{requestData.date_time}</Moment></Value>
           </Field>
           <Field>
             Blood Group: <Value>{requestData.blood_group}</Value>
@@ -120,7 +123,7 @@ export default function BloodRequest({
           <Wrap>
             <Actions>
               <Button
-                onClick={(e) => setShowRequestDetails(true)}
+                onClick={(e) => {setShowRequestDetails(true); setBloodRequestId(requestData.id)}}
                 info
                 style={{ padding: "10px 15px", margin: "0" }}
                 sm
@@ -128,7 +131,7 @@ export default function BloodRequest({
                 See More
               </Button>
               <ButtonLink
-                to={`/requests/${requestData?.slug}/`}
+                to={`/requests/${requestData?.id}/`}
                 success
                 style={{ padding: "10px 15px", marginLeft: "10px" }}
                 sm
@@ -164,7 +167,7 @@ export default function BloodRequest({
                 }}
                 sm
               >
-                5 minutes ago
+                <Moment fromNow >{requestData.timestamp}</Moment>
               </Badge>
             </NumOfReq>
           </Wrap>

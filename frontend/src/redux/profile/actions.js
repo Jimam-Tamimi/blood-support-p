@@ -10,7 +10,7 @@ export const getProfileDetails = () => async dispatch => {
         dispatch({type: 'GET_PROFILE_DETAILS', payload: res.data})
     } catch (error) {
         if(error.response.status === 404){
-            dispatch(alert('Please complete your profile Else you don\'n be able to use every feature 😶', 'warning'))
+            dispatch(alert('Please complete your profile Else you won\'n be able to use every feature 😶', 'warning'))
             dispatch({type: 'PROFILE_DOES_NOT_EXIST' })
         }
         if(error?.response?.status){

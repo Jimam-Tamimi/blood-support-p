@@ -27,7 +27,6 @@ BLOOD_GROUP_CHOICES = (
 
 class BloodRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=100, unique=True, blank=True, null=True) 
     name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, blank=False, null=False)
     date_time = models.DateTimeField(blank=False, null=False)
@@ -37,10 +36,4 @@ class BloodRequest(models.Model):
     location = models.JSONField(blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
     description = models.TextField(max_length=500, blank=False, null=False)
-    
-@receiver(pre_save, sender=BloodRequest)
-def create_profile(sender, instance, **kwargs):
-    if(not instance.slug):
-        blood_group = instance.blood_group
-        blood_group_slug = blood_group + ' positive' if blood_group.endswith("+")  else " negative"
-        instance.slug =  generate_slug(f"{blood_group_slug} blood request by {instance.name}", sender)
+     

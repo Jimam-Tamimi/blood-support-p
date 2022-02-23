@@ -50,7 +50,7 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
     useEffect(() => {
         setDashLinks(dashLinks.map(link => {
             if(link.name === 'Profile'){
-                if(profile.isCompleted){
+                if(!profile.isCompleted){
                     link.count = '!'
                 }
             }

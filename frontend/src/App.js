@@ -92,7 +92,7 @@ function App() {
               <Route path="/" component={Home} />
               <Route path="/make-request/" component={MakeRequest} />
               <Route path="/help-people/" component={HelpPeople} />
-              <Route path="/requests/:slug/" component={Request} />
+              <Route path="/requests/:bloodRequestId/" component={Request} />
               <Route path="/current/" component={Current} />
               <Route path="/all-requests/" component={AllRequests} />
               <Route path="/notifications/" component={Notifications} />
