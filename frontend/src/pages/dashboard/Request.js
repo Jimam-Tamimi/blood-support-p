@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Route, Link } from "react-router-dom";
+import { Route, Link, useHistory } from "react-router-dom";
 import "../../assets/css/transitions.css";
 import { Autocomplete } from "@react-google-maps/api";
 import { Marker } from "react-google-maps";
@@ -25,6 +25,7 @@ import {
   Input,
   TextArea,
   Label,
+  customStyles,
 } from "../../styles/Form.styles";
 import {
   Detail,
@@ -64,6 +65,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
 import { getCurrentLocation, getProfileData } from "../../helpers";
+import Select from "react-select";
 
 export default function Request({ match }) {
   // hooks
@@ -175,7 +177,6 @@ const RequestDetails = ({ match, requestData, requestorProfileData }) => {
   // hooks
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  
 
   return (
     <>
@@ -234,13 +235,16 @@ const RequestDetails = ({ match, requestData, requestorProfileData }) => {
             <DetailFieldValue>{requestData?.description}</DetailFieldValue>
           </Detail>
           <ButtonDiv>
-            {
-               auth?.user_id === requestData?.user ? 
-              <Complete /> : auth?.user_id !== requestData?.user?.id ?
-              <SendDonorRequestForm />  : ''
-            }
-
-
+            {auth?.user_id === requestData?.user ? (
+              <>
+                <UpdateRequest />
+                <Complete />
+              </>
+            ) : auth?.user_id !== requestData?.user?.id ? (
+              <SendDonorRequestForm />
+            ) : (
+              ""
+            )}
           </ButtonDiv>
         </DetailsDiv>
         <ActionDiv>
@@ -271,13 +275,11 @@ const SendDonorRequestForm = () => {
   const [coords, setCoords] = useState({});
   const [mark, setMark] = useState(false);
 
-  const [showDonorReqModal, setShowDonorReqModal] = useState(false)
-  
+  const [showDonorReqModal, setShowDonorReqModal] = useState(false);
 
   // hooks
   const profile = useSelector((state) => state.profile);
-  
-  
+
   function setCurrentLocation() {
     getCurrentLocation((crds) => {
       setMark(crds);
@@ -303,9 +305,14 @@ const SendDonorRequestForm = () => {
 
   return (
     <>
-      <Button disabled={!profile.isCompleted} onClick={e => setShowDonorReqModal(true)} info>Send Donor Request</Button>
-      {
-        profile.isCompleted &&
+      <Button
+        disabled={!profile.isCompleted}
+        onClick={(e) => setShowDonorReqModal(true)}
+        info
+      >
+        Send Donor Request
+      </Button>
+      {profile.isCompleted && (
         <form onSubmit={sendRequest}>
           <Modal
             actionText="Request"
@@ -425,7 +432,7 @@ const SendDonorRequestForm = () => {
             </FormWrap>
           </Modal>
         </form>
-      }
+      )}
     </>
   );
 };
@@ -433,13 +440,10 @@ const SendDonorRequestForm = () => {
 const Complete = () => {
   // states
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  
-  
+
   // hooks
   const profile = useSelector((state) => state.profile);
-  
-  
-  
+
   const sendRequest = (e) => {
     e.preventDefault();
   };
@@ -461,46 +465,371 @@ const Complete = () => {
 
   return (
     <>
-      <Button disabled={!profile.isCompleted} onClick={e => setShowCompleteModal(true)} info>Complete</Button>
-{
-  profile.isCompleted &&
-    <form onSubmit={sendRequest}>
-      <Modal
-        actionText="Complete"
-        title="Review And Complete Request"
-        md
+      <Button
+        disabled={!profile.isCompleted}
+        onClick={(e) => setShowCompleteModal(true)}
+      >
+        Complete
+      </Button>
+      {profile.isCompleted && (
+        <form onSubmit={sendRequest}>
+          <Modal
+            actionText="Complete"
+            title="Review And Complete Request"
+            md
+            info
+            btnText="Complete"
+            fade
+            scale
+            setShow={setShowCompleteModal}
+            show={showCompleteModal}
+          >
+            <FormWrap>
+              <Form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                }}
+              >
+                <InputDiv>
+                  <Label htmlFor="add-number">
+                    Express your experience with this Donor
+                  </Label>
+                  <TextArea placeholder="Short Description"></TextArea>
+                </InputDiv>
+                <InputDiv>
+                  <Label htmlFor="add-number">
+                    Express your experience with this Donor
+                  </Label>
+                  <ReactStars
+                    style={{ marginTop: "11px" }}
+                    {...secondExample}
+                  />
+                </InputDiv>
+              </Form>
+            </FormWrap>
+          </Modal>
+        </form>
+      )}
+    </>
+  );
+};
+
+const UpdateRequest = () => {
+  const bloodGroups = [
+    { value: "Select", label: "Select" },
+    { value: "A+", label: "A+" },
+    { value: "B+", label: "B+" },
+    { value: "AB+", label: "AB+" },
+    { value: "O+", label: "O+" },
+    { value: "A-", label: "A-" },
+    { value: "B-", label: "B-" },
+    { value: "AB-", label: "AB-" },
+    { value: "O-", label: "O-" },
+  ];
+  // states
+  const [autoComplete, setAutoComplete] = useState(null);
+  const [coords, setCoords] = useState({});
+  const [mark, setMark] = useState(false);
+
+  const [showUpdateRequestModal, setShowUpdateRequestModal] = useState(false);
+
+  // hooks
+  const auth = useSelector((state) => state.auth);
+  const profile = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+  const history = useHistory();
+
+  function setCurrentLocation() {
+    navigator.geolocation.getCurrentPosition(
+      (location) => {
+        setCoords({
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        });
+        setMark({
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        });
+      },
+      () => console.log("error :)"),
+      { timeout: 10000 }
+    );
+  }
+  useEffect(() => {
+    setCurrentLocation();
+  }, []);
+
+  const onPlaceChanged = () => {
+    try {
+      const lat = autoComplete.getPlace().geometry.location.lat();
+      const lng = autoComplete.getPlace().geometry.location.lng();
+      setMark({ lat, lng });
+      setCoords({ lat, lng });
+    } catch {}
+  };
+
+  // form data submit
+  const defaultRequestFormData = {
+    name: "",
+    email: "",
+    user: auth.user_id,
+    date_time: "",
+    number: "",
+    add_number: "",
+    blood_group: "",
+    location: mark,
+    location_name: "",
+  };
+  const [makeRequestFormData, setMakeRequestFormData] = useState({
+    name: "",
+    email: "",
+    user: auth.user_id,
+    date_time: "",
+    number: "",
+    add_number: "",
+    blood_group: "",
+    location: mark,
+    location_name: "",
+    description: "",
+  });
+  useEffect(() => {
+    setMakeRequestFormData({ ...makeRequestFormData, location: mark });
+  }, [mark]);
+
+  const {
+    name,
+    email,
+    date_time,
+    number,
+    add_number,
+    blood_group,
+    timestamp,
+    description,
+  } = makeRequestFormData;
+
+  const onChange = (e) =>
+    setMakeRequestFormData({
+      ...makeRequestFormData,
+      [e.target.name]: e.target.value,
+    });
+
+  const submitMakeRequest = async (e) => {
+    e.preventDefault();
+    dispatch(setProgress(10));
+    console.log(makeRequestFormData);
+    try {
+      dispatch(setProgress(20));
+
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/`,
+        makeRequestFormData
+      );
+      dispatch(setProgress(70));
+      console.log(res);
+      if (res?.status === 201) {
+        dispatch(
+          alert("Your Blood Request Was Posted Successfully", "success")
+        );
+        setMakeRequestFormData(defaultRequestFormData);
+        dispatch(setProgress(90));
+        history.push(`/requests/${res.data.id}/`);
+      }
+    } catch (err) {
+      console.log(err);
+      dispatch(alert("Failed to post your blood request", "danger"));
+    }
+    dispatch(setProgress(100));
+  };
+
+  return (
+    <>
+      <Button
+        disabled={!profile.isCompleted}
+        onClick={(e) => setShowUpdateRequestModal(true)}
         info
-        btnText="Complete"
+      >
+        Update
+      </Button>
+      <Modal
+        actionText="Update Blood Request"
+        title="Update Your Blood Request"
+        lg
+        info
+        btnText="Update"
         fade
         scale
-        setShow={setShowCompleteModal}
-        show={showCompleteModal}
+        setShow={setShowUpdateRequestModal}
+        show={showUpdateRequestModal}
+        wrapStyle={{alignItems: "start"}}
       >
         <FormWrap>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <InputDiv>
-              <Label htmlFor="add-number">
-                Express your experience with this Donor
-              </Label>
-              <TextArea placeholder="Short Description"></TextArea>
+          <Form onSubmit={submitMakeRequest}>
+            <InputDiv size={4}>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                placeholder="Name"
+                type="text"
+                name="name"
+                onChange={onChange}
+                value={name}
+                disabled={!profile.isCompleted}
+              />
             </InputDiv>
-            <InputDiv>
-              <Label htmlFor="add-number">
-                Express your experience with this Donor
-              </Label>
-              <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
+            <InputDiv size={5}>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                placeholder="Email"
+                type="email"
+                name="email"
+                onChange={onChange}
+                value={email}
+                disabled={!profile.isCompleted}
+              />
             </InputDiv>
+            <InputDiv size={3}>
+              <Label htmlFor="time">When Do You Need Blood</Label>
+              <Input
+                id="time"
+                placeholder="Time"
+                type="datetime-local"
+                name="date_time"
+                onChange={onChange}
+                value={date_time}
+                disabled={!profile.isCompleted}
+              />
+            </InputDiv>
+            <InputDiv size={3}>
+              <Label htmlFor="number">Phone Number</Label>
+              <Input
+                id="number"
+                placeholder="Phone Number"
+                type="tel"
+                name="number"
+                onChange={onChange}
+                value={number}
+                disabled={!profile.isCompleted}
+              />
+            </InputDiv>
+            <InputDiv size={3}>
+              <Label htmlFor="add-number">Additional Phone Number</Label>
+              <Input
+                id="add-number"
+                placeholder="Additional Phone Number"
+                type="tel"
+                name="add_number"
+                onChange={onChange}
+                value={add_number}
+                disabled={!profile.isCompleted}
+              />
+            </InputDiv>
+            <InputDiv size={6}>
+              <Label>Blood Group</Label>
+              <Select
+                className="basic-single"
+                classNamePrefix="select"
+                defaultValue={bloodGroups[0]}
+                disabledValue={bloodGroups[0]}
+                isDisabled={false}
+                isLoading={false}
+                isClearable={true}
+                isRtl={false}
+                isSearchable={true}
+                name="blood-group"
+                options={bloodGroups}
+                styles={customStyles}
+                onChange={(e) =>
+                  setMakeRequestFormData({
+                    ...makeRequestFormData,
+                    blood_group: e.value,
+                  })
+                }
+                disabled={!profile.isCompleted}
+              />
+            </InputDiv>
+
+            <InputDiv>
+              <Label>Description</Label>
+
+              <TextArea
+                disabled={!profile.isCompleted}
+                onChange={onChange}
+                name="description"
+                value={description}
+                height="200px"
+                placeholder="Description"
+              ></TextArea>
+            </InputDiv>
+
+            <InputDiv
+              flex
+              style={{ justifyContent: "space-between" }}
+              size={12}
+            >
+              <Button
+                type="button"
+                info
+                blockOnSmall
+                style={{ position: "relative", top: "14px" }}
+                onClick={(e) => {
+                  setCurrentLocation();
+                }}
+              >
+                Current Location
+              </Button>
+
+              <Autocomplete
+                onLoad={(autoC) => setAutoComplete(autoC)}
+                onPlaceChanged={onPlaceChanged}
+              >
+                <>
+                  <Label htmlFor="add-number">Where do you need blood? *</Label>
+                  <Input
+                    id="places"
+                    placeholder="Search Places..."
+                    type="text"
+                    onKeyDown={(e) => {
+                      if (e.keyCode === 13) {
+                        e.preventDefault();
+                      } else {
+                        return true;
+                      }
+                    }}
+                  />
+                </>
+              </Autocomplete>
+            </InputDiv>
+
+            <InputDiv
+              style={{
+                boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
+              }}
+              height="400px"
+              size={12}
+            >
+              <Map
+                coords={coords}
+                isMarkerShown
+                googleMapURL=" "
+                loadingElement={<div style={{ height: `100%` }} />}
+                containerElement={<div style={{ height: `100%` }} />}
+                mapElement={<div style={{ height: `100%` }} />}
+                setCoords={setCoords}
+                setMark={setMark}
+                click={(e) =>
+                  setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+                }
+                defaultZoom={17}
+              >
+                {mark ? <Marker position={mark} /> : ""}
+              </Map>
+            </InputDiv>
+ 
           </Form>
         </FormWrap>
       </Modal>
-    </form>
-}
     </>
-
   );
 };
 
