@@ -52,7 +52,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -76,7 +76,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -100,7 +100,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -124,7 +124,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -148,7 +148,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -172,7 +172,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -196,7 +196,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -220,7 +220,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -244,7 +244,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -268,7 +268,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -292,7 +292,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -316,7 +316,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -340,7 +340,7 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Jimam Tamimi
+                Friend
               </h4>
               <p
                 style={{
@@ -402,12 +402,7 @@ function MessagesSection({ match }) {
     setAllMessages([
       { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
       { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
+
       {
         id: 23,
         type: "sent",
@@ -445,7 +440,7 @@ function MessagesSection({ match }) {
           <MessageHeaderTitle>
             <MessageDetails>
               <ProfileImg src={profile} size="45px" />
-              <ProfName to={`/profile/34454/`}>Jimam Tamimi</ProfName>
+              <ProfName to={`/profile/34454/`}>Friend</ProfName>
             </MessageDetails>
             <ChatOptions>
               <Dropdown options={chatDropdownOptions}></Dropdown>
@@ -478,7 +473,7 @@ function MessagesSection({ match }) {
             ))}
           </MessagesDiv>
           <SendMessageDiv>
-            <EmojiWrap ref={refCont}>
+            <EmojiWrap showEmojiOption={showEmojiOption} ref={refCont}>
               <Transition show={showEmojiOption} fade scale>
                 <Picker
                   onClick={(emoji, e) => {

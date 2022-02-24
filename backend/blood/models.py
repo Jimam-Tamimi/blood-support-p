@@ -37,3 +37,16 @@ class BloodRequest(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     description = models.TextField(max_length=500, blank=False, null=False)
      
+     
+class DonorRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100, blank=False, null=False)
+    date_time = models.DateTimeField(blank=False, null=False)
+    number = models.CharField(max_length=30, blank=False, null=False)
+    add_number = models.CharField(max_length=30, blank=False, null=False)
+    address = models.CharField(max_length=100, blank=False, null=False)
+    description = models.TextField(max_length=500, blank=False, null=False)
+    location = models.JSONField(blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+     

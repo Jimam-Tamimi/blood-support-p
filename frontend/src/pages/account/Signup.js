@@ -20,7 +20,7 @@ import {
 } from './Account.styles'
 import { useDispatch } from 'react-redux';
 import { hideLoader, showLoader } from '../../redux/loader/actions'; 
-import { useHistory } from 'react-router';
+import { useHistory, useLocation } from 'react-router-dom'
 import { signup } from '../../redux/auth/actions';
 
 export default function Signup() {
@@ -32,12 +32,22 @@ export default function Signup() {
     const [showSubmit, setShowSubmit] = useState(false)
     const { email, password, cpassword } = formData
     const [checked, setChecked] = useState(true)
+
+    // hooks
     const dispatch = useDispatch()
+    const location = useLocation()
+    const history = useHistory()
+
 
     const onSubmit = e => {
         e.preventDefault();
         if(password === cpassword) {
-            dispatch(signup(email, password, cpassword))
+            dispatch(signup(email, password, cpassword, () => {
+                const queryString = location.search;
+                const urlParams = new URLSearchParams(queryString);
+                const redirect_url = urlParams.get('redirect_url')
+                history.push(redirect_url)
+            }))
         }
     }
 

@@ -70,10 +70,10 @@ function App() {
   
   useEffect(() => {
     dispatch(authenticate());
+    // dispatch(getProfileDetails());
   }, []);
   useEffect(() => {
     dispatch(getProfileDetails());
-    
   }, [auth]) 
  
 

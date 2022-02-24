@@ -9,9 +9,10 @@ const  initialState = {
 const profileReducer = (state=initialState, action) => {
     const { type, payload } = action
     if(type === 'GET_PROFILE_DETAILS'){
+        console.log(payload)
         return {
             isCompleted: payload.isCompleted,
-            ...payload
+            ...payload,
         }
     } else if(type === 'PROFILE_DOES_NOT_EXIST'){
         return {

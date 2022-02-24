@@ -4,8 +4,28 @@ from .models import *
 from account.serializers import UserSerializer
 
 class BloodRequestSerializer(ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = UserSerializer(read_only=True)
     timestamp = serializers.DateTimeField(read_only=True)
     class Meta:
         model = BloodRequest
         fields = "__all__" 
+        
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user'] = user
+        return super().create(validated_data)
+
+class DonorRequestSerializer(ModelSerializer):
+    user = UserSerializer(read_only=True)
+    timestamp = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = DonorRequest
+        fields = "__all__" 
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user'] = user
+        return super().create(validated_data)
+    
+    

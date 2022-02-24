@@ -199,6 +199,9 @@ export const ProfileImg = styled.img`
 export const ButtonDiv = styled.div`
   ${Flex}
   margin: 10px 0px;
+  & > button  {
+    ${({disabled}) => disabled?`pointer-events: none; opacity: 0.4; cursor: not-allowed; `:''}
+  }
 
 `
 

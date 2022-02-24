@@ -45,7 +45,7 @@ export default function BloodRequest({
   const getRequestorData = async () => {
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/account/profile/${requestData.user}/get-profile-details-by-user/`
+        `${process.env.REACT_APP_API_URL}api/account/profile/${requestData?.user?.id}/get-profile-details-by-user/`
       );
       if (res.status === 200) {
         console.log(res);
@@ -103,7 +103,7 @@ export default function BloodRequest({
           </NumOfReq>
 
           <Field>
-            <Profile to={`/profile/${requestData?.user}/`} style={{ marginLeft: "0" }}>
+            <Profile to={`/profile/${requestData?.user?.id}/`} style={{ marginLeft: "0" }}>
               <ProfileImg
                 size="3.5rem"
                 src={`${process.env.REACT_APP_MEDIA_URL}${requestorData?.profile_img}`}

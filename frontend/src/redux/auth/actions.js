@@ -3,7 +3,7 @@ import { setProgress } from '../progress/actions'
 import alert from '../alert/actions'
 
 
-export const signup = (email, password, cpassword) => async dispatch => {
+export const signup = (email, password, cpassword, callback) => async dispatch => {
     console.log(`${process.env.REACT_APP_API_URL}api/account/users/`)
     const data = { email, password, cpassword }
     try {
@@ -17,6 +17,7 @@ export const signup = (email, password, cpassword) => async dispatch => {
                 type: 'LOGIN_SUCCESS',
                 payload: payload
             })
+            callback()
         }
     } catch (error) {
         console.log(error);
@@ -30,7 +31,7 @@ export const signup = (email, password, cpassword) => async dispatch => {
 }
 
 
-export const login = (email, password) => async dispatch => {
+export const login = (email, password, callback) => async dispatch => {
     const data = { email, password }
     dispatch(setProgress(20))
     try {
@@ -44,6 +45,7 @@ export const login = (email, password) => async dispatch => {
             type: 'LOGIN_SUCCESS',
             payload: payload
         }) 
+        callback()
     } catch (error) {
         console.log(error);
         if (error.response) {

@@ -80,14 +80,16 @@ export default function Request({ match }) {
 
   // functions
   const getRequestData = async () => {
+    dispatch(setProgress(30));
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}api/blood/blood-request/${match.params.bloodRequestId}/`
       );
+    dispatch(setProgress(70));
       if (res.status === 200) {
         setRequestData(res.data);
-        setRequestorProfileData(await getProfileData(res.data.user));
-        console.log(res);
+        setRequestorProfileData(await getProfileData(res.data.user.id));
+    dispatch(setProgress(90));
       }
     } catch (error) {
       if (error.response.status === 404) {
@@ -95,14 +97,13 @@ export default function Request({ match }) {
       } else {
         dispatch(alert("Failed to get blood request details 😕", "danger"));
       }
-      console.log(error);
     }
+    dispatch(setProgress(100));
+
   };
 
   useEffect(async () => {
-    dispatch(setProgress(30));
     await getRequestData();
-    dispatch(setProgress(100));
   }, []);
 
   return (
@@ -141,6 +142,7 @@ export default function Request({ match }) {
         <RequestDetails
           requestData={requestData}
           requestorProfileData={requestorProfileData}
+          setRequestData={setRequestData}
         />
       </Route>
 
@@ -163,7 +165,7 @@ export default function Request({ match }) {
   );
 }
 
-const RequestDetails = ({ match, requestData, requestorProfileData }) => {
+const RequestDetails = ({ match, requestData, requestorProfileData , setRequestData}) => {
   // states
 
   const report = () => {
@@ -234,14 +236,14 @@ const RequestDetails = ({ match, requestData, requestorProfileData }) => {
           <Detail>
             <DetailFieldValue>{requestData?.description}</DetailFieldValue>
           </Detail>
-          <ButtonDiv>
-            {auth?.user_id === requestData?.user ? (
+          <ButtonDiv  >
+            {auth?.user_id === requestData?.user.id ? (
               <>
-                <UpdateRequest />
+                <UpdateRequest setRequestData={setRequestData} requestData={requestData} />
                 <Complete />
               </>
             ) : auth?.user_id !== requestData?.user?.id ? (
-              <SendDonorRequestForm />
+              <SendDonorRequestForm   />
             ) : (
               ""
             )}
@@ -276,32 +278,78 @@ const SendDonorRequestForm = () => {
   const [mark, setMark] = useState(false);
 
   const [showDonorReqModal, setShowDonorReqModal] = useState(false);
+  const [donorRequestFormData, setDonorRequestFormData] = useState({
+    name: "",
+    email: "",
+    date_time: "",
+    number: "",
+    add_number: "",
+    address: "",
+    description: "",
+    location: {}
+  })
+
+
 
   // hooks
   const profile = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+  
 
   function setCurrentLocation() {
     getCurrentLocation((crds) => {
-      setMark(crds);
+      setDonorRequestFormData({...donorRequestFormData, location: crds})
       setCoords(crds);
     });
   }
+  
   useEffect(() => {
     setCurrentLocation();
   }, []);
+
+  useEffect(() => {
+    setDonorRequestFormData(profile)
+  }, [profile]);
 
   const onPlaceChanged = () => {
     try {
       const lat = autoComplete.getPlace().geometry.location.lat();
       const lng = autoComplete.getPlace().geometry.location.lng();
-      setMark({ lat, lng });
       setCoords({ lat, lng });
+      setDonorRequestFormData({...donorRequestFormData, location: {lat, lng} })
+
     } catch {}
   };
 
   const sendRequest = (e) => {
     e.preventDefault();
   };
+
+
+  const onChange = e => setDonorRequestFormData({ ...donorRequestFormData, [e.target.name]: e.target.value });
+
+  // on form submit send donor request to api
+  const {name, email, date_time, address, number, add_number, location} = donorRequestFormData;
+  const sendDonorRequest = async e => {
+    e.preventDefault()
+    dispatch(setProgress(20))
+    console.log(profile)
+    console.log(donorRequestFormData)
+    try{
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}api/blood/donor-request/`, donorRequestFormData)
+      if(res.status === 201){
+    dispatch(setProgress(90))
+        dispatch(alert('Your donor request was sent successfully 🙂', 'success'))
+        setShowDonorReqModal(false)
+      }
+    } catch(err){
+      dispatch(alert('Failed to send your donor request 😐', 'danger'))
+
+      console.log(err)
+    }
+    dispatch(setProgress(100))
+  }
+  
 
   return (
     <>
@@ -313,9 +361,9 @@ const SendDonorRequestForm = () => {
         Send Donor Request
       </Button>
       {profile.isCompleted && (
-        <form onSubmit={sendRequest}>
+        // <form onSubmit={sendDonorRequest}>
           <Modal
-            actionText="Request"
+            actionText="Send Donor Request"
             title="Help Request Form"
             lg
             top
@@ -326,36 +374,42 @@ const SendDonorRequestForm = () => {
             buttonInfo
             show={showDonorReqModal}
             setShow={setShowDonorReqModal}
+            formId="donor-request-form"
           >
             <FormWrap>
               <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                }}
+                onSubmit={sendDonorRequest}
+                id="donor-request-form"
               >
                 <InputDiv size={4}>
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Name" type="text" />
+                  <Input id="name" placeholder="Name" type="text" name="name" value={name} onChange={onChange} />
                 </InputDiv>
                 <InputDiv size={5}>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" placeholder="Email" type="email" />
+                  <Input id="email" placeholder="Email" type="email" name="email" value={email} onChange={onChange} />
                 </InputDiv>
                 <InputDiv size={3}>
-                  <Label htmlFor="time">When Do You Need Blood</Label>
-                  <Input id="time" placeholder="Time" type="datetime-local" />
+                  <Label htmlFor="time">When Can You come to donate Blood</Label>
+                  <Input id="time" placeholder="Time" type="datetime-local" name="date_time" value={date_time} onChange={onChange} />
                 </InputDiv>
-                <InputDiv size={6}>
+                <InputDiv size={4}>
                   <Label htmlFor="number">Phone Number</Label>
-                  <Input id="number" placeholder="Phone Number" type="tel" />
+                  <Input id="number" placeholder="Phone Number" type="tel" name="number" value={number}  onChange={onChange}  />
                 </InputDiv>
-                <InputDiv size={6}>
+                <InputDiv size={4}>
                   <Label htmlFor="add-number">Additional Phone Number</Label>
                   <Input
                     id="add-number"
                     placeholder="Additional Phone Number"
                     type="tel"
+                    value={add_number}
+                    name="add_number"
                   />
+                </InputDiv>
+                <InputDiv size={4}>
+                  <Label htmlFor="address">Address (Where do you live)</Label>
+                  <Input id="address" placeholder="Address (Where do you live)" type="text" name="address" value={address} />
                 </InputDiv>
 
                 <InputDiv>
@@ -419,19 +473,18 @@ const SendDonorRequestForm = () => {
                     containerElement={<div style={{ height: `100%` }} />}
                     mapElement={<div style={{ height: `100%` }} />}
                     setCoords={setCoords}
-                    setMark={setMark}
                     click={(e) =>
-                      setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+                      setDonorRequestFormData({...donorRequestFormData, location: {lat: e.latLng.lat(), lng: e.latLng.lng()} })
                     }
                     defaultZoom={17}
                   >
-                    {mark ? <Marker position={mark} /> : ""}
+                    {location ? <Marker position={location} /> : ""}
                   </Map>
                 </InputDiv>
               </Form>
             </FormWrap>
           </Modal>
-        </form>
+        // </form>
       )}
     </>
   );
@@ -459,7 +512,6 @@ const Complete = () => {
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
     onChange: (newValue) => {
-      console.log(`Example 2: new value is ${newValue}`);
     },
   };
 
@@ -514,7 +566,7 @@ const Complete = () => {
   );
 };
 
-const UpdateRequest = () => {
+const UpdateRequest = ({requestData, setRequestData}) => {
   const bloodGroups = [
     { value: "Select", label: "Select" },
     { value: "A+", label: "A+" },
@@ -569,31 +621,10 @@ const UpdateRequest = () => {
   };
 
   // form data submit
-  const defaultRequestFormData = {
-    name: "",
-    email: "",
-    user: auth.user_id,
-    date_time: "",
-    number: "",
-    add_number: "",
-    blood_group: "",
-    location: mark,
-    location_name: "",
-  };
-  const [makeRequestFormData, setMakeRequestFormData] = useState({
-    name: "",
-    email: "",
-    user: auth.user_id,
-    date_time: "",
-    number: "",
-    add_number: "",
-    blood_group: "",
-    location: mark,
-    location_name: "",
-    description: "",
-  });
+  const defaultRequestFormData = requestData
+  const [updateRequestFormData, setUpdateRequestFormData] = useState(defaultRequestFormData);
   useEffect(() => {
-    setMakeRequestFormData({ ...makeRequestFormData, location: mark });
+    setUpdateRequestFormData({ ...updateRequestFormData, location: mark });
   }, [mark]);
 
   const {
@@ -605,38 +636,37 @@ const UpdateRequest = () => {
     blood_group,
     timestamp,
     description,
-  } = makeRequestFormData;
+  } = updateRequestFormData;
 
   const onChange = (e) =>
-    setMakeRequestFormData({
-      ...makeRequestFormData,
+    setUpdateRequestFormData({
+      ...updateRequestFormData,
       [e.target.name]: e.target.value,
     });
 
-  const submitMakeRequest = async (e) => {
+  const submitUpdateRequest = async (e) => {
     e.preventDefault();
     dispatch(setProgress(10));
-    console.log(makeRequestFormData);
     try {
       dispatch(setProgress(20));
 
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/blood/blood-request/`,
-        makeRequestFormData
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/`,
+        updateRequestFormData
       );
       dispatch(setProgress(70));
-      console.log(res);
-      if (res?.status === 201) {
+      if (res?.status === 200) {
         dispatch(
-          alert("Your Blood Request Was Posted Successfully", "success")
+          alert("Your Blood Request Was Updated Successfully", "success")
         );
-        setMakeRequestFormData(defaultRequestFormData);
-        dispatch(setProgress(90));
-        history.push(`/requests/${res.data.id}/`);
+        setUpdateRequestFormData(res.data);
+        setRequestData(res.data);
+        setShowUpdateRequestModal(false);
+        dispatch(setProgress(90)); 
       }
     } catch (err) {
-      console.log(err);
-      dispatch(alert("Failed to post your blood request", "danger"));
+      
+      dispatch(alert("Failed to update your blood request", "danger"));
     }
     dispatch(setProgress(100));
   };
@@ -661,9 +691,11 @@ const UpdateRequest = () => {
         setShow={setShowUpdateRequestModal}
         show={showUpdateRequestModal}
         wrapStyle={{alignItems: "start"}}
+        closeOnOutsideClick={false}
+        formId="update-request-form"
       >
         <FormWrap>
-          <Form onSubmit={submitMakeRequest}>
+          <Form id="update-request-form" onSubmit={submitUpdateRequest}>
             <InputDiv size={4}>
               <Label htmlFor="name">Name</Label>
               <Input
@@ -696,7 +728,7 @@ const UpdateRequest = () => {
                 type="datetime-local"
                 name="date_time"
                 onChange={onChange}
-                value={date_time}
+                value={new Date(date_time).toISOString().substr(0, 16)}
                 disabled={!profile.isCompleted}
               />
             </InputDiv>
@@ -729,7 +761,7 @@ const UpdateRequest = () => {
               <Select
                 className="basic-single"
                 classNamePrefix="select"
-                defaultValue={bloodGroups[0]}
+                defaultValue={bloodGroups.find((group) => group.value === requestData?.blood_group)}
                 disabledValue={bloodGroups[0]}
                 isDisabled={false}
                 isLoading={false}
@@ -740,8 +772,8 @@ const UpdateRequest = () => {
                 options={bloodGroups}
                 styles={customStyles}
                 onChange={(e) =>
-                  setMakeRequestFormData({
-                    ...makeRequestFormData,
+                  setUpdateRequestFormData({
+                    ...updateRequestFormData,
                     blood_group: e.value,
                   })
                 }

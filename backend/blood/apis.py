@@ -11,3 +11,10 @@ User = get_user_model()
 class BloodRequestViewSet(ModelViewSet):
     queryset = BloodRequest.objects.all()
     serializer_class = BloodRequestSerializer 
+    
+    
+
+ 
+class DonorRequestViewSet(ModelViewSet):
+    queryset = DonorRequest.objects.all()
+    serializer_class = DonorRequestSerializer 

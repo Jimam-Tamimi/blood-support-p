@@ -180,6 +180,7 @@ export const EmojiWrap = styled.div`
   left: 39px;
   width: 320px;
   bottom: 46px;
+  ${({showEmojiOption}) => showEmojiOption ? `visibility: visible;` : `visibility: hidden;`}
 `;
 
 export const MessageDiv = styled.div`

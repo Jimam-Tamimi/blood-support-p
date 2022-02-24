@@ -19,6 +19,7 @@ import {
 
 import { useDispatch } from 'react-redux'; 
 import { login } from '../../redux/auth/actions';
+import { useHistory, useLocation } from 'react-router-dom';
 
 
 export default function Login() {
@@ -29,11 +30,21 @@ export default function Login() {
     const [showSubmit, setShowSubmit] = useState(false)
     const { email, password } = formData
     const [checked, setChecked] = useState(true)
+
+    // hooks
     const dispatch = useDispatch()
+    const location = useLocation()
+    const history = useHistory()
+
 
     const onSubmit = e => {
         e.preventDefault(); 
-            dispatch(login(email, password)) 
+            dispatch(login(email, password, () => {
+                const queryString = location.search;
+                const urlParams = new URLSearchParams(queryString);
+                const redirect_url = urlParams.get('redirect_url')
+                history.push(redirect_url)
+            })) 
     }
 
     const changeFormData = e => setformData({ ...formData, [e.target.name]: e.target.value })

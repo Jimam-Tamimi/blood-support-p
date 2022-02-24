@@ -77,8 +77,7 @@ export default function MakeRequest() {
   // form data submit
   const defaultRequestFormData = {
     name: "",
-    email: "",
-    user: auth.user_id,
+    email: "", 
     date_time: "",
     number: "",
     add_number: "",
@@ -88,8 +87,7 @@ export default function MakeRequest() {
   }
   const [makeRequestFormData, setMakeRequestFormData] = useState({
     name: "",
-    email: "",
-    user: auth.user_id,
+    email: "", 
     date_time: "",
     number: "",
     add_number: "",
