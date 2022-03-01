@@ -40,6 +40,7 @@ class BloodRequest(models.Model):
      
 class DonorRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    blood_request = models.ForeignKey(BloodRequest, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, blank=False, null=False)
     date_time = models.DateTimeField(blank=False, null=False)

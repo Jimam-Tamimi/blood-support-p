@@ -75,3 +75,19 @@ export const Action = styled.div`
 `
   
 
+
+export const NotAvailableWrap = styled.div`
+    ${Flex}
+    width: 100%;
+    height: 100%;
+    max-height: calc(100vh - 180px);
+    border: 1px dashed white;
+    border-radius: 2px;
+    * {
+    text-align: center;
+
+        font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    }
+`

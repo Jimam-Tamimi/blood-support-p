@@ -44,4 +44,12 @@ export const NavTab = styled(NavLink)`
       ? `
   `
       : ""}
+  ${({ disabled }) =>
+    disabled
+      ? `
+      pointer-events: none;
+    opacity: 0.4;
+    cursor: not-allowed;
+  `
+      : ""}
 `;

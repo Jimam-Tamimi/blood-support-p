@@ -73,6 +73,7 @@ export const Button = styled.button`
       ? `
       opacity: .5;
     cursor: not-allowed;
+    pointer-events: none;
       `
       : ""}
 
