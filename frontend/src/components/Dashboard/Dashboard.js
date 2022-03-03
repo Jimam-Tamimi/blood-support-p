@@ -31,7 +31,7 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
     const profile = useSelector(state => state.profile)
     
     
-    const [dashLinks, setDashLinks] = useState([
+    const dashLinks = [
         {to:"/", name: 'Dashboard', icon: AiFillDashboard,exact: true, count:null },
         {to:"/help-people/", name: 'Help People', icon:FaHandsHelping,exact: true, count:null },
         {to:"/make-request/", name: 'Make Request', icon:AiOutlineForm,exact: true, count:null },
@@ -42,21 +42,12 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
         {to:"/notifications/", name: 'Notifications', icon:IoMdNotificationsOutline,exact: true, count:null },
         {to:"/favorites/", name: 'Favorites', icon:MdFavoriteBorder,exact: true, count:null },
 
-        {to:"/profile/", name: 'Profile', icon:CgProfile,exact: false, count:null },
+        {to:"/profile/", name: 'Profile', icon:CgProfile,exact: false, count:profile.isCompleted?null: '!' },
 
         {to:"/settings/", name: 'Settings', icon:FiSettings,exact: true, count:null },
-    ])
+    ]
  
-    useEffect(() => {
-        setDashLinks(dashLinks.map(link => {
-            if(link.name === 'Profile'){
-                if(!profile.isCompleted){
-                    link.count = '!'
-                }
-            }
-            return link
-        }))
-    }, [profile])
+ 
     
     
 

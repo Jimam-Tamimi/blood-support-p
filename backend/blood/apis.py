@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response  import Response
 from rest_framework import status
+# from rest_framework.permissions import 
+
+from account.models import Profile
+from account.serializers import ProfileSerializer
 from .serializers import *
 from .models import *
 
@@ -26,10 +30,24 @@ class BloodRequestViewSet(ModelViewSet):
             
  
 class DonorRequestViewSet(ModelViewSet):
-    queryset = DonorRequest.objects.all()
+    queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
+    
+
+    def list(self, request, *args, **kwargs):
+        if(request.user.is_admin):
+            return super().list(request, *args, **kwargs)
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to view this page'}, status=status.HTTP_401_UNAUTHORIZED)
 
     def create(self, request, *args, **kwargs):
+        try:
+            if(not Profile.objects.get(user=request.user).isCompleted):
+                return Response({'success': False, 'message': 'You must complete your profile before sending a donor request'}, status=status.HTTP_400_BAD_REQUEST)
+        except Profile.DoesNotExist:
+            return Response({'success': False, 'message': 'You must complete your profile before sending a donor request'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        
         if DonorRequest.objects.filter(blood_request=request.data['blood_request'], user=request.user).exists():
             return Response({'success': False, 'error': 'You have already sent a donor request'}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -37,8 +55,8 @@ class DonorRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'You can\'t send a donor request to your own blood request'}, status=status.HTTP_400_BAD_REQUEST) 
         return super().create(request, *args, **kwargs)
     
-    @action(detail=False, methods=['get'], url_path='get-my-donor-request')
-    def getMyDonorRequest(self, request):
+    @action(detail=False, methods=['get'], url_path='get-my-donor-request-for-blood-request')
+    def getMyDonorRequestForBloodRequest(self, request):
         try:
             bloodRequest = BloodRequest.objects.get(id=request.GET['bloodRequestId'])
         except BloodRequest.DoesNotExist:
@@ -49,3 +67,26 @@ class DonorRequestViewSet(ModelViewSet):
             return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'You have not sent any donor request'}, status=status.HTTP_404_NOT_FOUND)
+
+    
+    @action(detail=False, methods=['get'], url_path='get-donor-requests-for-my-blood-request')
+    def getDonorRequestsForMyBloodRequest(self, request):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=request.GET['blood_request_id'])
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        donorRequests = DonorRequest.objects.filter(blood_request=bloodRequest).order_by('-timestamp')
+        data = DonorRequestSerializer(donorRequests, many=True).data
+        for d in data:
+            print(d['user']['id'])
+            try:
+                profile = Profile.objects.get(user=d['user']['id'])
+                if(profile.isCompleted):
+                    d['profile'] = ProfileSerializer(profile).data
+                else:
+                    data.remove(d)
+            except Profile.DoesNotExist:
+                data.remove(d)
+        
+        return Response(data, status=status.HTTP_200_OK) 

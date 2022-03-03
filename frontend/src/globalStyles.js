@@ -78,11 +78,18 @@ const GlobalStyle = createGlobalStyle`
   a{
       text-decoration: none;
       color: var(--secendory-text-color);
+      &:hover{
+        .profile-link-name{
+         text-decoration: underline;
+        }
+      }
   }
   p, label, button, input, textarea, select{    
     color: var(--secendory-text-color);
 
   }
+
+  
   
   @media only screen and (min-width: 768px){
       body{

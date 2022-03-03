@@ -78,7 +78,7 @@ export default function Message({id, name, image, profileId}) {
 
                 </MessagesDiv>
                 <SendMessageDiv>
-                    <EmojiWrap ref={refCont} show={true}>
+                    <EmojiWrap ref={refCont} show={showEmojiOption}>
                         <Transition show={showEmojiOption} fade scale>
                             <Picker onClick={(emoji, e) => {setMessage(message + emoji.native)}} style={{position: "relative",  width: "unset" }} set='facebook' />
                         </Transition>

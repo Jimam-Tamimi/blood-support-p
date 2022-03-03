@@ -89,7 +89,7 @@ function App() {
         <DesignConfig>
           <Layout>
             <PrivateRoute>
-              <Route path="/" component={Home} />
+              <Route exact path="/" component={Home} />
               <Route path="/make-request/" component={MakeRequest} />
               <Route path="/help-people/" component={HelpPeople} />
               <Route path="/requests/:bloodRequestId/" component={Request} />

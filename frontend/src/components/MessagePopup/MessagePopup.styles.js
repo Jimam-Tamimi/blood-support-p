@@ -174,9 +174,11 @@ export const EmojiWrap = styled.div`
     ${({show}) => show?`
     transform: scale(1);
     opacity: 1;
+    visibility: visible;
     `:`
     transform: scale(0);
     opacity: 0;
+    visibility: hidden;
     `}
 `
 

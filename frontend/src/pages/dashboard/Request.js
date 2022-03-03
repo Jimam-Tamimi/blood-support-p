@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Route, Link, useHistory } from "react-router-dom";
+import { Route, Link, useHistory, useLocation } from "react-router-dom";
 import "../../assets/css/transitions.css";
 import { Autocomplete } from "@react-google-maps/api";
 import { Marker } from "react-google-maps";
@@ -65,7 +65,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
-import { getCurrentLocation, getProfileData } from "../../helpers";
+import { calcDistance, getCurrentLocation, getProfileData } from "../../helpers";
 import Select from "react-select";
 import Moment from "react-moment";
 
@@ -94,7 +94,8 @@ export default function Request({ match }) {
         dispatch(setProgress(90));
       }
     } catch (error) {
-      if (error.response.status === 404) {
+      console.log(error);
+      if (error?.response?.status === 404) {
         dispatch(alert("This blood request is not available 😒", "danger"));
         setRequestData("404_NOT_AVAILABLE");
       } else {
@@ -119,7 +120,7 @@ export default function Request({ match }) {
             return true;
           }
         }
-      } catch (err) {}
+      } catch (err) { }
     }
     return false;
   };
@@ -130,8 +131,7 @@ export default function Request({ match }) {
         <NavTab
           activeClassName="active"
           exact
-          to={`/requests/${match.params.bloodRequestId}/`}
-        >
+          to={`/requests/${match.params.bloodRequestId}/`}>
           Request
         </NavTab>
 
@@ -139,8 +139,7 @@ export default function Request({ match }) {
           <NavTab
             activeClassName="active"
             exact
-            to={`/requests/${match.params.bloodRequestId}/donors/`}
-          >
+            to={`/requests/${match.params.bloodRequestId}/donors/`}>
             Donor Requests
           </NavTab>
         ) : (
@@ -149,8 +148,7 @@ export default function Request({ match }) {
               activeClassName="active"
               exact
               to={`/requests/${match.params.bloodRequestId}/donor-request/`}
-              disabled={requestData === "404_NOT_AVAILABLE"}
-            >
+              disabled={requestData === "404_NOT_AVAILABLE"}>
               Your Donor Request
             </NavTab>
           )
@@ -172,19 +170,12 @@ export default function Request({ match }) {
           path="/requests/:bloodRequestId/donors/"
           component={DonorRequests}
         />
+      ) : requestData && requestData !== "404_NOT_AVAILABLE" ? (
+        <Route exact path="/requests/:bloodRequestId/donor-request/">
+          <YourDonorRequest bloodRequestId={match.params.bloodRequestId} />
+        </Route>
       ) : (
-        requestData && requestData !== '404_NOT_AVAILABLE' ? (
-          <Route
-            exact
-            path="/requests/:bloodRequestId/donor-request/"
-          >
-            <YourDonorRequest 
-              bloodRequestId={match.params.bloodRequestId}
-
-            />
-            
-          </Route>
-        ):''
+        ""
       )}
     </>
   );
@@ -231,15 +222,14 @@ const RequestDetails = ({
                 <div style={{ height: `350px`, width: "100%" }} />
               }
               mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-              defaultZoom={14}
-            >
+              defaultZoom={14}>
               {<Marker position={requestData?.location} />}
             </Map>
           </DetailsMap>
           <AllDetails>
             <DetailsDiv>
               <DetailHeader>Posted By: </DetailHeader>
-              <Profile to={`/profile/${requestData?.user}/`}>
+              <Profile to={`/profile/${requestData?.user?.id}/`}>
                 <ProfileImg
                   size="55px"
                   style={{ marginRight: "10px" }}
@@ -254,7 +244,11 @@ const RequestDetails = ({
               </Detail>
               <Detail>
                 <DetailField>Time: </DetailField>
-                <DetailFieldValue><Moment format="DD/MM/YYYY hh:MM A" >{requestData?.date_time}</Moment> </DetailFieldValue>
+                <DetailFieldValue>
+                  <Moment format="DD/MM/YYYY hh:MM A">
+                    {requestData?.date_time}
+                  </Moment>{" "}
+                </DetailFieldValue>
               </Detail>
               <Detail>
                 <DetailField>Blood Group: </DetailField>
@@ -308,8 +302,7 @@ const RequestDetails = ({
                     width: "max-content",
                     right: "6px",
                     top: "20px",
-                  }}
-                >
+                  }}>
                   10 Request Got
                 </Badge>
               </Action>
@@ -371,11 +364,7 @@ const SendDonorRequestForm = ({
         ...donorRequestFormData,
         location: { lat, lng },
       });
-    } catch {}
-  };
-
-  const sendRequest = (e) => {
-    e.preventDefault();
+    } catch { }
   };
 
   // check if user have already sent a request
@@ -396,19 +385,21 @@ const SendDonorRequestForm = ({
   const sendDonorRequest = async (e) => {
     e.preventDefault();
     dispatch(setProgress(20));
-    console.log(profile);
-    console.log(donorRequestFormData);
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}api/blood/donor-request/`,
-        { ...donorRequestFormData, blood_request: bloodRequestId }
+        {
+          ...donorRequestFormData,
+          blood_request: bloodRequestId,
+        }
       );
+
       if (res.status === 201) {
         dispatch(setProgress(90));
         dispatch(
           alert("Your donor request was sent successfully 🙂", "success")
         );
-        await checkHaveSentDonorRequest();
+        setHaveSentDonorRequest(true);
         setShowDonorReqModal(false);
       }
     } catch (err) {
@@ -421,7 +412,7 @@ const SendDonorRequestForm = ({
         dispatch(alert("Failed to send your donor request 😐", "danger"));
       }
 
-      console.log(err);
+      // console.log(err);
     }
     dispatch(setProgress(100));
   };
@@ -432,10 +423,8 @@ const SendDonorRequestForm = ({
         disabled={!profile.isCompleted || haveSentDonorRequest}
         onClick={(e) => {
           setShowDonorReqModal(true);
-          console.log(haveSentDonorRequest);
         }}
-        info
-      >
+        info>
         {haveSentDonorRequest ? "Donor Request Sent" : "Send Donor Request"}
       </Button>
       {profile.isCompleted || !haveSentDonorRequest ? (
@@ -452,8 +441,7 @@ const SendDonorRequestForm = ({
           buttonInfo
           show={showDonorReqModal}
           setShow={setShowDonorReqModal}
-          formId="donor-request-form"
-        >
+          formId="donor-request-form">
           <FormWrap>
             <Form onSubmit={sendDonorRequest} id="donor-request-form">
               <InputDiv size={4}>
@@ -464,6 +452,7 @@ const SendDonorRequestForm = ({
                   type="text"
                   name="name"
                   value={name}
+                  required
                   onChange={onChange}
                 />
               </InputDiv>
@@ -475,6 +464,7 @@ const SendDonorRequestForm = ({
                   type="email"
                   name="email"
                   value={email}
+                  required
                   onChange={onChange}
                 />
               </InputDiv>
@@ -487,6 +477,7 @@ const SendDonorRequestForm = ({
                   name="date_time"
                   value={date_time}
                   onChange={onChange}
+                  required
                 />
               </InputDiv>
               <InputDiv size={4}>
@@ -497,6 +488,7 @@ const SendDonorRequestForm = ({
                   type="tel"
                   name="number"
                   value={number}
+                  required
                   onChange={onChange}
                 />
               </InputDiv>
@@ -507,6 +499,8 @@ const SendDonorRequestForm = ({
                   placeholder="Additional Phone Number"
                   type="tel"
                   value={add_number}
+                  onChange={onChange}
+                  required
                   name="add_number"
                 />
               </InputDiv>
@@ -517,20 +511,22 @@ const SendDonorRequestForm = ({
                   placeholder="Address (Where do you live)"
                   type="text"
                   name="address"
+                  onChange={onChange}
+                  required
                   value={address}
                 />
               </InputDiv>
 
               <InputDiv>
                 <Label htmlFor="add-number">Short Description</Label>
-                <TextArea placeholder="Short Description"></TextArea>
+
+                <TextArea required placeholder="Short Description"></TextArea>
               </InputDiv>
 
               <InputDiv
                 flex
                 style={{ justifyContent: "space-between" }}
-                size={12}
-              >
+                size={12}>
                 <Button
                   type="button"
                   info
@@ -538,15 +534,13 @@ const SendDonorRequestForm = ({
                   style={{ position: "relative", top: "14px" }}
                   onClick={(e) => {
                     setCurrentLocation();
-                  }}
-                >
+                  }}>
                   Get Current Location
                 </Button>
 
                 <Autocomplete
                   onLoad={(autoC) => setAutoComplete(autoC)}
-                  onPlaceChanged={onPlaceChanged}
-                >
+                  onPlaceChanged={onPlaceChanged}>
                   <>
                     <Label htmlFor="add-number">
                       Current Location of Donor *
@@ -572,10 +566,9 @@ const SendDonorRequestForm = ({
                   boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
                 }}
                 height="400px"
-                size={12}
-              >
+                size={12}>
                 <Map
-                  coords={{ lat: 23, lng: 23 }}
+                  coords={coords}
                   isMarkerShown
                   googleMapURL=" "
                   loadingElement={<div style={{ height: `100%` }} />}
@@ -588,9 +581,8 @@ const SendDonorRequestForm = ({
                       location: { lat: e.latLng.lat(), lng: e.latLng.lng() },
                     })
                   }
-                  defaultZoom={17}
-                >
-                  {location ? <Marker position={{ lat: 23, lng: 23 }} /> : ""}
+                  defaultZoom={17}>
+                  {location ? <Marker position={location} /> : ""}
                 </Map>
               </InputDiv>
             </Form>
@@ -625,15 +617,14 @@ const Complete = () => {
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
-    onChange: (newValue) => {},
+    onChange: (newValue) => { },
   };
 
   return (
     <>
       <Button
         disabled={!profile.isCompleted}
-        onClick={(e) => setShowCompleteModal(true)}
-      >
+        onClick={(e) => setShowCompleteModal(true)}>
         Complete
       </Button>
       {profile.isCompleted && (
@@ -647,14 +638,12 @@ const Complete = () => {
             fade
             scale
             setShow={setShowCompleteModal}
-            show={showCompleteModal}
-          >
+            show={showCompleteModal}>
             <FormWrap>
               <Form
                 onSubmit={(e) => {
                   e.preventDefault();
-                }}
-              >
+                }}>
                 <InputDiv>
                   <Label htmlFor="add-number">
                     Express your experience with this Donor
@@ -693,7 +682,6 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   ];
   // states
   const [autoComplete, setAutoComplete] = useState(null);
-  const [coords, setCoords] = useState({});
   const [mark, setMark] = useState(false);
 
   const [showUpdateRequestModal, setShowUpdateRequestModal] = useState(false);
@@ -707,10 +695,6 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   function setCurrentLocation() {
     navigator.geolocation.getCurrentPosition(
       (location) => {
-        setCoords({
-          lat: location.coords.latitude,
-          lng: location.coords.longitude,
-        });
         setMark({
           lat: location.coords.latitude,
           lng: location.coords.longitude,
@@ -729,8 +713,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
       const lat = autoComplete.getPlace().geometry.location.lat();
       const lng = autoComplete.getPlace().geometry.location.lng();
       setMark({ lat, lng });
-      setCoords({ lat, lng });
-    } catch {}
+    } catch { }
   };
 
   // form data submit
@@ -790,8 +773,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
       <Button
         disabled={!profile.isCompleted}
         onClick={(e) => setShowUpdateRequestModal(true)}
-        info
-      >
+        info>
         Update
       </Button>
       <Modal
@@ -806,8 +788,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
         show={showUpdateRequestModal}
         wrapStyle={{ alignItems: "start" }}
         closeOnOutsideClick={false}
-        formId="update-request-form"
-      >
+        formId="update-request-form">
         <FormWrap>
           <Form id="update-request-form" onSubmit={submitUpdateRequest}>
             <InputDiv size={4}>
@@ -906,15 +887,13 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
                 name="description"
                 value={description}
                 height="200px"
-                placeholder="Description"
-              ></TextArea>
+                placeholder="Description"></TextArea>
             </InputDiv>
 
             <InputDiv
               flex
               style={{ justifyContent: "space-between" }}
-              size={12}
-            >
+              size={12}>
               <Button
                 type="button"
                 info
@@ -922,15 +901,13 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
                 style={{ position: "relative", top: "14px" }}
                 onClick={(e) => {
                   setCurrentLocation();
-                }}
-              >
+                }}>
                 Current Location
               </Button>
 
               <Autocomplete
                 onLoad={(autoC) => setAutoComplete(autoC)}
-                onPlaceChanged={onPlaceChanged}
-              >
+                onPlaceChanged={onPlaceChanged}>
                 <>
                   <Label htmlFor="add-number">Where do you need blood? *</Label>
                   <Input
@@ -954,22 +931,19 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
                 boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
               }}
               height="400px"
-              size={12}
-            >
+              size={12}>
               <Map
-                coords={coords}
+                coords={mark}
                 isMarkerShown
                 googleMapURL=" "
                 loadingElement={<div style={{ height: `100%` }} />}
                 containerElement={<div style={{ height: `100%` }} />}
                 mapElement={<div style={{ height: `100%` }} />}
-                setCoords={setCoords}
                 setMark={setMark}
                 click={(e) =>
                   setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
                 }
-                defaultZoom={17}
-              >
+                defaultZoom={17}>
                 {mark ? <Marker position={mark} /> : ""}
               </Map>
             </InputDiv>
@@ -980,21 +954,18 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   );
 };
 
-const DonorRequests = () => {
-  // eslint-disable-next-line
+const DonorRequests = ({ match }) => {
+  // hooks
+  const location = useLocation();
+  const dispatch = useDispatch();
+
   const [donorRequestData, setDonorRequestData] = useState([]);
   const [showDonorRequest, setShowDonorRequest] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
-  const [showEmail, setShowEmail] = useState(true);
-  const report = () => {
-    // call api to report this request
-    console.log("report request");
-  };
 
-  // eslint-disable-next-line
-  const [dropDownOptions, setDropDownOptions] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
-  ]);
+  const [showEmail, setShowEmail] = useState(true);
+
 
   window.addEventListener("resize", (e) => {
     if (window.innerWidth <= 550) {
@@ -1003,26 +974,44 @@ const DonorRequests = () => {
       setShowEmail(true);
     }
   });
-  useEffect(() => {
-    setDonorRequestData([
-      {
-        Name: "Jimam Tamimi",
-        Time: "23 th april 2021",
-        Distance: "2 km",
-      },
-    ]);
+
+  const getDonorRequestsForBloodRequest = async () => {
+    dispatch(setProgress(20))
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/get-donor-requests-for-my-blood-request/`,
+        { params: { blood_request_id: match?.params?.bloodRequestId } }
+      );
+      console.log(res);
+      if (res.status === 200) {
+        setDonorRequestData(res.data);
+        getCurrentLocation((crds) => {
+          setCurrentLocation(crds);
+        });
+    dispatch(setProgress(90))
+      }
+    } catch (error) {
+      dispatch(alert("Failed to fetch donor requests", "danger"));
+    }
+    dispatch(setProgress(100))
+  }
+  
+  useEffect(async () => {
+    getDonorRequestsForBloodRequest()
   }, []);
 
   const showMoreDetails = (id) => {
-    // call the apis
     setShowDonorRequest(true);
-    setDonorRequestMoreDetails({});
+    donorRequestData.map((donorRequest) => donorRequest.id === id && setDonorRequestMoreDetails(donorRequest))
   };
   const onCanvasExit = () => {
     setTimeout(() => {
       setDonorRequestMoreDetails(null);
+      setShowDonorRequest(false);
     }, 450);
   };
+ 
+  
 
   return (
     <>
@@ -1050,115 +1039,52 @@ const DonorRequests = () => {
               {showEmail ? <Th>Email</Th> : ""}
             </Tr>
 
-            <Tr onClick={(e) => showMoreDetails(90)}>
-              <Td>1</Td>
-              <Td>
-                {" "}
-                <Link
-                  style={{ display: "flex", alignItems: "center" }}
-                  to="/user/23/"
-                >
-                  <ProfileImg size="45px" src={logo} />{" "}
-                  <p
-                    style={{
-                      position: "relative",
-                      left: "15px",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Jimam Tamimi
-                  </p>{" "}
-                </Link>{" "}
-              </Td>
-              <Td>2 april 2021 4:30 pm </Td>
-              <Td>2 KM</Td>
-              <Td>01827485748</Td>
-              {showEmail ? <Td>jimam@jimam.com</Td> : ""}
-            </Tr>
+            {donorRequestData.map((donorRequest, index) => (
+              <Tr key={index} onClick={(e) => showMoreDetails(donorRequest.id)}>
+                <Td>{index + 1}</Td>
+                <Td>
+                  {" "}
+                  <Link
+                    style={{ display: "flex", alignItems: "center" }}
+                    to={`/profile/${donorRequest?.user?.id}/`}>
+                    <ProfileImg
+                      size="45px"
+                      src={`${process.env.REACT_APP_MEDIA_URL}${donorRequest?.profile.profile_img}`}
+                    />{" "}
+                    <p
+                    className="profile-link-name"
+                      style={{
+                        position: "relative",
+                        left: "15px",
+                        fontWeight: "600",
+                      }}>
+                      {donorRequest?.profile?.name}
+                    </p>
+                  </Link>
+                </Td>
+                <Td>
+                  <Moment format="DD/MM/YYYY hh:MM A">
+                    {donorRequest?.date_time}
+                  </Moment>
+                </Td>
+                <Td>{calcDistance(donorRequest?.location, currentLocation)} KM</Td>
+                <Td>{donorRequest?.number}</Td>
+                {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
+                  <div className="table-row-badge"> 
+                {/* <Badge sm >ACCEPTED </Badge> */}
+                <Badge sm ><Moment fromNow >{donorRequest.timestamp}</Moment></Badge>
+                  </div>
+                
+              </Tr>
+            ))}
           </HtmlTable>
         </BottomSection>
         <OffCanvas
           onCanvasExit={onCanvasExit}
           setShow={setShowDonorRequest}
-          show={showDonorRequest}
-        >
-          {donorRequestMoreDetails ? (
-            <AllDetails>
-              <DetailsDiv>
-                <DetailHeader>Requested By: </DetailHeader>
-                <Detail>
-                  <Dropdown
-                    style={{ position: "absolute", right: "38px" }}
-                    options={dropDownOptions}
-                  />
-                </Detail>
-                <Detail>
-                  <Link
-                    style={{ display: "flex", alignItems: "center" }}
-                    to="/user/23/"
-                  >
-                    <ProfileImg size="45px" src={logo} />{" "}
-                    <p
-                      style={{
-                        position: "relative",
-                        left: "15px",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Jimam Tamimi
-                    </p>{" "}
-                  </Link>
-                </Detail>
-
-                <DetailHeader>Informations: </DetailHeader>
-                <Detail>
-                  <DetailField>Name: </DetailField>
-                  <DetailFieldValue>Jimam</DetailFieldValue>
-                </Detail>
-                <Detail>
-                  <DetailField>Time: </DetailField>
-                  <DetailFieldValue>24 October 2021 2:30 pm</DetailFieldValue>
-                </Detail>
-                <Detail>
-                  <DetailField>Distance: </DetailField>
-                  <DetailFieldValue>4 KM</DetailFieldValue>
-                </Detail>
-
-                <DetailHeader>Contacts: </DetailHeader>
-                <Detail>
-                  <DetailField>Email: </DetailField>
-                  <DetailFieldValue>jimam@jimam.com</DetailFieldValue>
-                </Detail>
-                <Detail>
-                  <DetailField>Number: </DetailField>
-                  <DetailFieldValue>0199483748</DetailFieldValue>
-                </Detail>
-                <Detail>
-                  <DetailField>Additional Number: </DetailField>
-                  <DetailFieldValue>017384738</DetailFieldValue>
-                </Detail>
-
-                <DetailHeader>Description: </DetailHeader>
-                <Detail>
-                  <DetailFieldValue>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                    Ipsum cumque molestiae asperiores alias maxime! Ea
-                    aspernatur sed libero laudantium odit molestias tempore
-                    deleniti odio perferendis modi? Magnam praesentium impedit
-                    quasi voluptates molestiae ipsam quos cumque sed facere
-                    repellat sapiente sunt, eligendi non animi iusto, quam
-                    consequuntur? Aliquid accusamus quos nostrum.
-                  </DetailFieldValue>
-                </Detail>
-                <DetailHeader>Actions: </DetailHeader>
-                <ButtonDiv>
-                  <Button sm info>
-                    Accept
-                  </Button>
-                  <Button sm>Reject</Button>
-                </ButtonDiv>
-              </DetailsDiv>
-            </AllDetails>
+          show={showDonorRequest}>
+          {donorRequestMoreDetails && showDonorRequest ? (
+            <DonorRequestMoreDetails donorRequestMoreDetails={donorRequestMoreDetails} />
           ) : (
             ""
           )}
@@ -1168,44 +1094,140 @@ const DonorRequests = () => {
   );
 };
 
-const YourDonorRequest = ({bloodRequestId}) => {
-  // eslint-disable-next-line
-  const [myDonorRequestData, setMyDonorRequestData] = useState(null)
+const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
+  const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
+  
+  
+
+  const report = () => {
+    // call api to report this request
+    console.log("report request");
+  };
+
+  const dropDownOptions = [{ name: "Report", icon: FaBan, onClick: report }];
+
+
+  useEffect(() => {
+    getCurrentLocation((crds) => {
+      setCurrentLocation(crds);
+    });
+  
+ 
+  }, [ ])
+  
+  
+  return (
+    <AllDetails>
+      <DetailsDiv>
+        <DetailHeader>Requested By: </DetailHeader>
+        <Detail>
+          <Dropdown
+            style={{ position: "absolute", right: "38px" }}
+            options={dropDownOptions}
+          />
+        </Detail>
+        <Detail>
+          <Link
+            style={{ display: "flex", alignItems: "center" }}
+            to="/user/23/">
+            <ProfileImg size="45px" src={`${process.env.REACT_APP_MEDIA_URL}${donorRequestMoreDetails?.profile?.profile_img}`} />{" "}
+            <p
+              style={{
+                position: "relative",
+                left: "15px",
+                fontWeight: "600",
+              }}>
+              {donorRequestMoreDetails?.profile?.name}
+            </p>{" "}
+          </Link>
+        </Detail>
+
+        <DetailHeader>Informations: </DetailHeader>
+        <Detail>
+          <DetailField>Name: </DetailField>
+          <DetailFieldValue>{donorRequestMoreDetails?.name}</DetailFieldValue>
+        </Detail>
+        <Detail>
+          <DetailField>Time: </DetailField>
+          <DetailFieldValue>
+            <Moment format="DD/MM/YYYY hh:MM A">
+              {donorRequestMoreDetails?.date_time}
+            </Moment>
+          </DetailFieldValue>
+        </Detail>
+        <Detail>
+          <DetailField>Distance: </DetailField>
+          <DetailFieldValue>{calcDistance(donorRequestMoreDetails?.location, currentLocation)} KM</DetailFieldValue>
+        </Detail>
+
+        <DetailHeader>Contacts: </DetailHeader>
+        <Detail>
+          <DetailField>Email: </DetailField>
+          <DetailFieldValue>{donorRequestMoreDetails?.email}</DetailFieldValue>
+        </Detail>
+        <Detail>
+          <DetailField>Number: </DetailField>
+          <DetailFieldValue>{donorRequestMoreDetails?.number}</DetailFieldValue>
+        </Detail>
+        <Detail>
+          <DetailField>Additional Number: </DetailField>
+          <DetailFieldValue>{donorRequestMoreDetails?.add_number}</DetailFieldValue>
+        </Detail>
+
+        <DetailHeader>Description: </DetailHeader>
+        <Detail>
+          <DetailFieldValue>{donorRequestMoreDetails?.description}</DetailFieldValue>
+        </Detail>
+        <DetailHeader>Actions: </DetailHeader>
+        <ButtonDiv>
+          <Button sm info>
+            Accept
+          </Button>
+          <Button sm>Reject</Button>
+        </ButtonDiv>
+      </DetailsDiv>
+    </AllDetails>
+  )
+}
+
+
+
+
+
+const YourDonorRequest = ({ bloodRequestId }) => {
+  // hooks
+  const dispatch = useDispatch();
+  const history = useHistory();
+
+  const [myDonorRequestData, setMyDonorRequestData] = useState(null);
   const [autoComplete, setAutoComplete] = useState(null);
   const [coords, setCoords] = useState({ lat: 24.0077202, lng: 89.2429551 });
   const [mark, setMark] = useState(false);
   function setCurrentLocation() {
-    navigator.geolocation.getCurrentPosition(
-      (location) => {
-        setCoords({
-          lat: location.coords.latitude,
-          lng: location.coords.longitude,
-        });
-        setMark({
-          lat: location.coords.latitude,
-          lng: location.coords.longitude,
-        });
-      },
-      () => console.log("error :)"),
-      { timeout: 30000 }
-    );
+    getCurrentLocation((coords) => {
+      setCoords(coords);
+      setMark(coords);
+    });
   }
-  useEffect( async () => {
+  useEffect(async () => {
     setCurrentLocation();
 
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}api/blood/donor-request/get-my-donor-request/`, {params: {bloodRequestId: bloodRequestId}});
-      console.log(res)
-      if(res.status === 200){
-        setMyDonorRequestData(res.data)
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/get-my-donor-request-for-blood-request/`,
+        {
+          params: { bloodRequestId: bloodRequestId },
+        }
+      );
+      if (res.status === 200) {
+        setMyDonorRequestData(res.data);
       }
     } catch (error) {
-      if(error.response.status === 404){
-        setMyDonorRequestData("404_NOT_FOUND")
+      console.log(error);
+      if (error?.response?.status === 404) {
+        setMyDonorRequestData("404_NOT_FOUND");
       }
-      console.log(error.response)
     }
-
   }, []);
 
   const onPlaceChanged = () => {
@@ -1214,212 +1236,391 @@ const YourDonorRequest = ({bloodRequestId}) => {
       const lng = autoComplete.getPlace().geometry.location.lng();
       setMark({ lat, lng });
       setCoords({ lat, lng });
-    } catch {}
+    } catch { }
   };
 
-  // const {name, time, bloodGroup, number, addNumber, email, description, cords} = details
+  // drop down options
 
-  const upDateRequest = (e) => {
+  const deleteDonorRequest = async () => {
+    dispatch(setProgress(20));
+    try {
+      const res = await axios.delete(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/${myDonorRequestData?.id}/`
+      );
+      console.log(res);
+      if (res.status === 204) {
+        dispatch(alert("Your donor request has been deleted successfully"));
+        history.push("/requests/" + myDonorRequestData?.blood_request + "/");
+        dispatch(setProgress(80));
+        setMyDonorRequestData(null);
+      }
+    } catch (error) {
+      console.log(error);
+      if (error?.response?.status === 404) {
+        dispatch(alert("this donor request is not available", "danger"));
+      } else {
+        dispatch(alert("something went wrong", "danger"));
+      }
+    }
+    dispatch(setProgress(100));
+  };
+
+  const dropDownOption = [
+    { name: "Delete", icon: FaBan, onClick: deleteDonorRequest },
+  ];
+
+  return (
+    <>
+      {myDonorRequestData !== "404_NOT_FOUND" && myDonorRequestData ? (
+        <>
+          <DetailsMap>
+            <Map
+              coords={myDonorRequestData?.location}
+              isMarkerShown
+              googleMapURL=" "
+              loadingElement={
+                <div style={{ height: `350px`, width: "100%" }} />
+              }
+              containerElement={
+                <div style={{ height: `350px`, width: "100%" }} />
+              }
+              mapElement={<div style={{ height: `350px`, width: "100%" }} />}
+              defaultZoom={14}>
+              {<Marker position={myDonorRequestData?.location} />}
+            </Map>
+          </DetailsMap>
+          <AllDetails>
+            <DetailsDiv>
+              <DetailHeader>Informations: </DetailHeader>
+              <Detail>
+                <DetailField>Name: </DetailField>
+                <DetailFieldValue>{myDonorRequestData?.name}</DetailFieldValue>
+              </Detail>
+              <Detail>
+                <DetailField>Time: </DetailField>
+                <DetailFieldValue>
+                  <Moment format="DD/MM/YYYY hh:MM A">
+                    {myDonorRequestData?.date_time}
+                  </Moment>{" "}
+                </DetailFieldValue>
+              </Detail>
+
+              <Detail>
+                <DetailField>Number: </DetailField>
+                <DetailFieldValue>
+                  {myDonorRequestData?.number}
+                </DetailFieldValue>
+              </Detail>
+              <Detail>
+                <DetailField>Additional Number: </DetailField>
+                <DetailFieldValue>
+                  {myDonorRequestData?.number}
+                </DetailFieldValue>
+              </Detail>
+              <Detail>
+                <DetailField>Email: </DetailField>
+                <DetailFieldValue>{myDonorRequestData?.email}</DetailFieldValue>
+              </Detail>
+
+              <DetailHeader>Description: </DetailHeader>
+              <Detail>
+                <DetailFieldValue>
+                  {myDonorRequestData?.description}
+                </DetailFieldValue>
+              </Detail>
+              <ButtonDiv>
+                <UpdateDonorRequest
+                  myDonorRequestData={myDonorRequestData}
+                  setMyDonorRequestData={setMyDonorRequestData}
+                />
+              </ButtonDiv>
+            </DetailsDiv>
+            <ActionDiv>
+              <Action>
+                <Dropdown options={dropDownOption} />
+              </Action>
+              <Action>
+                <Badge
+                  info
+                  style={{
+                    position: "absolute",
+                    width: "max-content",
+                    right: "6px",
+                    top: "20px",
+                  }}>
+                  10 Request Got
+                </Badge>
+              </Action>
+              <Action>
+                <Badge
+                  info
+                  style={{
+                    position: "absolute",
+                    width: "max-content",
+                    right: "6px",
+                    top: "20px",
+                  }}>
+                  10 Request Got
+                </Badge>
+              </Action>
+            </ActionDiv>
+          </AllDetails>
+        </>
+      ) : (
+        <NotAvailableWrap>
+          <h2>you haven't sent any donor request!</h2>
+        </NotAvailableWrap>
+      )}
+    </>
+  );
+};
+
+const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
+  const [showUpdateDonorRequestModal, setShowUpdateDonorRequestModal] =
+    useState(false);
+  const [autoComplete, setAutoComplete] = useState(null);
+
+  const [donorRequestFormData, setDonorRequestFormData] =
+    useState(myDonorRequestData);
+
+  const {
+    name,
+    email,
+    date_time,
+    address,
+    number,
+    add_number,
+    location,
+    description,
+  } = donorRequestFormData;
+  const [coords, setCoords] = useState(location);
+
+  // hooks
+  const profile = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+
+  function setCurrentLocation() {
+    getCurrentLocation((crds) => {
+      setDonorRequestFormData({ ...donorRequestFormData, location: crds });
+      setCoords(crds);
+    });
+  }
+  const onPlaceChanged = () => {
+    try {
+      const lat = autoComplete.getPlace().geometry.location.lat();
+      const lng = autoComplete.getPlace().geometry.location.lng();
+      setDonorRequestFormData({
+        ...donorRequestFormData,
+        location: { lat, lng },
+      });
+      setCoords({ lat, lng });
+    } catch { }
+  };
+
+  const onChange = (e) =>
+    setDonorRequestFormData({
+      ...donorRequestFormData,
+      [e.target.name]: e.target.value,
+    });
+
+  useEffect(() => { }, []);
+
+  const upDateRequest = async (e) => {
     e.preventDefault();
+    dispatch(setProgress(20));
+    try {
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/${donorRequestFormData.id}/`,
+        donorRequestFormData
+      );
+
+      if (res?.status === 200) {
+        dispatch(setProgress(90));
+        setMyDonorRequestData(res.data);
+        dispatch(
+          alert("Your donor request was updates successfully 🙂", "success")
+        );
+        setShowUpdateDonorRequestModal(false);
+      }
+    } catch (err) {
+      if (
+        err?.response?.status === 400 &&
+        err?.response?.data?.success === false
+      ) {
+        dispatch(alert(err?.response?.data?.error, "danger"));
+      } else {
+        dispatch(alert("Failed to update your donor request 😐", "danger"));
+      }
+
+      // console.log(err);
+    }
+    dispatch(setProgress(100));
   };
 
   return (
     <>
-    {
-      myDonorRequestData !== '404_NOT_FOUND' ? (
-        <>
-      <DetailsMap>
-        <Map
-          coords={myDonorRequestData?.location}
-          isMarkerShown
-          googleMapURL=" "
-          loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
-          containerElement={<div style={{ height: `350px`, width: "100%" }} />}
-          mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-          defaultZoom={14}
-        >
-          {<Marker position={myDonorRequestData?.location} />}
-        </Map>
-      </DetailsMap>
-      <AllDetails>
-        <DetailsDiv>
-          <DetailHeader>Informations: </DetailHeader>
-          <Detail>
-            <DetailField>Name: </DetailField>
-            <DetailFieldValue>{myDonorRequestData?.name}</DetailFieldValue>
-          </Detail>
-          <Detail>
-            <DetailField>Time: </DetailField>
-            <DetailFieldValue><Moment format="DD/MM/YYYY hh:MM A" >{myDonorRequestData?.date_time}</Moment> </DetailFieldValue>
-          </Detail>
- 
-          <Detail>
-            <DetailField>Number: </DetailField>
-            <DetailFieldValue>{myDonorRequestData?.number}</DetailFieldValue>
-          </Detail>
-          <Detail>
-            <DetailField>Additional Number: </DetailField>
-            <DetailFieldValue>{myDonorRequestData?.number}</DetailFieldValue>
-          </Detail>
-          <Detail>
-            <DetailField>Email: </DetailField>
-            <DetailFieldValue>{myDonorRequestData?.email}</DetailFieldValue>
-          </Detail>
+      <Button onClick={() => setShowUpdateDonorRequestModal(true)}>
+        Update
+      </Button>
+      <form onSubmit={upDateRequest}>
+        <Modal
+          actionText="Update"
+          title="Update Request Form"
+          lg
+          info
+          btnText="Update"
+          show={showUpdateDonorRequestModal}
+          wrapStyle={{ alignItems: "baseline" }}
+          setShow={setShowUpdateDonorRequestModal}>
+          <FormWrap>
+            <Form
+              onSubmit={(e) => {
+                e.preventDefault();
+              }}>
+              <InputDiv size={4}>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Name"
+                  type="text"
+                  name="name"
+                  onChange={onChange}
+                  value={name}
+                />
+              </InputDiv>
+              <InputDiv size={5}>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="Email"
+                  type="email"
+                  name="email"
+                  onChange={onChange}
+                  value={email}
+                />
+              </InputDiv>
+              <InputDiv size={3}>
+                <Label htmlFor="time">When Do You Need Blood</Label>
+                <Input
+                  id="time"
+                  placeholder="Time"
+                  type="datetime-local"
+                  name="date_time"
+                  onChange={onChange}
+                  value={new Date(date_time).toISOString().substr(0, 16)}
+                />
+              </InputDiv>
+              <InputDiv size={4}>
+                <Label htmlFor="number">Phone Number</Label>
+                <Input
+                  id="number"
+                  placeholder="Phone Number"
+                  type="tel"
+                  name="number"
+                  onChange={onChange}
+                  value={number}
+                />
+              </InputDiv>
+              <InputDiv size={4}>
+                <Label htmlFor="add-number">Additional Phone Number</Label>
+                <Input
+                  id="add-number"
+                  placeholder="Additional Phone Number"
+                  type="tel"
+                  name="add_number"
+                  onChange={onChange}
+                  value={add_number}
+                />
+              </InputDiv>
+              <InputDiv size={4}>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  placeholder="Address"
+                  type="text"
+                  name="address"
+                  onChange={onChange}
+                  value={address}
+                />
+              </InputDiv>
 
-          <DetailHeader>Description: </DetailHeader>
-          <Detail>
-            <DetailFieldValue>{myDonorRequestData?.description}</DetailFieldValue>
-          </Detail>
-          <ButtonDiv>
-            <form onSubmit={upDateRequest}>
-              <Modal
-                actionText="Update"
-                title="Update Request Form"
-                lg
-                info
-                btnText="Update"
-              >
-                <FormWrap>
-                  <Form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
-                    <InputDiv size={4}>
-                      <Label htmlFor="name">Name</Label>
-                      <Input id="name" placeholder="Name" type="text" />
-                    </InputDiv>
-                    <InputDiv size={5}>
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" placeholder="Email" type="email" />
-                    </InputDiv>
-                    <InputDiv size={3}>
-                      <Label htmlFor="time">When Do You Need Blood</Label>
-                      <Input
-                        id="time"
-                        placeholder="Time"
-                        type="datetime-local"
-                      />
-                    </InputDiv>
-                    <InputDiv size={6}>
-                      <Label htmlFor="number">Phone Number</Label>
-                      <Input
-                        id="number"
-                        placeholder="Phone Number"
-                        type="tel"
-                      />
-                    </InputDiv>
-                    <InputDiv size={6}>
-                      <Label htmlFor="add-number">
-                        Additional Phone Number
-                      </Label>
-                      <Input
-                        id="add-number"
-                        placeholder="Additional Phone Number"
-                        type="tel"
-                      />
-                    </InputDiv>
+              <InputDiv>
+                <Label htmlFor="add-number">Short Description</Label>
+                <TextArea
+                  placeholder="Short Description"
+                  name="description"
+                  onChange={onChange}
+                  value={description}>
+                  {description}
+                </TextArea>
+              </InputDiv>
 
-                    <InputDiv>
-                      <Label htmlFor="add-number">Short Description</Label>
-                      <TextArea placeholder="Short Description"></TextArea>
-                    </InputDiv>
+              <InputDiv
+                flex
+                style={{ justifyContent: "space-between" }}
+                size={12}>
+                <Button
+                  type="button"
+                  info
+                  blockOnSmall
+                  style={{ position: "relative", top: "14px" }}
+                  onClick={(e) => {
+                    setCurrentLocation();
+                  }}>
+                  Get Current Location
+                </Button>
 
-                    <InputDiv
-                      flex
-                      style={{ justifyContent: "space-between" }}
-                      size={12}
-                    >
-                      <Button
-                        type="button"
-                        info
-                        blockOnSmall
-                        style={{ position: "relative", top: "14px" }}
-                        onClick={(e) => {
-                          setCurrentLocation();
-                        }}
-                      >
-                        Get Current Location
-                      </Button>
-
-                      <Autocomplete
-                        onLoad={(autoC) => setAutoComplete(autoC)}
-                        onPlaceChanged={onPlaceChanged}
-                      >
-                        <>
-                          <Label htmlFor="add-number">
-                            Current Location of Donor *
-                          </Label>
-                          <Input
-                            id="places"
-                            placeholder="Search Places..."
-                            type="text"
-                            onKeyDown={(e) => {
-                              if (e.keyCode === 13) {
-                                e.preventDefault();
-                              } else {
-                                return true;
-                              }
-                            }}
-                          />
-                        </>
-                      </Autocomplete>
-                    </InputDiv>
-
-                    <InputDiv
-                      style={{
-                        boxShadow:
-                          "0px 0px 15px 2px var(--main-box-shadow-color)",
-                      }}
-                      height="400px"
-                      size={12}
-                    >
-                      <Map
-                        coords={coords}
-                        isMarkerShown
-                        googleMapURL=" "
-                        loadingElement={<div style={{ height: `100%` }} />}
-                        containerElement={<div style={{ height: `100%` }} />}
-                        mapElement={<div style={{ height: `100%` }} />}
-                        setCoords={setCoords}
-                        setMark={setMark}
-                        click={(e) =>
-                          setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+                <Autocomplete
+                  onLoad={(autoC) => setAutoComplete(autoC)}
+                  onPlaceChanged={onPlaceChanged}>
+                  <>
+                    <Label htmlFor="add-number">
+                      Current Location of Donor *
+                    </Label>
+                    <Input
+                      id="places"
+                      placeholder="Search Places..."
+                      type="text"
+                      onKeyDown={(e) => {
+                        if (e.keyCode === 13) {
+                          e.preventDefault();
+                        } else {
+                          return true;
                         }
-                        defaultZoom={17}
-                      >
-                        {mark ? <Marker position={mark} /> : ""}
-                      </Map>
-                    </InputDiv>
-                  </Form>
-                </FormWrap>
-              </Modal>
-            </form>
-          </ButtonDiv>
-        </DetailsDiv>
-        <ActionDiv>
-          <Action>
-            <Badge
-              info
-              style={{
-                position: "absolute",
-                width: "max-content",
-                right: "6px",
-                top: "20px",
-              }}
-            >
-              10 Request Got
-            </Badge>
-          </Action>
-        </ActionDiv>
-      </AllDetails>
-        </>
-      ) : 
-      <NotAvailableWrap>
-        <h2>you haven't sent any donor request!</h2>
-      </NotAvailableWrap>
-    }
+                      }}
+                    />
+                  </>
+                </Autocomplete>
+              </InputDiv>
+
+              <InputDiv
+                style={{
+                  boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
+                }}
+                height="400px"
+                size={12}>
+                <Map
+                  coords={coords}
+                  isMarkerShown
+                  googleMapURL=" "
+                  loadingElement={<div style={{ height: `100%` }} />}
+                  containerElement={<div style={{ height: `100%` }} />}
+                  mapElement={<div style={{ height: `100%` }} />}
+                  setCoords={setCoords}
+                  click={(e) =>
+                    setDonorRequestFormData({
+                      ...donorRequestFormData,
+                      location: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+                    })
+                  }
+                  defaultZoom={17}>
+                  {location ? <Marker position={location} /> : ""}
+                </Map>
+              </InputDiv>
+            </Form>
+          </FormWrap>
+        </Modal>
+      </form>
     </>
-    
   );
 };

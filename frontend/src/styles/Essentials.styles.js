@@ -161,9 +161,11 @@ export const ButtonLink = styled(Link)`
 
 export const Badge = styled.span`
   background: var(--primary-color);
+  width: max-content;
 
   border-radius: 7px;
   padding: 4px 6px;
+
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -179,7 +181,7 @@ export const Badge = styled.span`
     sm
       ? `
         border-radius: 4px;
-        padding: 3px 4px;
+        padding: 2px 7px;
         font-size: 12px;
         font-weight: 600;      
       `

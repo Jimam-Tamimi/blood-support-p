@@ -14,16 +14,19 @@ export default function PrivateRoute({children}) {
     } 
 
     else {
+
         return(
             <>
             {
-                    React.Children.map(children, child => (
-                        <div>
-                           <Route exact path={child.props.path}>
-                               <Redirect to={`/login?redirect_url=${location.pathname}`} />
+                    React.Children.map(children, child => {
+ 
+                        return (
+                        <>
+                           <Route exact={child.props.exact === true} path={child.props.path}>
+                               <Redirect to={`/login?redirect_url=${location.pathname.replaceAll('/', '[1234]')}`} />
                            </Route>
-                        </div>
-                     ))
+                        </>
+                     )})
             }
             </>
         )

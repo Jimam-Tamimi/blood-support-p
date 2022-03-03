@@ -359,7 +359,6 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
       }
       dispatch(setProgress(70));
 
-      console.log(res);
       if (res?.status === 201 || res?.status === 200) {
         dispatch(alert("Profile Updated Successfully 😎", "success"));
         setShowUpdateFormModal(false);
