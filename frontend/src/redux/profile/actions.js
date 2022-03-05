@@ -5,7 +5,7 @@ import alert from "../alert/actions"
 export const getProfileDetails = () => async dispatch => {
     
     try {
-        const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/profile/get-profile-details/`)
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/profile/get-my-profile-details/`)
         console.log(res)
         dispatch({type: 'GET_PROFILE_DETAILS', payload: res.data})
     } catch (error) {

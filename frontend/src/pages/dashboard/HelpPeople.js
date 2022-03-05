@@ -29,6 +29,7 @@ import axios from "axios";
 import { getProfileData } from "../../helpers";
 import { useDispatch } from "react-redux";
 import alert from "../../redux/alert/actions";
+import { getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
 
 export default function HelpPeople() {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
@@ -134,29 +135,17 @@ const RequestDetails = ({bloodRequestId}) => {
 
   // functions
   // get blood request data using id
-  const getRequestData = async () => {
-    try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${bloodRequestId}/`
-      );
-      if (res.status === 200) {
-        setRequestData({ ...res.data, userData: {...await getProfileData(res.data.user)} });
-        console.log(res);
-      }
-    } catch (error) {
-      if(error.response.status === 404){
-        dispatch(alert("This blood request is not available 😒", "danger"));
-      } else{
-        dispatch(alert("Failed to get blood request details 😕", "danger"));
-      }
-      console.log(error);
-    }
-  };
+ 
   
-  useEffect(() => {
-    console.log(requestData)
+  useEffect( async () => {
     if(bloodRequestId){
-      getRequestData();
+      const res = await getBloodRequestData(bloodRequestId);
+      console.log({res})
+      if(res.status === 200) {
+        const userDataRes = await getProfileDetailsForUser(res?.data?.user?.id)
+        setRequestData({ ...res.data, userData: userDataRes.data });
+      } 
+
     }
   }, [bloodRequestId])
   
@@ -180,13 +169,13 @@ const RequestDetails = ({bloodRequestId}) => {
       <AllDetails>
         <DetailsDiv>
           <DetailHeader>Posted By: </DetailHeader>
-          <Profile to={`/profile/${requestData?.userData?.user}/`}>
+          <Profile to={`/profile/${requestData?.userData?.user?.id}/`}>
             <ProfileImg
               size="55px"
               style={{ marginRight: "10px" }}
               src={`${process.env.REACT_APP_MEDIA_URL}${requestData?.userData?.profile_img}`}
             />
-            <DetailFieldValue>{requestData?.userData?.name}</DetailFieldValue>
+            <DetailFieldValue className="profile-link-name" >{requestData?.userData?.name}</DetailFieldValue>
           </Profile>
           <DetailHeader>Informations: </DetailHeader>
           <Detail>

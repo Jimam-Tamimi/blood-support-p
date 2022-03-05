@@ -23,8 +23,8 @@ import { Marker } from "react-google-maps";
 import Dropdown from "../Dropdown/Dropdown";
 import axios from "axios";
 
-import Moment from 'react-moment';
-
+import Moment from "react-moment";
+import { getProfileDetailsForUser } from "../../apiCalls";
 
 export default function BloodRequest({
   setShowRequestDetails,
@@ -42,22 +42,14 @@ export default function BloodRequest({
 
   // get user data
   const [requestorData, setRequestorData] = useState(null);
-  const getRequestorData = async () => {
+
+  useEffect(async () => {
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/account/profile/${requestData?.user?.id}/get-profile-details-by-user/`
-      );
+      const res = await getProfileDetailsForUser(requestData?.user?.id);
       if (res.status === 200) {
-        console.log(res);
         setRequestorData(res.data);
       }
-    } catch (error) {
-      console.log(error.response);
-    }
-  };
-
-  useEffect(() => {
-    getRequestorData();
+    } catch (error) {}
   }, []);
 
   return (
@@ -71,8 +63,7 @@ export default function BloodRequest({
             loadingElement={<div style={{ height: `100%`, width: "100%" }} />}
             containerElement={<div style={{ height: `100%`, width: "100%" }} />}
             mapElement={<div style={{ height: `100%`, width: "100%" }} />}
-            defaultZoom={15}
-          >
+            defaultZoom={15}>
             {<Marker position={requestData?.location} />}
           </Map>
         </RequestAddress>
@@ -103,16 +94,26 @@ export default function BloodRequest({
           </NumOfReq>
 
           <Field>
-            <Profile to={`/profile/${requestData?.user?.id}/`} style={{ marginLeft: "0" }}>
+            <Profile
+              to={`/profile/${requestData?.user?.id}/`}
+              style={{ marginLeft: "0" }}>
               <ProfileImg
                 size="3.5rem"
                 src={`${process.env.REACT_APP_MEDIA_URL}${requestorData?.profile_img}`}
               />
-              <b style={{marginLeft: '15px'}} >{requestData.name}</b>
+              <b className="profile-link-name" style={{ marginLeft: "15px" }}>
+                {requestData.name}
+              </b>
             </Profile>
           </Field>
           <Field>
-            Time: <Value> <Moment format="DD/MM/YYYY hh:MM A" >{requestData.date_time}</Moment></Value>
+            Time:{" "}
+            <Value>
+              {" "}
+              <Moment format="DD/MM/YYYY hh:MM A">
+                {requestData.date_time}
+              </Moment>
+            </Value>
           </Field>
           <Field>
             Blood Group: <Value>{requestData.blood_group}</Value>
@@ -123,19 +124,20 @@ export default function BloodRequest({
           <Wrap>
             <Actions>
               <Button
-                onClick={(e) => {setShowRequestDetails(true); setBloodRequestId(requestData.id)}}
+                onClick={(e) => {
+                  setShowRequestDetails(true);
+                  setBloodRequestId(requestData.id);
+                }}
                 info
                 style={{ padding: "10px 15px", margin: "0" }}
-                sm
-              >
+                sm>
                 See More
               </Button>
               <ButtonLink
                 to={`/requests/${requestData?.id}/`}
                 success
                 style={{ padding: "10px 15px", marginLeft: "10px" }}
-                sm
-              >
+                sm>
                 View
               </ButtonLink>
             </Actions>
@@ -149,8 +151,7 @@ export default function BloodRequest({
                   width: "max-content",
                   right: "-3px",
                   top: "-28px",
-                }}
-              >
+                }}>
                 10
               </Badge>
               <Badge
@@ -165,9 +166,8 @@ export default function BloodRequest({
                   right: "-8.4px",
                   bottom: "-21px",
                 }}
-                sm
-              >
-                <Moment fromNow >{requestData.timestamp}</Moment>
+                sm>
+                <Moment fromNow>{requestData.timestamp}</Moment>
               </Badge>
             </NumOfReq>
           </Wrap>

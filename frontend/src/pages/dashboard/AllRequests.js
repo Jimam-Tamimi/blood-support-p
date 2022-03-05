@@ -52,7 +52,7 @@ export default  function AllRequest () {
       location.pathname === "/all-requests/" ||
       location.pathname === "/all-requests"
     ) {
-      history.push("/all-requests/blood-requests/");
+      history.push("/all-requests/blood-requests/", {});
     }
       // eslint-disable-next-line
   }, [location.pathname]);

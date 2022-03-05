@@ -59,6 +59,7 @@ import axios from "axios";
 import { getProfileDetails } from "../../redux/profile/actions";
 
 import { setProgress } from "../../redux/progress/actions";
+import { getProfileDetailsForUser } from "../../apiCalls";
 
 const bloodGroups = [
   { value: "Select", label: "Select" },
@@ -76,8 +77,9 @@ export default function Profile({ match }) {
   // hooks
   const history = useHistory();
   const location = useLocation();
-  const profile = useSelector((state) => state.profile);
-
+  
+  const [profile, setProfile] = useState({})
+  
   useEffect(() => {
     if (
       location.pathname === `/profile/${match.params.id}/` ||
@@ -87,6 +89,17 @@ export default function Profile({ match }) {
     }
     // eslint-disable-next-line
   }, [location]);
+
+ 
+  useEffect( async () => {
+    try {
+      const res = await getProfileDetailsForUser(match?.params?.id)
+      if(res.status === 200){
+        setProfile(res.data)
+      }
+    } catch (error) {
+    }
+  }, [])
 
   return (
     <>
@@ -98,8 +111,7 @@ export default function Profile({ match }) {
           loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
           containerElement={<div style={{ height: `350px`, width: "100%" }} />}
           mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-          defaultZoom={14}
-        >
+          defaultZoom={14}>
           {<Marker position={profile?.location} />}
         </Map>
       </DetailsMap>
@@ -115,41 +127,41 @@ export default function Profile({ match }) {
         <NavTab
           activeClassName="active"
           exact
-          to={`/profile/${match.params.id}/details/`}
-        >
+          to={`/profile/${match.params.id}/details/`}>
           Details
         </NavTab>
         <NavTab
           activeClassName="active"
-          to={`/profile/${match.params.id}/review/`}
-        >
+          to={`/profile/${match.params.id}/review/`}>
           Review
         </NavTab>
       </NavWrap>
 
-      <Route exact path="/profile/:id/details/">
-        <Details />
-      </Route>
+      <Route exact path="/profile/:id/details/" >
+        <Details profile={profile}  />
+        </Route>
 
       <Route path="/profile/:id/review/" component={Review} />
     </>
   );
 }
 
-function Details() {
-  const [showUpdateProfile, setShowUpdateProfile] = useState(false);
-  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false);
+function Details( {profile}) { 
+  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false); 
+  
   const report = () => {
     // call api to report this request
     console.log("report request");
   };
-  // eslint-disable-next-line
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: FaBan, onClick: report },
   ]);
 
-  // get profile details
-  const profile = useSelector((state) => state.profile);
+  // hooks 
+  const auth = useSelector((state) => state.auth);
+  
+
+  
 
   return (
     <>
@@ -185,31 +197,31 @@ function Details() {
           <Detail>
             <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
+          {
+            auth.user_id === profile?.user?.id ?
+            <ButtonDiv style={{ marginTop: "20px" }}>
+              <Button onClick={(e) => setShowUpdateFormModal(true)} type="button">
+                {profile.isCompleted ? "Update Profile" : "Complete Profile"}
+              </Button>
 
-          <ButtonDiv style={{ marginTop: "20px" }}>
-            <Button onClick={(e) => setShowUpdateFormModal(true)} type="button">
-              {
-                profile.isCompleted ? "Update Profile" : "Complete Profile"
-              }
-            </Button>
+              <Modal
+                btnText="Update Profile"
+                title="Update Profile"
+                actionText="Update"
+                formId="updateProfileForm"
+                md
+                wrapStyle={{ alignItems: "baseline" }}
+                scale
+                closeOnOutsideClick={false}
+                show={showUpdateFormModal}
+                setShow={setShowUpdateFormModal}>
+                <UpdateProfileForm
+                  setShowUpdateFormModal={setShowUpdateFormModal}
+                />
+              </Modal>
+            </ButtonDiv>:''
+          }
 
-            <Modal
-              btnText="Update Profile"
-              title="Update Profile"
-              actionText="Update"
-              formId="updateProfileForm"
-              md
-              wrapStyle={{ alignItems: "baseline" }}
-              scale
-              closeOnOutsideClick={false}
-              show={showUpdateFormModal}
-              setShow={setShowUpdateFormModal}
-            >
-              <UpdateProfileForm
-                setShowUpdateFormModal={setShowUpdateFormModal}
-              />
-            </Modal>
-          </ButtonDiv>
         </DetailsDiv>
         <ActionDiv>
           <Action>
@@ -223,8 +235,7 @@ function Details() {
                 width: "max-content",
                 right: "6px",
                 top: "20px",
-              }}
-            >
+              }}>
               New Member
             </Badge>
           </Action>
@@ -379,8 +390,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
         <Form
           id="updateProfileForm"
           onSubmit={onSubmitUpdateProfile}
-          enctype="multipart/form-data"
-        >
+          enctype="multipart/form-data">
           <InputDiv size={4}>
             <Label htmlFor="name">Name</Label>
             <Input
@@ -440,8 +450,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
           <InputDiv size={4}>
             <Label
               htmlFor="blood-group"
-              showAlert={submitReq && !blood_group ? true : false}
-            >
+              showAlert={submitReq && !blood_group ? true : false}>
               Blood Group{" "}
             </Label>
             <Select
@@ -473,8 +482,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
               name="description"
               value={description}
               height="200px"
-              placeholder="Description"
-            ></TextArea>
+              placeholder="Description"></TextArea>
           </InputDiv>
 
           <InputDiv>
@@ -483,8 +491,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
                 submitReq && !profile_img && !profile?.isCompleted
                   ? true
                   : false
-              }
-            >
+              }>
               Profile Image
             </Label>
             <ImageUpload
@@ -510,15 +517,13 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
                   setProfileFormData({ ...profileFormData, coords: crds });
                   setMark(crds);
                 });
-              }}
-            >
+              }}>
               Current Location
             </Button>
 
             <Autocomplete
               onLoad={(autoC) => setAutoComplete(autoC)}
-              onPlaceChanged={onPlaceChanged}
-            >
+              onPlaceChanged={onPlaceChanged}>
               <>
                 <Label htmlFor="add-number">Where do you need blood? *</Label>
                 <Input
@@ -542,8 +547,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
               boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
             }}
             height="400px"
-            size={12}
-          >
+            size={12}>
             <Map
               coords={coords}
               isMarkerShown
@@ -555,8 +559,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
               click={(e) =>
                 setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
               }
-              defaultZoom={17}
-            >
+              defaultZoom={17}>
               {mark ? <Marker position={mark} /> : ""}
             </Map>
           </InputDiv>
@@ -567,8 +570,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
               justifyContent: "flex-end",
               width: "100%",
             }}
-            size={12}
-          >
+            size={12}>
             {/* <Button blockOnSmall>Update</Button> */}
           </InputDiv>
         </Form>
@@ -596,15 +598,13 @@ function Review({ match }) {
         <NavTab
           activeClassName="active"
           exact
-          to={`/profile/${match.params.id}/review/as-requestor/`}
-        >
+          to={`/profile/${match.params.id}/review/as-requestor/`}>
           Review As Requestor
         </NavTab>
         <NavTab
           activeClassName="active"
           exact
-          to={`/profile/${match.params.id}/review/as-donor/`}
-        >
+          to={`/profile/${match.params.id}/review/as-donor/`}>
           Review As Donor
         </NavTab>
       </NavWrap>
@@ -650,8 +650,7 @@ function RequestorReview() {
                       position: "relative",
                       bottom: "2px",
                       left: "18px",
-                    }}
-                  >
+                    }}>
                     <ReactStars {...firstExample} />
                   </div>
                 </div>
@@ -659,8 +658,7 @@ function RequestorReview() {
                   style={{
                     fontSize: "14px",
                     color: "var(--secendory-text-color)",
-                  }}
-                >
+                  }}>
                   aa quick brown fox jumped over the lazy doga quick brown fox
                   jumped over the lazy doga quick brown fox jumped over the lazy
                   doga quick brown fox jumped over the lazy doga quick brown fox
@@ -671,8 +669,7 @@ function RequestorReview() {
               </ReviewContent>
               <Badge
                 sm
-                style={{ position: "absolute", bottom: "13px", right: "18px" }}
-              >
+                style={{ position: "absolute", bottom: "13px", right: "18px" }}>
                 3 days ago
               </Badge>
             </ReviewDiv>
@@ -713,8 +710,7 @@ function DonorReview() {
                       position: "relative",
                       bottom: "2px",
                       left: "18px",
-                    }}
-                  >
+                    }}>
                     <ReactStars {...firstExample} />
                   </div>
                 </div>
@@ -722,8 +718,7 @@ function DonorReview() {
                   style={{
                     fontSize: "14px",
                     color: "var(--secendory-text-color)",
-                  }}
-                >
+                  }}>
                   aa quick brown fox jumped over the lazy doga quick brown fox
                   jumped over the lazy doga quick brown fox jumped over the lazy
                   doga quick brown fox jumped over the lazy doga quick brown fox
@@ -734,8 +729,7 @@ function DonorReview() {
               </ReviewContent>
               <Badge
                 sm
-                style={{ position: "absolute", bottom: "13px", right: "18px" }}
-              >
+                style={{ position: "absolute", bottom: "13px", right: "18px" }}>
                 3 days ago
               </Badge>
             </ReviewDiv>

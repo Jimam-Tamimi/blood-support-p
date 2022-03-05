@@ -65,9 +65,10 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
-import { calcDistance, getCurrentLocation, getProfileData } from "../../helpers";
+import { calcDistance, getCurrentLocation } from "../../helpers";
 import Select from "react-select";
 import Moment from "react-moment";
+import { getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
 
 export default function Request({ match }) {
   // hooks
@@ -82,31 +83,24 @@ export default function Request({ match }) {
 
   // functions
   const getRequestData = async () => {
-    dispatch(setProgress(30));
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${match.params.bloodRequestId}/`
-      );
-      dispatch(setProgress(70));
+      const res = await getBloodRequestData(match?.params?.bloodRequestId)
       if (res.status === 200) {
         setRequestData(res.data);
-        setRequestorProfileData(await getProfileData(res.data.user.id));
-        dispatch(setProgress(90));
+        await getProfileDetailsForUser(res.data.user.id).then(res => setRequestorProfileData(res.data)) 
       }
     } catch (error) {
-      console.log(error);
       if (error?.response?.status === 404) {
-        dispatch(alert("This blood request is not available 😒", "danger"));
         setRequestData("404_NOT_AVAILABLE");
-      } else {
-        dispatch(alert("Failed to get blood request details 😕", "danger"));
-      }
+      }  
     }
-    dispatch(setProgress(100));
   };
 
   useEffect(async () => {
+    dispatch(setProgress(30));
     await getRequestData();
+    dispatch(setProgress(100));
+
   }, []);
 
   const checkHaveSentDonorRequest = async (bloodRequestId) => {
@@ -235,7 +229,8 @@ const RequestDetails = ({
                   style={{ marginRight: "10px" }}
                   src={`${process.env.REACT_APP_MEDIA_URL}${requestorProfileData?.profile_img}`}
                 />
-                <DetailFieldValue>{requestData?.name}</DetailFieldValue>
+                <DetailFieldValue                      className="profile-link-name"
+  >{requestData?.name}</DetailFieldValue>
               </Profile>
               <DetailHeader>Informations: </DetailHeader>
               <Detail>
@@ -1129,9 +1124,10 @@ const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
         <Detail>
           <Link
             style={{ display: "flex", alignItems: "center" }}
-            to="/user/23/">
+            to={`/profile/${donorRequestMoreDetails?.user?.id}/`}>
             <ProfileImg size="45px" src={`${process.env.REACT_APP_MEDIA_URL}${donorRequestMoreDetails?.profile?.profile_img}`} />{" "}
             <p
+            className="profile-link-name"
               style={{
                 position: "relative",
                 left: "15px",

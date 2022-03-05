@@ -65,7 +65,7 @@ class ProfileViewSet(ModelViewSet):
         except Exception as e:
             return Response({'error': "Something Went Wrong 😐"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='get-profile-details')
+    @action(detail=False, methods=['get'], url_path='get-my-profile-details')
     def get_profile_details(self, request):
         try:
             profile = Profile.objects.get(user=request.user)
@@ -78,10 +78,10 @@ class ProfileViewSet(ModelViewSet):
         except Exception:
             return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['get'], url_path='get-profile-details-by-user')
-    def get_profile_details_by_user(self, request, pk=None, *args, **kwargs):
+    @action(detail=False, methods=['get'], url_path='get-profile-details-for-user')
+    def get_profile_details_by_user(self, request):
         try:
-            profile = Profile.objects.get(user__id=pk)
+            profile = Profile.objects.get(user__id=request.GET['user_id'])
             serializer = ProfileSerializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Profile.DoesNotExist:
