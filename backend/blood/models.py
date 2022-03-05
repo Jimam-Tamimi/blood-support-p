@@ -34,8 +34,9 @@ class BloodRequest(models.Model):
     add_number = models.CharField(max_length=30, blank=False, null=False)
     blood_group = models.CharField(max_length=30, blank=False, null=False, choices=BLOOD_GROUP_CHOICES)
     location = models.JSONField(blank=False, null=False)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=30, blank=False, null=False, default="open", choices=(("Open", "Open"), ("Accepted", "Accepted"), ("Completed", "Completed"), ("Expired", "Expired") ))
     description = models.TextField(max_length=500, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
      
      
 class DonorRequest(models.Model):
@@ -49,5 +50,6 @@ class DonorRequest(models.Model):
     address = models.CharField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     location = models.JSONField(blank=False, null=False)
+    status = models.CharField(max_length=30, blank=False, null=False, default="open", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Completed", "Completed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
-     
+    

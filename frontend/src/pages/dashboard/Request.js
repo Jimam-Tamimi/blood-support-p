@@ -84,15 +84,17 @@ export default function Request({ match }) {
   // functions
   const getRequestData = async () => {
     try {
-      const res = await getBloodRequestData(match?.params?.bloodRequestId)
+      const res = await getBloodRequestData(match?.params?.bloodRequestId);
       if (res.status === 200) {
         setRequestData(res.data);
-        await getProfileDetailsForUser(res.data.user.id).then(res => setRequestorProfileData(res.data)) 
+        await getProfileDetailsForUser(res.data.user.id).then((res) =>
+          setRequestorProfileData(res.data)
+        );
       }
     } catch (error) {
       if (error?.response?.status === 404) {
         setRequestData("404_NOT_AVAILABLE");
-      }  
+      }
     }
   };
 
@@ -100,7 +102,6 @@ export default function Request({ match }) {
     dispatch(setProgress(30));
     await getRequestData();
     dispatch(setProgress(100));
-
   }, []);
 
   const checkHaveSentDonorRequest = async (bloodRequestId) => {
@@ -114,7 +115,7 @@ export default function Request({ match }) {
             return true;
           }
         }
-      } catch (err) { }
+      } catch (err) {}
     }
     return false;
   };
@@ -149,7 +150,7 @@ export default function Request({ match }) {
         )}
       </NavWrap>
 
-      <Route exact path="/requests/:bloodRequestId/" component={RequestDetails}>
+      <Route exact path="/requests/:bloodRequestId/">
         <RequestDetails
           requestData={requestData}
           requestorProfileData={requestorProfileData}
@@ -159,11 +160,13 @@ export default function Request({ match }) {
       </Route>
 
       {requestData?.user?.id === auth.user_id ? (
-        <Route
-          exact
-          path="/requests/:bloodRequestId/donors/"
-          component={DonorRequests}
-        />
+        <Route exact path="/requests/:bloodRequestId/donors/">
+          <DonorRequests
+            match={match}
+            requestData={requestData}
+            setRequestData={setRequestData}
+          />
+        </Route>
       ) : requestData && requestData !== "404_NOT_AVAILABLE" ? (
         <Route exact path="/requests/:bloodRequestId/donor-request/">
           <YourDonorRequest bloodRequestId={match.params.bloodRequestId} />
@@ -229,8 +232,9 @@ const RequestDetails = ({
                   style={{ marginRight: "10px" }}
                   src={`${process.env.REACT_APP_MEDIA_URL}${requestorProfileData?.profile_img}`}
                 />
-                <DetailFieldValue                      className="profile-link-name"
-  >{requestData?.name}</DetailFieldValue>
+                <DetailFieldValue className="profile-link-name">
+                  {requestData?.name}
+                </DetailFieldValue>
               </Profile>
               <DetailHeader>Informations: </DetailHeader>
               <Detail>
@@ -298,7 +302,7 @@ const RequestDetails = ({
                     right: "6px",
                     top: "20px",
                   }}>
-                  10 Request Got
+                  {requestData?.status}
                 </Badge>
               </Action>
             </ActionDiv>
@@ -359,7 +363,7 @@ const SendDonorRequestForm = ({
         ...donorRequestFormData,
         location: { lat, lng },
       });
-    } catch { }
+    } catch {}
   };
 
   // check if user have already sent a request
@@ -612,7 +616,7 @@ const Complete = () => {
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
-    onChange: (newValue) => { },
+    onChange: (newValue) => {},
   };
 
   return (
@@ -708,7 +712,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
       const lat = autoComplete.getPlace().geometry.location.lat();
       const lng = autoComplete.getPlace().geometry.location.lng();
       setMark({ lat, lng });
-    } catch { }
+    } catch {}
   };
 
   // form data submit
@@ -766,190 +770,194 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   return (
     <>
       <Button
-        disabled={!profile.isCompleted}
+        disabled={!profile.isCompleted || requestData?.status !== "Open"}
         onClick={(e) => setShowUpdateRequestModal(true)}
         info>
         Update
       </Button>
-      <Modal
-        actionText="Update Blood Request"
-        title="Update Your Blood Request"
-        lg
-        info
-        btnText="Update"
-        fade
-        scale
-        setShow={setShowUpdateRequestModal}
-        show={showUpdateRequestModal}
-        wrapStyle={{ alignItems: "start" }}
-        closeOnOutsideClick={false}
-        formId="update-request-form">
-        <FormWrap>
-          <Form id="update-request-form" onSubmit={submitUpdateRequest}>
-            <InputDiv size={4}>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Name"
-                type="text"
-                name="name"
-                onChange={onChange}
-                value={name}
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
-            <InputDiv size={5}>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="Email"
-                type="email"
-                name="email"
-                onChange={onChange}
-                value={email}
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
-            <InputDiv size={3}>
-              <Label htmlFor="time">When Do You Need Blood</Label>
-              <Input
-                id="time"
-                placeholder="Time"
-                type="datetime-local"
-                name="date_time"
-                onChange={onChange}
-                value={new Date(date_time).toISOString().substr(0, 16)}
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
-            <InputDiv size={3}>
-              <Label htmlFor="number">Phone Number</Label>
-              <Input
-                id="number"
-                placeholder="Phone Number"
-                type="tel"
-                name="number"
-                onChange={onChange}
-                value={number}
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
-            <InputDiv size={3}>
-              <Label htmlFor="add-number">Additional Phone Number</Label>
-              <Input
-                id="add-number"
-                placeholder="Additional Phone Number"
-                type="tel"
-                name="add_number"
-                onChange={onChange}
-                value={add_number}
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
-            <InputDiv size={6}>
-              <Label>Blood Group</Label>
-              <Select
-                className="basic-single"
-                classNamePrefix="select"
-                defaultValue={bloodGroups.find(
-                  (group) => group.value === requestData?.blood_group
-                )}
-                disabledValue={bloodGroups[0]}
-                isDisabled={false}
-                isLoading={false}
-                isClearable={true}
-                isRtl={false}
-                isSearchable={true}
-                name="blood-group"
-                options={bloodGroups}
-                styles={customStyles}
-                onChange={(e) =>
-                  setUpdateRequestFormData({
-                    ...updateRequestFormData,
-                    blood_group: e.value,
-                  })
-                }
-                disabled={!profile.isCompleted}
-              />
-            </InputDiv>
+      {requestData?.status === "Open" && (
+        <Modal
+          actionText="Update Blood Request"
+          title="Update Your Blood Request"
+          lg
+          info
+          btnText="Update"
+          fade
+          scale
+          setShow={setShowUpdateRequestModal}
+          show={showUpdateRequestModal}
+          wrapStyle={{ alignItems: "start" }}
+          closeOnOutsideClick={false}
+          formId="update-request-form">
+          <FormWrap>
+            <Form id="update-request-form" onSubmit={submitUpdateRequest}>
+              <InputDiv size={4}>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Name"
+                  type="text"
+                  name="name"
+                  onChange={onChange}
+                  value={name}
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
+              <InputDiv size={5}>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="Email"
+                  type="email"
+                  name="email"
+                  onChange={onChange}
+                  value={email}
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
+              <InputDiv size={3}>
+                <Label htmlFor="time">When Do You Need Blood</Label>
+                <Input
+                  id="time"
+                  placeholder="Time"
+                  type="datetime-local"
+                  name="date_time"
+                  onChange={onChange}
+                  value={new Date(date_time).toISOString().substr(0, 16)}
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
+              <InputDiv size={3}>
+                <Label htmlFor="number">Phone Number</Label>
+                <Input
+                  id="number"
+                  placeholder="Phone Number"
+                  type="tel"
+                  name="number"
+                  onChange={onChange}
+                  value={number}
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
+              <InputDiv size={3}>
+                <Label htmlFor="add-number">Additional Phone Number</Label>
+                <Input
+                  id="add-number"
+                  placeholder="Additional Phone Number"
+                  type="tel"
+                  name="add_number"
+                  onChange={onChange}
+                  value={add_number}
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
+              <InputDiv size={6}>
+                <Label>Blood Group</Label>
+                <Select
+                  className="basic-single"
+                  classNamePrefix="select"
+                  defaultValue={bloodGroups.find(
+                    (group) => group.value === requestData?.blood_group
+                  )}
+                  disabledValue={bloodGroups[0]}
+                  isDisabled={false}
+                  isLoading={false}
+                  isClearable={true}
+                  isRtl={false}
+                  isSearchable={true}
+                  name="blood-group"
+                  options={bloodGroups}
+                  styles={customStyles}
+                  onChange={(e) =>
+                    setUpdateRequestFormData({
+                      ...updateRequestFormData,
+                      blood_group: e.value,
+                    })
+                  }
+                  disabled={!profile.isCompleted}
+                />
+              </InputDiv>
 
-            <InputDiv>
-              <Label>Description</Label>
+              <InputDiv>
+                <Label>Description</Label>
 
-              <TextArea
-                disabled={!profile.isCompleted}
-                onChange={onChange}
-                name="description"
-                value={description}
-                height="200px"
-                placeholder="Description"></TextArea>
-            </InputDiv>
+                <TextArea
+                  disabled={!profile.isCompleted}
+                  onChange={onChange}
+                  name="description"
+                  value={description}
+                  height="200px"
+                  placeholder="Description"></TextArea>
+              </InputDiv>
 
-            <InputDiv
-              flex
-              style={{ justifyContent: "space-between" }}
-              size={12}>
-              <Button
-                type="button"
-                info
-                blockOnSmall
-                style={{ position: "relative", top: "14px" }}
-                onClick={(e) => {
-                  setCurrentLocation();
-                }}>
-                Current Location
-              </Button>
+              <InputDiv
+                flex
+                style={{ justifyContent: "space-between" }}
+                size={12}>
+                <Button
+                  type="button"
+                  info
+                  blockOnSmall
+                  style={{ position: "relative", top: "14px" }}
+                  onClick={(e) => {
+                    setCurrentLocation();
+                  }}>
+                  Current Location
+                </Button>
 
-              <Autocomplete
-                onLoad={(autoC) => setAutoComplete(autoC)}
-                onPlaceChanged={onPlaceChanged}>
-                <>
-                  <Label htmlFor="add-number">Where do you need blood? *</Label>
-                  <Input
-                    id="places"
-                    placeholder="Search Places..."
-                    type="text"
-                    onKeyDown={(e) => {
-                      if (e.keyCode === 13) {
-                        e.preventDefault();
-                      } else {
-                        return true;
-                      }
-                    }}
-                  />
-                </>
-              </Autocomplete>
-            </InputDiv>
+                <Autocomplete
+                  onLoad={(autoC) => setAutoComplete(autoC)}
+                  onPlaceChanged={onPlaceChanged}>
+                  <>
+                    <Label htmlFor="add-number">
+                      Where do you need blood? *
+                    </Label>
+                    <Input
+                      id="places"
+                      placeholder="Search Places..."
+                      type="text"
+                      onKeyDown={(e) => {
+                        if (e.keyCode === 13) {
+                          e.preventDefault();
+                        } else {
+                          return true;
+                        }
+                      }}
+                    />
+                  </>
+                </Autocomplete>
+              </InputDiv>
 
-            <InputDiv
-              style={{
-                boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
-              }}
-              height="400px"
-              size={12}>
-              <Map
-                coords={mark}
-                isMarkerShown
-                googleMapURL=" "
-                loadingElement={<div style={{ height: `100%` }} />}
-                containerElement={<div style={{ height: `100%` }} />}
-                mapElement={<div style={{ height: `100%` }} />}
-                setMark={setMark}
-                click={(e) =>
-                  setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
-                }
-                defaultZoom={17}>
-                {mark ? <Marker position={mark} /> : ""}
-              </Map>
-            </InputDiv>
-          </Form>
-        </FormWrap>
-      </Modal>
+              <InputDiv
+                style={{
+                  boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
+                }}
+                height="400px"
+                size={12}>
+                <Map
+                  coords={mark}
+                  isMarkerShown
+                  googleMapURL=" "
+                  loadingElement={<div style={{ height: `100%` }} />}
+                  containerElement={<div style={{ height: `100%` }} />}
+                  mapElement={<div style={{ height: `100%` }} />}
+                  setMark={setMark}
+                  click={(e) =>
+                    setMark({ lat: e.latLng.lat(), lng: e.latLng.lng() })
+                  }
+                  defaultZoom={17}>
+                  {mark ? <Marker position={mark} /> : ""}
+                </Map>
+              </InputDiv>
+            </Form>
+          </FormWrap>
+        </Modal>
+      )}
     </>
   );
 };
 
-const DonorRequests = ({ match }) => {
+const DonorRequests = ({ match, requestData, setRequestData }) => {
   // hooks
   const location = useLocation();
   const dispatch = useDispatch();
@@ -961,7 +969,6 @@ const DonorRequests = ({ match }) => {
 
   const [showEmail, setShowEmail] = useState(true);
 
-
   window.addEventListener("resize", (e) => {
     if (window.innerWidth <= 550) {
       setShowEmail(false);
@@ -971,7 +978,7 @@ const DonorRequests = ({ match }) => {
   });
 
   const getDonorRequestsForBloodRequest = async () => {
-    dispatch(setProgress(20))
+    dispatch(setProgress(20));
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}api/blood/donor-request/get-donor-requests-for-my-blood-request/`,
@@ -983,21 +990,24 @@ const DonorRequests = ({ match }) => {
         getCurrentLocation((crds) => {
           setCurrentLocation(crds);
         });
-    dispatch(setProgress(90))
+        dispatch(setProgress(90));
       }
     } catch (error) {
       dispatch(alert("Failed to fetch donor requests", "danger"));
     }
-    dispatch(setProgress(100))
-  }
-  
+    dispatch(setProgress(100));
+  };
+
   useEffect(async () => {
-    getDonorRequestsForBloodRequest()
-  }, []);
+    getDonorRequestsForBloodRequest();
+  }, [requestData]);
 
   const showMoreDetails = (id) => {
     setShowDonorRequest(true);
-    donorRequestData.map((donorRequest) => donorRequest.id === id && setDonorRequestMoreDetails(donorRequest))
+    donorRequestData.map(
+      (donorRequest) =>
+        donorRequest.id === id && setDonorRequestMoreDetails(donorRequest)
+    );
   };
   const onCanvasExit = () => {
     setTimeout(() => {
@@ -1005,8 +1015,6 @@ const DonorRequests = ({ match }) => {
       setShowDonorRequest(false);
     }, 450);
   };
- 
-  
 
   return (
     <>
@@ -1047,7 +1055,7 @@ const DonorRequests = ({ match }) => {
                       src={`${process.env.REACT_APP_MEDIA_URL}${donorRequest?.profile.profile_img}`}
                     />{" "}
                     <p
-                    className="profile-link-name"
+                      className="profile-link-name"
                       style={{
                         position: "relative",
                         left: "15px",
@@ -1062,14 +1070,19 @@ const DonorRequests = ({ match }) => {
                     {donorRequest?.date_time}
                   </Moment>
                 </Td>
-                <Td>{calcDistance(donorRequest?.location, currentLocation)} KM</Td>
+                <Td>
+                  {calcDistance(donorRequest?.location, currentLocation)} KM
+                </Td>
                 <Td>{donorRequest?.number}</Td>
                 {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
-                  <div className="table-row-badge"> 
-                {/* <Badge sm >ACCEPTED </Badge> */}
-                <Badge sm ><Moment fromNow >{donorRequest.timestamp}</Moment></Badge>
-                  </div>
-                
+                <div className="table-row-badge">
+                  {donorRequest?.status === "Accepted" && (
+                    <Badge sm> ACCEPTED </Badge>
+                  )}
+                  <Badge sm>
+                    <Moment fromNow>{donorRequest.timestamp}</Moment>
+                  </Badge>
+                </div>
               </Tr>
             ))}
           </HtmlTable>
@@ -1079,7 +1092,12 @@ const DonorRequests = ({ match }) => {
           setShow={setShowDonorRequest}
           show={showDonorRequest}>
           {donorRequestMoreDetails && showDonorRequest ? (
-            <DonorRequestMoreDetails donorRequestMoreDetails={donorRequestMoreDetails} />
+            <DonorRequestMoreDetails
+              donorRequestMoreDetails={donorRequestMoreDetails}
+              requestData={requestData}
+              setRequestData={setRequestData}
+              setShowDonorRequest={setShowDonorRequest}
+            />
           ) : (
             ""
           )}
@@ -1089,10 +1107,17 @@ const DonorRequests = ({ match }) => {
   );
 };
 
-const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
+const DonorRequestMoreDetails = ({
+  donorRequestMoreDetails,
+  requestData,
+  setRequestData,
+  setShowDonorRequest,
+}) => {
+  // hooks
+
+  const dispatch = useDispatch();
+
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
-  
-  
 
   const report = () => {
     // call api to report this request
@@ -1101,16 +1126,55 @@ const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
 
   const dropDownOptions = [{ name: "Report", icon: FaBan, onClick: report }];
 
-
   useEffect(() => {
     getCurrentLocation((crds) => {
       setCurrentLocation(crds);
     });
-  
- 
-  }, [ ])
-  
-  
+  }, []);
+
+  const acceptDonorRequest = async (id) => {
+    if (requestData.status === "Open") {
+      try {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}api/blood/donor-request/accept-donor-request/`,
+          { donor_request_id: id }
+        );
+        console.log(res);
+        if (res.status === 200) {
+          setRequestData({ ...requestData, status: "Accepted" });
+          dispatch(alert("Donor request accepted", "success"));
+          setShowDonorRequest(false);
+        }
+      } catch (error) {
+        if(error?.response?.data?.success === false){
+          dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+          dispatch(alert('Failed to accept this donor request 😐', "danger"));
+        } 
+        
+      }
+    } else {
+      dispatch(alert("You can't accept this request", "danger"));
+    }
+  };
+
+  const rejectDonorRequest = async (id) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/reject-donor-request/`,
+        { donor_request_id: id }
+      );
+      console.log(res);
+      if (res.status === 200) { 
+        setRequestData({...requestData});
+        dispatch(alert("Donor request rejected", "success"));
+        setShowDonorRequest(false);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   return (
     <AllDetails>
       <DetailsDiv>
@@ -1125,9 +1189,12 @@ const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
           <Link
             style={{ display: "flex", alignItems: "center" }}
             to={`/profile/${donorRequestMoreDetails?.user?.id}/`}>
-            <ProfileImg size="45px" src={`${process.env.REACT_APP_MEDIA_URL}${donorRequestMoreDetails?.profile?.profile_img}`} />{" "}
+            <ProfileImg
+              size="45px"
+              src={`${process.env.REACT_APP_MEDIA_URL}${donorRequestMoreDetails?.profile?.profile_img}`}
+            />{" "}
             <p
-            className="profile-link-name"
+              className="profile-link-name"
               style={{
                 position: "relative",
                 left: "15px",
@@ -1153,7 +1220,10 @@ const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
         </Detail>
         <Detail>
           <DetailField>Distance: </DetailField>
-          <DetailFieldValue>{calcDistance(donorRequestMoreDetails?.location, currentLocation)} KM</DetailFieldValue>
+          <DetailFieldValue>
+            {calcDistance(donorRequestMoreDetails?.location, currentLocation)}{" "}
+            KM
+          </DetailFieldValue>
         </Detail>
 
         <DetailHeader>Contacts: </DetailHeader>
@@ -1167,28 +1237,40 @@ const DonorRequestMoreDetails = ({ donorRequestMoreDetails }) => {
         </Detail>
         <Detail>
           <DetailField>Additional Number: </DetailField>
-          <DetailFieldValue>{donorRequestMoreDetails?.add_number}</DetailFieldValue>
+          <DetailFieldValue>
+            {donorRequestMoreDetails?.add_number}
+          </DetailFieldValue>
         </Detail>
 
         <DetailHeader>Description: </DetailHeader>
         <Detail>
-          <DetailFieldValue>{donorRequestMoreDetails?.description}</DetailFieldValue>
+          <DetailFieldValue>
+            {donorRequestMoreDetails?.description}
+          </DetailFieldValue>
         </Detail>
         <DetailHeader>Actions: </DetailHeader>
         <ButtonDiv>
-          <Button sm info>
-            Accept
+          <Button
+            onClick={(e) =>
+              window.confirm(
+                "Are you sure you want to accept this donor request? (You can accept only one donor request)"
+              ) && acceptDonorRequest(donorRequestMoreDetails?.id)
+            }
+            sm
+            disabled={requestData.status === "Open" ? false : true}
+            info>
+            {donorRequestMoreDetails.status === "Accepted"
+              ? "Accepted"
+              : "Accept"}
           </Button>
-          <Button sm>Reject</Button>
+          <Button onClick={e => window.confirm('Are you sure you want to reject this donor request?') && rejectDonorRequest(donorRequestMoreDetails.id)} disabled={donorRequestMoreDetails.status === "Accepted"} sm>
+            Reject
+          </Button>
         </ButtonDiv>
       </DetailsDiv>
     </AllDetails>
-  )
-}
-
-
-
-
+  );
+};
 
 const YourDonorRequest = ({ bloodRequestId }) => {
   // hooks
@@ -1232,7 +1314,7 @@ const YourDonorRequest = ({ bloodRequestId }) => {
       const lng = autoComplete.getPlace().geometry.location.lng();
       setMark({ lat, lng });
       setCoords({ lat, lng });
-    } catch { }
+    } catch {}
   };
 
   // drop down options
@@ -1410,7 +1492,7 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
         location: { lat, lng },
       });
       setCoords({ lat, lng });
-    } catch { }
+    } catch {}
   };
 
   const onChange = (e) =>
@@ -1419,7 +1501,7 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
       [e.target.name]: e.target.value,
     });
 
-  useEffect(() => { }, []);
+  useEffect(() => {}, []);
 
   const upDateRequest = async (e) => {
     e.preventDefault();

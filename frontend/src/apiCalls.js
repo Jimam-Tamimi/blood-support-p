@@ -1,6 +1,8 @@
 import axios from "axios";
 import alert from "./redux/alert/actions";
 import store from "./redux/store";
+
+// function that takes in an user id and return a promise that resolves to the profile details of the user
 export const getProfileDetailsForUser = async (id, showAlert = true) =>
   new Promise(async (resolve, reject) => {
     try {
@@ -21,6 +23,8 @@ export const getProfileDetailsForUser = async (id, showAlert = true) =>
     }
   });
 
+
+// function that takes in an blood request id and return a promise that resolves to the blood request details of that blood request id
 export const getBloodRequestData = async (id, showAlert = true) => 
   new Promise(async (resolve, reject) => {
     try {

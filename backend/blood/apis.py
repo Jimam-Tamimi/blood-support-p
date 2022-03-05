@@ -4,6 +4,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response  import Response
 from rest_framework import status
+
+from django.db.models import Q
+
 # from rest_framework.permissions import 
 
 from account.models import Profile
@@ -77,6 +80,7 @@ class DonorRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
         donorRequests = DonorRequest.objects.filter(blood_request=bloodRequest).order_by('-timestamp')
+        donorRequests = donorRequests.filter(~Q(status="Rejected"))
         data = DonorRequestSerializer(donorRequests, many=True).data
         for d in data:
             print(d['user']['id'])
@@ -90,3 +94,48 @@ class DonorRequestViewSet(ModelViewSet):
                 data.remove(d)
         
         return Response(data, status=status.HTTP_200_OK) 
+    
+    
+    @action(detail=False, methods=['post'], url_path='accept-donor-request')
+    def acceptDonorRequest(self, request):
+        try:
+            donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
+            if(donorRequest.blood_request.user != request.user):
+                return Response({'success': False, 'error': 'You are not authorized to accept this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                if(donorRequest.blood_request.status == 'accepted'):
+                    return Response({'success': False, 'error': 'You can\'t accept more than one donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+                if(donorRequest.status == 'Accepted'):
+                    return Response({'success': False, 'error': 'You have already accepted this donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+                for dr in DonorRequest.objects.filter(blood_request=donorRequest.blood_request):
+                    if(dr.status == 'Accepted'):
+                        return Response({'success': False, 'error': 'You can\'t accept more than one donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                donorRequest.status = 'Accepted'
+                donorRequest.save()
+                donorRequest.blood_request.status = 'Accepted'
+                donorRequest.blood_request.save()
+                return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+        except DonorRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'], url_path='reject-donor-request')
+    def acceptDonorRequest(self, request):
+        try:
+            donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
+            if(donorRequest.blood_request.user != request.user):
+                return Response({'success': False, 'error': 'You are not authorized to reject this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+            if(donorRequest.status == 'Rejected'):
+                return Response({'success': False, 'error': 'You have already rejected this donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            donorRequest.status = 'Rejected'
+            donorRequest.save() 
+            return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+        except DonorRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)

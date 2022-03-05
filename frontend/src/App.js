@@ -59,7 +59,7 @@ function App() {
       (error) => {
         console.log(error.response);
         if (JSON.parse(localStorage.getItem("auth"))?.isAuthenticated) {
-          if (error?.response?.status === 401) {
+          if (error?.response?.status === 401, error?.response?.data?.code === "token_not_valid") {
             dispatch(refreshToken());
           }
         }

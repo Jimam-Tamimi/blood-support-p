@@ -76,42 +76,7 @@ export default function HelpPeople() {
           ))
         }
         
-        {/* <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        />
-        <BloodRequest
-          setShowRequestDetails={setShowRequestDetails}
-          setRequestId={setRequestId}
-        /> */}
+ 
       </Wrap>
     </>
   );
