@@ -72,6 +72,12 @@ export const DropdownLink = styled.div`
         background: var(--primary-hover-color);
         transform: scaleX(1);
     }
+
+    ${({disabled}) => disabled && `
+        cursor: not-allowed;
+        opacity: .5;
+        
+    `}
    
 `
  

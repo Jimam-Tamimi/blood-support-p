@@ -50,6 +50,6 @@ class DonorRequest(models.Model):
     address = models.CharField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     location = models.JSONField(blank=False, null=False)
-    status = models.CharField(max_length=30, blank=False, null=False, default="open", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Completed", "Completed"), ("Rejected", "Rejected") ))
+    status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Completed", "Completed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
     

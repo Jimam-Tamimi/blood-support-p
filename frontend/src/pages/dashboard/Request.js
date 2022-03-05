@@ -379,7 +379,7 @@ const SendDonorRequestForm = ({
     });
 
   // on form submit send donor request to api
-  const { name, email, date_time, address, number, add_number, location } =
+  const { name, email, date_time, address, number, add_number, location, description } =
     donorRequestFormData;
   const sendDonorRequest = async (e) => {
     e.preventDefault();
@@ -519,7 +519,7 @@ const SendDonorRequestForm = ({
               <InputDiv>
                 <Label htmlFor="add-number">Short Description</Label>
 
-                <TextArea required placeholder="Short Description"></TextArea>
+                <TextArea required placeholder="Short Description" onChange={onChange} name="description" value={description} >{description}</TextArea>
               </InputDiv>
 
               <InputDiv
@@ -1336,7 +1336,9 @@ const YourDonorRequest = ({ bloodRequestId }) => {
       console.log(error);
       if (error?.response?.status === 404) {
         dispatch(alert("this donor request is not available", "danger"));
-      } else {
+      } else if(error?.response?.data?.success === false) {
+        dispatch(alert(error?.response?.data?.error, "danger"));
+      } else{
         dispatch(alert("something went wrong", "danger"));
       }
     }
@@ -1344,7 +1346,7 @@ const YourDonorRequest = ({ bloodRequestId }) => {
   };
 
   const dropDownOption = [
-    { name: "Delete", icon: FaBan, onClick: deleteDonorRequest },
+     { name: "Delete", icon: <FaBan />, onClick: deleteDonorRequest, hidden: myDonorRequestData?.status !== "Pending" },
   ];
 
   return (
@@ -1419,26 +1421,14 @@ const YourDonorRequest = ({ bloodRequestId }) => {
               </Action>
               <Action>
                 <Badge
-                  info
+                  danger={myDonorRequestData?.status === "Rejected"}
                   style={{
                     position: "absolute",
                     width: "max-content",
                     right: "6px",
                     top: "20px",
                   }}>
-                  10 Request Got
-                </Badge>
-              </Action>
-              <Action>
-                <Badge
-                  info
-                  style={{
-                    position: "absolute",
-                    width: "max-content",
-                    right: "6px",
-                    top: "20px",
-                  }}>
-                  10 Request Got
+                  {myDonorRequestData?.status}
                 </Badge>
               </Action>
             </ActionDiv>
@@ -1537,168 +1527,171 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
 
   return (
     <>
-      <Button onClick={() => setShowUpdateDonorRequestModal(true)}>
+      <Button disabled={myDonorRequestData?.status !== "Pending"}  onClick={() => myDonorRequestData?.status === "Pending" && setShowUpdateDonorRequestModal(true)}>
         Update
       </Button>
-      <form onSubmit={upDateRequest}>
-        <Modal
-          actionText="Update"
-          title="Update Request Form"
-          lg
-          info
-          btnText="Update"
-          show={showUpdateDonorRequestModal}
-          wrapStyle={{ alignItems: "baseline" }}
-          setShow={setShowUpdateDonorRequestModal}>
-          <FormWrap>
-            <Form
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}>
-              <InputDiv size={4}>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Name"
-                  type="text"
-                  name="name"
-                  onChange={onChange}
-                  value={name}
-                />
-              </InputDiv>
-              <InputDiv size={5}>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  placeholder="Email"
-                  type="email"
-                  name="email"
-                  onChange={onChange}
-                  value={email}
-                />
-              </InputDiv>
-              <InputDiv size={3}>
-                <Label htmlFor="time">When Do You Need Blood</Label>
-                <Input
-                  id="time"
-                  placeholder="Time"
-                  type="datetime-local"
-                  name="date_time"
-                  onChange={onChange}
-                  value={new Date(date_time).toISOString().substr(0, 16)}
-                />
-              </InputDiv>
-              <InputDiv size={4}>
-                <Label htmlFor="number">Phone Number</Label>
-                <Input
-                  id="number"
-                  placeholder="Phone Number"
-                  type="tel"
-                  name="number"
-                  onChange={onChange}
-                  value={number}
-                />
-              </InputDiv>
-              <InputDiv size={4}>
-                <Label htmlFor="add-number">Additional Phone Number</Label>
-                <Input
-                  id="add-number"
-                  placeholder="Additional Phone Number"
-                  type="tel"
-                  name="add_number"
-                  onChange={onChange}
-                  value={add_number}
-                />
-              </InputDiv>
-              <InputDiv size={4}>
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  placeholder="Address"
-                  type="text"
-                  name="address"
-                  onChange={onChange}
-                  value={address}
-                />
-              </InputDiv>
+      {
+        myDonorRequestData?.status === "Pending" &&
+        <form onSubmit={upDateRequest}>
+          <Modal
+            actionText="Update"
+            title="Update Request Form"
+            lg
+            info
+            btnText="Update"
+            show={showUpdateDonorRequestModal}
+            wrapStyle={{ alignItems: "baseline" }}
+            setShow={setShowUpdateDonorRequestModal}>
+            <FormWrap>
+              <Form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                }}>
+                <InputDiv size={4}>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Name"
+                    type="text"
+                    name="name"
+                    onChange={onChange}
+                    value={name}
+                  />
+                </InputDiv>
+                <InputDiv size={5}>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    placeholder="Email"
+                    type="email"
+                    name="email"
+                    onChange={onChange}
+                    value={email}
+                  />
+                </InputDiv>
+                <InputDiv size={3}>
+                  <Label htmlFor="time">When Do You Need Blood</Label>
+                  <Input
+                    id="time"
+                    placeholder="Time"
+                    type="datetime-local"
+                    name="date_time"
+                    onChange={onChange}
+                    value={new Date(date_time).toISOString().substr(0, 16)}
+                  />
+                </InputDiv>
+                <InputDiv size={4}>
+                  <Label htmlFor="number">Phone Number</Label>
+                  <Input
+                    id="number"
+                    placeholder="Phone Number"
+                    type="tel"
+                    name="number"
+                    onChange={onChange}
+                    value={number}
+                  />
+                </InputDiv>
+                <InputDiv size={4}>
+                  <Label htmlFor="add-number">Additional Phone Number</Label>
+                  <Input
+                    id="add-number"
+                    placeholder="Additional Phone Number"
+                    type="tel"
+                    name="add_number"
+                    onChange={onChange}
+                    value={add_number}
+                  />
+                </InputDiv>
+                <InputDiv size={4}>
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="Address"
+                    type="text"
+                    name="address"
+                    onChange={onChange}
+                    value={address}
+                  />
+                </InputDiv>
 
-              <InputDiv>
-                <Label htmlFor="add-number">Short Description</Label>
-                <TextArea
-                  placeholder="Short Description"
-                  name="description"
-                  onChange={onChange}
-                  value={description}>
-                  {description}
-                </TextArea>
-              </InputDiv>
+                <InputDiv>
+                  <Label htmlFor="add-number">Short Description</Label>
+                  <TextArea
+                    placeholder="Short Description"
+                    name="description"
+                    onChange={onChange}
+                    value={description}>
+                    {description}
+                  </TextArea>
+                </InputDiv>
 
-              <InputDiv
-                flex
-                style={{ justifyContent: "space-between" }}
-                size={12}>
-                <Button
-                  type="button"
-                  info
-                  blockOnSmall
-                  style={{ position: "relative", top: "14px" }}
-                  onClick={(e) => {
-                    setCurrentLocation();
-                  }}>
-                  Get Current Location
-                </Button>
+                <InputDiv
+                  flex
+                  style={{ justifyContent: "space-between" }}
+                  size={12}>
+                  <Button
+                    type="button"
+                    info
+                    blockOnSmall
+                    style={{ position: "relative", top: "14px" }}
+                    onClick={(e) => {
+                      setCurrentLocation();
+                    }}>
+                    Get Current Location
+                  </Button>
 
-                <Autocomplete
-                  onLoad={(autoC) => setAutoComplete(autoC)}
-                  onPlaceChanged={onPlaceChanged}>
-                  <>
-                    <Label htmlFor="add-number">
-                      Current Location of Donor *
-                    </Label>
-                    <Input
-                      id="places"
-                      placeholder="Search Places..."
-                      type="text"
-                      onKeyDown={(e) => {
-                        if (e.keyCode === 13) {
-                          e.preventDefault();
-                        } else {
-                          return true;
-                        }
-                      }}
-                    />
-                  </>
-                </Autocomplete>
-              </InputDiv>
+                  <Autocomplete
+                    onLoad={(autoC) => setAutoComplete(autoC)}
+                    onPlaceChanged={onPlaceChanged}>
+                    <>
+                      <Label htmlFor="add-number">
+                        Current Location of Donor *
+                      </Label>
+                      <Input
+                        id="places"
+                        placeholder="Search Places..."
+                        type="text"
+                        onKeyDown={(e) => {
+                          if (e.keyCode === 13) {
+                            e.preventDefault();
+                          } else {
+                            return true;
+                          }
+                        }}
+                      />
+                    </>
+                  </Autocomplete>
+                </InputDiv>
 
-              <InputDiv
-                style={{
-                  boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
-                }}
-                height="400px"
-                size={12}>
-                <Map
-                  coords={coords}
-                  isMarkerShown
-                  googleMapURL=" "
-                  loadingElement={<div style={{ height: `100%` }} />}
-                  containerElement={<div style={{ height: `100%` }} />}
-                  mapElement={<div style={{ height: `100%` }} />}
-                  setCoords={setCoords}
-                  click={(e) =>
-                    setDonorRequestFormData({
-                      ...donorRequestFormData,
-                      location: { lat: e.latLng.lat(), lng: e.latLng.lng() },
-                    })
-                  }
-                  defaultZoom={17}>
-                  {location ? <Marker position={location} /> : ""}
-                </Map>
-              </InputDiv>
-            </Form>
-          </FormWrap>
-        </Modal>
-      </form>
+                <InputDiv
+                  style={{
+                    boxShadow: "0px 0px 15px 2px var(--main-box-shadow-color)",
+                  }}
+                  height="400px"
+                  size={12}>
+                  <Map
+                    coords={coords}
+                    isMarkerShown
+                    googleMapURL=" "
+                    loadingElement={<div style={{ height: `100%` }} />}
+                    containerElement={<div style={{ height: `100%` }} />}
+                    mapElement={<div style={{ height: `100%` }} />}
+                    setCoords={setCoords}
+                    click={(e) =>
+                      setDonorRequestFormData({
+                        ...donorRequestFormData,
+                        location: { lat: e.latLng.lat(), lng: e.latLng.lng() },
+                      })
+                    }
+                    defaultZoom={17}>
+                    {location ? <Marker position={location} /> : ""}
+                  </Map>
+                </InputDiv>
+              </Form>
+            </FormWrap>
+          </Modal>
+        </form>
+      }
     </>
   );
 };

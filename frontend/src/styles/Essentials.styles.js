@@ -107,6 +107,9 @@ export const Button = styled.button`
         
       `
       : ""}
+
+ 
+      
 `;
 
 export const ButtonLink = styled(Link)`
@@ -171,12 +174,12 @@ export const Badge = styled.span`
   letter-spacing: 0.8px;
   color: white;
   transition: var(--main-transition) !important;
-  ${({ info }) =>
+  ${({ info, danger }) =>
     info
       ? `
         background: var(--info-color);       
       `
-      : ""}
+      : danger? `background: var(--primary-color);` : ''}
   ${({ sm }) =>
     sm
       ? `

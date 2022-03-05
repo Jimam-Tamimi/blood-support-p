@@ -35,13 +35,15 @@ class BloodRequestViewSet(ModelViewSet):
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
-    
+     
 
     def list(self, request, *args, **kwargs):
         if(request.user.is_admin):
             return super().list(request, *args, **kwargs)
         else:
             return Response({'success': False, 'error': 'You are not authorized to view this page'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    
 
     def create(self, request, *args, **kwargs):
         try:
@@ -57,7 +59,44 @@ class DonorRequestViewSet(ModelViewSet):
         if(BloodRequest.objects.filter(id=request.data['blood_request'], user=request.user).exists()):
             return Response({'success': False, 'error': 'You can\'t send a donor request to your own blood request'}, status=status.HTTP_400_BAD_REQUEST) 
         return super().create(request, *args, **kwargs)
-    
+
+    def update(self, request, *args, **kwargs):
+        if(request.user.is_staff):
+            return super().update(request, *args, **kwargs)
+        donorRequest = self.get_object()
+        if(donorRequest.user == request.user):
+            if(donorRequest.status == 'Pending'):
+                return super().update(request, *args, **kwargs)
+            else:
+                return Response({'success': False, 'error': 'You can not update this request right now'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to update this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+    def partial_update(self, request, *args, **kwargs):
+        if(request.user.is_staff):
+            return super().partial_update(request, *args, **kwargs)
+        donorRequest = self.get_object()
+        if(donorRequest.user == request.user):
+            if(donorRequest.status == 'Pending'):
+                return super().partial_update(request, *args, **kwargs)
+            else:
+                return Response({'success': False, 'error': 'You can not update this request right now'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to update this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+    def destroy(self, request, *args, **kwargs):
+        if(request.user.is_staff):
+            return super().destroy(request, *args, **kwargs)
+        donorRequest = self.get_object()
+        if(donorRequest.user == request.user):
+            if(donorRequest.status == 'Pending'):
+                return super().destroy(request, *args, **kwargs)
+            else:
+                return Response({'success': False, 'error': 'You can not delete this request right now'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to delete this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED) 
+        
     @action(detail=False, methods=['get'], url_path='get-my-donor-request-for-blood-request')
     def getMyDonorRequestForBloodRequest(self, request):
         try:

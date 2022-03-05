@@ -16,7 +16,6 @@ import Transition from "../Transition/Transition";
 
 export default function Dropdown({ absolute, options, style }) {
   const [showDropdown, setShowDropdown] = useState(false);
-
   return (
     <>
       <Wrap style={style}>
@@ -37,12 +36,13 @@ export default function Dropdown({ absolute, options, style }) {
             onClick={(e) => (showDropdown ? setShowDropdown(false) : "")}
           >
             {options?.map((option, i ) => (
-              <DropdownLink key={i} onClick={option.onClick}>
+                 
+              <DropdownLink disabled={option.hidden} key={i} onClick={ !option.hidden&& option.onClick}>
                 <LinkIcon>
-                  <FaBan />
+                  {option.icon}
                 </LinkIcon>
                 <LinkText>{option.name}</LinkText>
-              </DropdownLink>
+              </DropdownLink>  
             ))}
           </DropdownMenu>
         </Transition>
