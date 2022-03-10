@@ -105,3 +105,22 @@ export const NotAvailableWrap = styled.div`
     text-transform: uppercase;
     }
 `
+
+
+
+export const DetailsAlert = styled.div`
+    width: 100%;
+    height: 43px;
+    background-color: ${({type}) => type === 'info'? 'rgb(195, 221, 253)' : type==='danger'? 'rgb(251, 213, 213)' : '#BCF0DA'};
+    margin: 0 0 15px 0px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    p {
+        /* color: ${({type}) => type==="info"? 'rgb(30, 66, 159)' : type==='danger'? 'rgb(155, 28, 28)' :  'black' }; */
+        color:black ;
+    margin: 0.5rem 0.7rem;
+    font-size: .9rem;
+    font-weight: 500;
+        }
+`

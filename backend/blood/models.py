@@ -55,14 +55,14 @@ class DonorRequest(models.Model):
      
     
 class DonorRequestReview(models.Model):
-    donor_request = models.ForeignKey(DonorRequest, on_delete=models.CASCADE)
+    donor_request = models.OneToOneField(DonorRequest, on_delete=models.CASCADE, unique=True)
     rating = models.FloatField(blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     
 
     
 class BloodRequestReview(models.Model):
-    blood_request = models.ForeignKey(BloodRequest, on_delete=models.CASCADE)
+    blood_request = models.OneToOneField(BloodRequest, on_delete=models.CASCADE, unique=True)
     rating = models.FloatField(blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     

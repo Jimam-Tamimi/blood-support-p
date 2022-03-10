@@ -70,8 +70,10 @@ class BloodRequestViewSet(ModelViewSet):
                     if(dReq.status == 'Accepted'):
                         dReq.status = 'Reviewed'
                         dReq.save()
-                        DonorRequestReview.objects.create(donor_request=dReq, rating=rating, description=description) 
-
+                        try:
+                            DonorRequestReview.objects.create(donor_request=dReq, rating=rating, description=description) 
+                        except Exception as e:
+                            pass
                 bloodRequest.status = 'Completed'
                 bloodRequest.save()
 
@@ -82,9 +84,43 @@ class BloodRequestViewSet(ModelViewSet):
         else:
             return Response({'success': False, 'error': 'You are not authorized to complete this blood request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    
-    
-    
+    @action(detail=True, methods=['get'], url_path='get-current-status-of-blood-request-for-me')
+    def getCurrentStatusOfBloodRequestForMe(self, request, pk=None):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=pk)
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e :
+            print(e)
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+        if(bloodRequest.user == request.user):
+            
+            if(bloodRequest.status == 'Open'):
+                bloodRequestGot =  len(DonorRequest.objects.filter(blood_request=bloodRequest, status="Pending"))
+                return Response({'success': True, 'message': f'You have got total {bloodRequestGot} donor request. Please check them and respond to them 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
+            elif(bloodRequest.status == 'Accepted'):
+                bloodRequestGot =  len(DonorRequest.objects.filter(blood_request=bloodRequest, status="Pending"))
+                return Response({'success': True, 'message': f'You have accepted a donor request. That user will come to donate blood.', 'type': 'success'}, status=status.HTTP_200_OK)
+            
+            elif(bloodRequest.status == 'Completed'): 
+                reviewedDonorRequest = DonorRequestReview.objects.get(donor_request__blood_request=bloodRequest)
+                return Response({'success': True, 'message': f'Your blood request was completed and you gave {reviewedDonorRequest.rating} star review to the donor 🙂.', 'type': 'success'}, status=status.HTTP_200_OK)
+            
+            elif(bloodRequest.status == 'Reviewed'):
+                reviewedBloodRequest = DonorRequestReview.objects.get(donor_request__blood_request=bloodRequest)
+                return Response({'success': True, 'message': f'Everything was done successfully and the donor gave you {reviewedBloodRequest.rating} star rating 🙂.', 'type': 'success'}, status=status.HTTP_200_OK)
+            
+
+        else:
+            try:
+                donorRequest = DonorRequest.objects.get(blood_request=bloodRequest, user=request.user)
+                if(donorRequest.status == 'Pending'):
+                    return Response({'success': True, 'message': f'You have sent a donor request. Please wait for the blood requestor to check your donor request and respond to it. 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
+                
+            except DonorRequest.DoesNotExist:
+                return Response({'success': True, 'message': 'You haven\'t sent any donor request to this blood request😶', 'type': 'info'}, status=status.HTTP_200_OK)
+
+            
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 

@@ -38,6 +38,7 @@ import {
   ActionDiv,
   Action,
   NotAvailableWrap,
+  DetailsAlert,
 } from "../../styles/Details.styles";
 
 import Map from "../../components/Map/Map";
@@ -70,6 +71,7 @@ import Select from "react-select";
 import Moment from "react-moment";
 import {
   getBloodRequestData,
+  getCurrentStatusOfBloodRequestForMe,
   getProfileDetailsForUser,
   getTotalDonorRequestsForBloodRequest,
 } from "../../apiCalls";
@@ -86,6 +88,9 @@ export default function Request({ match }) {
   const [requestData, setRequestData] = useState(null);
   const [requestorProfileData, setRequestorProfileData] = useState(null);
   const [totalDonorRequestGot, setTotalDonorRequestGot] = useState(0);
+  const [requestAlertInfo, setRequestAlertInfo] = useState({type: 'info', message: 'You have submitted your donor request. Please wait until the blood requestor checks ur donor request and respond to it.'});
+
+
 
   // functions
   const getRequestData = async () => {
@@ -112,6 +117,26 @@ export default function Request({ match }) {
     await getRequestData();
     dispatch(setProgress(100));
   }, []);
+
+  const getRequestStatusInfo = async () => {
+    if (requestData?.id){
+      try {
+        const res = await getCurrentStatusOfBloodRequestForMe(requestData?.id )
+        if(res.status=== 200){
+          setRequestAlertInfo(res?.data)
+        }
+      } catch (error) {
+
+      }
+
+    } 
+  }
+  
+  useEffect( async () => {
+    getRequestStatusInfo()
+  }, [requestData]);
+  
+  
 
   const checkHaveSentDonorRequest = async (bloodRequestId) => {
     if (bloodRequestId) {
@@ -159,6 +184,13 @@ export default function Request({ match }) {
         )}
       </NavWrap>
 
+        {
+          requestData && requestData !== "404_NOT_AVAILABLE" ? 
+            <DetailsAlert type={requestAlertInfo?.type}  > 
+              <p>{requestAlertInfo?.message}</p>
+            </DetailsAlert>: ''
+        }
+
       <Route exact path="/requests/:bloodRequestId/">
         <RequestDetails
           requestData={requestData}
@@ -166,6 +198,7 @@ export default function Request({ match }) {
           setRequestData={setRequestData}
           checkHaveSentDonorRequest={checkHaveSentDonorRequest}
           totalDonorRequestGot={totalDonorRequestGot}
+          getRequestStatusInfo={getRequestStatusInfo}
         />
       </Route>
 
@@ -179,7 +212,7 @@ export default function Request({ match }) {
         </Route>
       ) : requestData && requestData !== "404_NOT_AVAILABLE" ? (
         <Route exact path="/requests/:bloodRequestId/donor-request/">
-          <YourDonorRequest bloodRequestId={match.params.bloodRequestId} />
+          <YourDonorRequest getRequestStatusInfo={getRequestStatusInfo}  bloodRequestId={match.params.bloodRequestId} />
         </Route>
       ) : (
         ""
@@ -195,6 +228,7 @@ const RequestDetails = ({
   setRequestData,
   totalDonorRequestGot,
   checkHaveSentDonorRequest,
+  getRequestStatusInfo
 }) => {
   // states
 
@@ -297,6 +331,7 @@ const RequestDetails = ({
                   <SendDonorRequestForm
                     checkHaveSentDonorRequest={checkHaveSentDonorRequest}
                     bloodRequestId={requestData?.id}
+                    getRequestStatusInfo={getRequestStatusInfo}
                   />
                 ) : (
                   ""
@@ -336,6 +371,7 @@ const RequestDetails = ({
 const SendDonorRequestForm = ({
   bloodRequestId,
   checkHaveSentDonorRequest,
+  getRequestStatusInfo
 }) => {
   const [autoComplete, setAutoComplete] = useState(null);
   const [coords, setCoords] = useState({});
@@ -392,6 +428,7 @@ const SendDonorRequestForm = ({
     setHaveSentDonorRequest(await checkHaveSentDonorRequest(bloodRequestId));
   }, [bloodRequestId]);
 
+
   const onChange = (e) =>
     setDonorRequestFormData({
       ...donorRequestFormData,
@@ -424,10 +461,11 @@ const SendDonorRequestForm = ({
       if (res.status === 201) {
         dispatch(setProgress(90));
         dispatch(
-          alert("Your donor request was sent successfully 🙂", "success")
+        alert("Your donor request was sent successfully 🙂", "success")
         );
         setHaveSentDonorRequest(true);
         setShowDonorReqModal(false);
+        await getRequestStatusInfo()
       }
     } catch (err) {
       if (
@@ -1400,7 +1438,7 @@ const DonorRequestMoreDetails = ({
   );
 };
 
-const YourDonorRequest = ({ bloodRequestId }) => {
+const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
   // hooks
   const dispatch = useDispatch();
   const history = useHistory();
@@ -1458,6 +1496,7 @@ const YourDonorRequest = ({ bloodRequestId }) => {
         dispatch(alert("Your donor request has been deleted successfully"));
         history.push("/requests/" + myDonorRequestData?.blood_request + "/");
         dispatch(setProgress(80));
+        await getRequestStatusInfo()
         setMyDonorRequestData(null);
       }
     } catch (error) {
