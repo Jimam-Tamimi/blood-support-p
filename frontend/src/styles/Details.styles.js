@@ -72,6 +72,20 @@ export const ActionDiv = styled.div`
 export const Action = styled.div`
     position: relative;
     margin: 10px 0px;
+
+    div.action-badge {
+        position: absolute;
+    top: 20px;
+    right: 0;
+    ${Flex}
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end ;
+    span {
+        margin: 5px 0px;
+    }
+
+    }
 `
   
 

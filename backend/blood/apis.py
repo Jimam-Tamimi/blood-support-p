@@ -23,6 +23,8 @@ User = get_user_model()
 class BloodRequestViewSet(ModelViewSet):
     queryset = BloodRequest.objects.all()
     serializer_class = BloodRequestSerializer 
+     
+    
     @action(detail=True, methods=['get'], url_path='have-sent-donor-request')
     def haveSentDonorRequest(self, request, pk=None):
         blood_request = self.get_object()
@@ -31,7 +33,50 @@ class BloodRequestViewSet(ModelViewSet):
         else:
             return Response({'success': True, 'message': 'You haven\'t sent any donor request', "haveSentDonorRequest" : False}, status=status.HTTP_200_OK)
             
- 
+    @action(detail=True, methods=['get'], url_path='get-total-donor-requests-for-blood-request')
+    def getTotalDonorRequestsForBloodRequest(self, request, pk=None):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=pk)
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e :
+            print(e)
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        
+        donorRequests = DonorRequest.objects.filter(blood_request=bloodRequest).order_by('-timestamp')
+        donorRequests = donorRequests.filter(~Q(status="Rejected")) 
+        return Response({"total": len(donorRequests)}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='complete-blood-request')
+    def completeBloodRequest(self, request, pk=None):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=pk)
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e :
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if(bloodRequest.user == request.user):
+            if(bloodRequest.status == 'Accepted'):
+                bloodRequest.status = 'Completed'
+                bloodRequest.save()
+                donorRequests = DonorRequest.objects.filter(blood_request=bloodRequest)
+                for dReq in donorRequests:
+                    if(dReq.status == 'Accepted'):
+                        dReq.status = 'Reviewed'
+                        dReq.save()
+                        print({'data': request.data})
+                        break
+                return Response({'success': True, 'message': 'Blood request was completed successfully 😀'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'success': False, 'error': 'You can not complete accepted blood request'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to complete this blood request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    
+    
+    
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
@@ -137,6 +182,7 @@ class DonorRequestViewSet(ModelViewSet):
     
     @action(detail=False, methods=['post'], url_path='accept-donor-request')
     def acceptDonorRequest(self, request):
+        print('in')
         try:
             donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
             if(donorRequest.blood_request.user != request.user):
@@ -162,13 +208,17 @@ class DonorRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'], url_path='reject-donor-request')
-    def acceptDonorRequest(self, request):
+    def rejectDonorRequest(self, request):
         try:
             donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
             if(donorRequest.blood_request.user != request.user):
                 return Response({'success': False, 'error': 'You are not authorized to reject this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
             if(donorRequest.status == 'Rejected'):
                 return Response({'success': False, 'error': 'You have already rejected this donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+                
+
+            if(donorRequest.status == 'Accepted'):
+                return Response({'success': False, 'error': 'You can\'t reject an accepted donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
                 
             donorRequest.status = 'Rejected'
             donorRequest.save() 
@@ -178,3 +228,31 @@ class DonorRequestViewSet(ModelViewSet):
         
         except Exception:
             return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+    
+    @action(detail=False, methods=['post'], url_path='cancel-accepted-donor-request')
+    def cancelAcceptedDonorRequest(self, request):
+        try:
+            donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
+            if(donorRequest.blood_request.user != request.user):
+                return Response({'success': False, 'error': 'You are not authorized to reject this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            if(donorRequest.status == 'Accepted'):
+                donorRequest.status = 'Pending'
+                donorRequest.save() 
+                donorRequest.blood_request.status = 'Open'
+                donorRequest.blood_request.save()
+            else:
+                return Response({'success': False, 'error': 'You can only cancel accepted donor requests.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+        except DonorRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+        

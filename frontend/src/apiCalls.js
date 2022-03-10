@@ -45,3 +45,25 @@ export const getBloodRequestData = async (id, showAlert = true) =>
       }
     }
   });
+
+// function that takes in an blood request id and return a promise that resolves to the blood request details of that blood request id
+export const getTotalDonorRequestsForBloodRequest = async (id, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${id}/get-total-donor-requests-for-blood-request/`
+      );
+      console.log(res)
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if (error.response.status === 404) {
+          store.dispatch(alert("This blood request is not available 😒", "danger"));
+        } else {
+            store.dispatch(alert("Failed to get total donor request for this blood request 😕", "danger"));
+        }
+      }
+    }
+  });

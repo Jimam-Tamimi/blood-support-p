@@ -68,7 +68,12 @@ import alert from "../../redux/alert/actions";
 import { calcDistance, getCurrentLocation } from "../../helpers";
 import Select from "react-select";
 import Moment from "react-moment";
-import { getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
+import {
+  getBloodRequestData,
+  getProfileDetailsForUser,
+  getTotalDonorRequestsForBloodRequest,
+} from "../../apiCalls";
+import Transition from "../../components/Transition/Transition";
 
 export default function Request({ match }) {
   // hooks
@@ -80,6 +85,7 @@ export default function Request({ match }) {
   // states
   const [requestData, setRequestData] = useState(null);
   const [requestorProfileData, setRequestorProfileData] = useState(null);
+  const [totalDonorRequestGot, setTotalDonorRequestGot] = useState(0);
 
   // functions
   const getRequestData = async () => {
@@ -87,8 +93,11 @@ export default function Request({ match }) {
       const res = await getBloodRequestData(match?.params?.bloodRequestId);
       if (res.status === 200) {
         setRequestData(res.data);
-        await getProfileDetailsForUser(res.data.user.id).then((res) =>
+        getProfileDetailsForUser(res.data.user.id).then((res) =>
           setRequestorProfileData(res.data)
+        );
+        getTotalDonorRequestsForBloodRequest(res.data.id).then((res) =>
+          setTotalDonorRequestGot(res?.data?.total)
         );
       }
     } catch (error) {
@@ -156,6 +165,7 @@ export default function Request({ match }) {
           requestorProfileData={requestorProfileData}
           setRequestData={setRequestData}
           checkHaveSentDonorRequest={checkHaveSentDonorRequest}
+          totalDonorRequestGot={totalDonorRequestGot}
         />
       </Route>
 
@@ -183,6 +193,7 @@ const RequestDetails = ({
   requestData,
   requestorProfileData,
   setRequestData,
+  totalDonorRequestGot,
   checkHaveSentDonorRequest,
 }) => {
   // states
@@ -277,7 +288,9 @@ const RequestDetails = ({
                       setRequestData={setRequestData}
                       requestData={requestData}
                     />
-                    <Complete />
+                    <Complete 
+                      requestData={requestData}
+                    />
                   </>
                 ) : auth?.user_id !== requestData?.user?.id ? (
                   <SendDonorRequestForm
@@ -294,16 +307,22 @@ const RequestDetails = ({
                 <Dropdown options={dropDownOption} />
               </Action>
               <Action>
-                <Badge
-                  info
-                  style={{
-                    position: "absolute",
-                    width: "max-content",
-                    right: "6px",
-                    top: "20px",
-                  }}>
-                  {requestData?.status}
-                </Badge>
+                <div className="action-badge">
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {requestData?.status}
+                  </Badge>
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {totalDonorRequestGot} Request Got
+                  </Badge>
+                </div>
               </Action>
             </ActionDiv>
           </AllDetails>
@@ -379,8 +398,16 @@ const SendDonorRequestForm = ({
     });
 
   // on form submit send donor request to api
-  const { name, email, date_time, address, number, add_number, location, description } =
-    donorRequestFormData;
+  const {
+    name,
+    email,
+    date_time,
+    address,
+    number,
+    add_number,
+    location,
+    description,
+  } = donorRequestFormData;
   const sendDonorRequest = async (e) => {
     e.preventDefault();
     dispatch(setProgress(20));
@@ -519,7 +546,14 @@ const SendDonorRequestForm = ({
               <InputDiv>
                 <Label htmlFor="add-number">Short Description</Label>
 
-                <TextArea required placeholder="Short Description" onChange={onChange} name="description" value={description} >{description}</TextArea>
+                <TextArea
+                  required
+                  placeholder="Short Description"
+                  onChange={onChange}
+                  name="description"
+                  value={description}>
+                  {description}
+                </TextArea>
               </InputDiv>
 
               <InputDiv
@@ -595,9 +629,16 @@ const SendDonorRequestForm = ({
   );
 };
 
-const Complete = () => {
+const Complete = ({requestData}) => {
   // states
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+
+  const [completeReqFormData, setCompleteReqFormData] = useState({
+    rating: 3,
+    description: ''
+  })
+
+  const { rating, description } = completeReqFormData;
 
   // hooks
   const profile = useSelector((state) => state.profile);
@@ -608,26 +649,42 @@ const Complete = () => {
   const secondExample = {
     size: 35,
     count: 5,
-    // color: "black",
     activeColor: "var(--primary-color)",
-    value: 5,
+    value: rating,
     a11y: true,
     isHalf: true,
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
-    onChange: (newValue) => {},
+    onChange: (newValue) => setCompleteReqFormData({...completeReqFormData, rating: newValue}),
   };
+
+
+  // functions 
+
+  const onInputValChange = (e) => setCompleteReqFormData({...completeReqFormData, [e.target.name]: e.target.value});
+
+  const completeBloodRequest = async (e) => {
+    e.preventDefault();
+    console.log(completeReqFormData)
+    try{
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`, completeReqFormData)
+      console.log(res)
+
+
+    } catch(err){
+      console.log(err)
+    }
+  }
 
   return (
     <>
       <Button
-        disabled={!profile.isCompleted}
+        disabled={!profile.isCompleted || requestData.status !== "Accepted"}
         onClick={(e) => setShowCompleteModal(true)}>
         Complete
       </Button>
-      {profile.isCompleted && (
-        <form onSubmit={sendRequest}>
+      {(profile.isCompleted && requestData.status === "Accepted") && (
           <Modal
             actionText="Complete"
             title="Review And Complete Request"
@@ -637,17 +694,20 @@ const Complete = () => {
             fade
             scale
             setShow={setShowCompleteModal}
-            show={showCompleteModal}>
+            show={showCompleteModal}
+            formId="complete-form"
+            >
             <FormWrap>
               <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                }}>
+                onSubmit={completeBloodRequest}
+                id="complete-form"
+                >
+
                 <InputDiv>
                   <Label htmlFor="add-number">
                     Express your experience with this Donor
                   </Label>
-                  <TextArea placeholder="Short Description"></TextArea>
+                  <TextArea required  onChange={onInputValChange} name="description" value={description} placeholder="Short Description">{description}</TextArea>
                 </InputDiv>
                 <InputDiv>
                   <Label htmlFor="add-number">
@@ -661,7 +721,6 @@ const Complete = () => {
               </Form>
             </FormWrap>
           </Modal>
-        </form>
       )}
     </>
   );
@@ -978,7 +1037,6 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
   });
 
   const getDonorRequestsForBloodRequest = async () => {
-    dispatch(setProgress(20));
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}api/blood/donor-request/get-donor-requests-for-my-blood-request/`,
@@ -990,16 +1048,16 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
         getCurrentLocation((crds) => {
           setCurrentLocation(crds);
         });
-        dispatch(setProgress(90));
       }
     } catch (error) {
       dispatch(alert("Failed to fetch donor requests", "danger"));
     }
-    dispatch(setProgress(100));
   };
 
   useEffect(async () => {
+    dispatch(setProgress(30));
     getDonorRequestsForBloodRequest();
+    dispatch(setProgress(100));
   }, [requestData]);
 
   const showMoreDetails = (id) => {
@@ -1041,7 +1099,6 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
               <Th>Number</Th>
               {showEmail ? <Th>Email</Th> : ""}
             </Tr>
-
             {donorRequestData.map((donorRequest, index) => (
               <Tr key={index} onClick={(e) => showMoreDetails(donorRequest.id)}>
                 <Td>{index + 1}</Td>
@@ -1087,6 +1144,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
             ))}
           </HtmlTable>
         </BottomSection>
+
         <OffCanvas
           onCanvasExit={onCanvasExit}
           setShow={setShowDonorRequest}
@@ -1146,12 +1204,11 @@ const DonorRequestMoreDetails = ({
           setShowDonorRequest(false);
         }
       } catch (error) {
-        if(error?.response?.data?.success === false){
+        if (error?.response?.data?.success === false) {
           dispatch(alert(error?.response?.data?.error, "danger"));
         } else {
-          dispatch(alert('Failed to accept this donor request 😐', "danger"));
-        } 
-        
+          dispatch(alert("Failed to accept this donor request 😐", "danger"));
+        }
       }
     } else {
       dispatch(alert("You can't accept this request", "danger"));
@@ -1165,15 +1222,41 @@ const DonorRequestMoreDetails = ({
         { donor_request_id: id }
       );
       console.log(res);
-      if (res.status === 200) { 
-        setRequestData({...requestData});
+      if (res.status === 200) {
+        setRequestData({ ...requestData, status: "Open" });
         dispatch(alert("Donor request rejected", "success"));
         setShowDonorRequest(false);
       }
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      if (error?.response?.data?.success === false) {
+        dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        dispatch(alert("Failed to reject this donor request 😐", "danger"));
+      }
+      console.log(error );
     }
-  }
+  };
+
+  const cancelAcceptedDonorRequest = async (id) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/cancel-accepted-donor-request/`,
+        { donor_request_id: id }
+      );
+      console.log(res);
+      if (res.status === 200) {
+        setRequestData({ ...requestData, status: 'Open' });
+        dispatch(alert("Accepted donor request was canceled successfully", "success"));
+        setShowDonorRequest(false);
+      }
+    } catch (error) {
+      if (error?.response?.data?.success === false) {
+        dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        dispatch(alert("Failed to cancel this accepted donor request 😐", "danger"));
+      }
+    }
+  };
 
   return (
     <AllDetails>
@@ -1263,9 +1346,30 @@ const DonorRequestMoreDetails = ({
               ? "Accepted"
               : "Accept"}
           </Button>
-          <Button onClick={e => window.confirm('Are you sure you want to reject this donor request?') && rejectDonorRequest(donorRequestMoreDetails.id)} disabled={donorRequestMoreDetails.status === "Accepted"} sm>
-            Reject
-          </Button>
+
+          {donorRequestMoreDetails.status === "Accepted" ? (
+            <Button
+              onClick={(e) =>
+                window.confirm(
+                  "Are you sure you want to cancel the acceptance of this this donor request?"
+                ) && cancelAcceptedDonorRequest(donorRequestMoreDetails.id)
+              }
+              disabled={donorRequestMoreDetails.status !== "Accepted"}
+              sm>
+              Cancel
+            </Button>
+          ) : (
+            <Button
+              onClick={(e) =>
+                window.confirm(
+                  "Are you sure you want to reject this donor request?"
+                ) && rejectDonorRequest(donorRequestMoreDetails.id)
+              }
+              disabled={donorRequestMoreDetails.status === "Accepted"}
+              sm>
+              Reject
+            </Button>
+          )}
         </ButtonDiv>
       </DetailsDiv>
     </AllDetails>
@@ -1336,9 +1440,9 @@ const YourDonorRequest = ({ bloodRequestId }) => {
       console.log(error);
       if (error?.response?.status === 404) {
         dispatch(alert("this donor request is not available", "danger"));
-      } else if(error?.response?.data?.success === false) {
+      } else if (error?.response?.data?.success === false) {
         dispatch(alert(error?.response?.data?.error, "danger"));
-      } else{
+      } else {
         dispatch(alert("something went wrong", "danger"));
       }
     }
@@ -1346,12 +1450,23 @@ const YourDonorRequest = ({ bloodRequestId }) => {
   };
 
   const dropDownOption = [
-     { name: "Delete", icon: <FaBan />, onClick: deleteDonorRequest, hidden: myDonorRequestData?.status !== "Pending" },
+    {
+      name: "Delete",
+      icon: <FaBan />,
+      onClick: deleteDonorRequest,
+      hidden: myDonorRequestData?.status !== "Pending",
+    },
   ];
 
   return (
     <>
-      {myDonorRequestData !== "404_NOT_FOUND" && myDonorRequestData ? (
+
+      {myDonorRequestData === "404_NOT_FOUND" ? (
+                <NotAvailableWrap>
+                <h2>you haven't sent any donor request!</h2>
+              </NotAvailableWrap>
+
+      ) : myDonorRequestData &&  (
         <>
           <DetailsMap>
             <Map
@@ -1433,11 +1548,7 @@ const YourDonorRequest = ({ bloodRequestId }) => {
               </Action>
             </ActionDiv>
           </AllDetails>
-        </>
-      ) : (
-        <NotAvailableWrap>
-          <h2>you haven't sent any donor request!</h2>
-        </NotAvailableWrap>
+          </>
       )}
     </>
   );
@@ -1527,11 +1638,15 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
 
   return (
     <>
-      <Button disabled={myDonorRequestData?.status !== "Pending"}  onClick={() => myDonorRequestData?.status === "Pending" && setShowUpdateDonorRequestModal(true)}>
+      <Button
+        disabled={myDonorRequestData?.status !== "Pending"}
+        onClick={() =>
+          myDonorRequestData?.status === "Pending" &&
+          setShowUpdateDonorRequestModal(true)
+        }>
         Update
       </Button>
-      {
-        myDonorRequestData?.status === "Pending" &&
+      {myDonorRequestData?.status === "Pending" && (
         <form onSubmit={upDateRequest}>
           <Modal
             actionText="Update"
@@ -1691,7 +1806,7 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
             </FormWrap>
           </Modal>
         </form>
-      }
+      )}
     </>
   );
 };

@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 
 export const Wrap = styled.div`
-    transition: all ${({ timeout }) => `${timeout / 1000}s`} ease !important;
+    transition: all ${({ timeout }) => `${timeout / 1000}s`} ease-in-out !important;
  
     ${({ show, fade, leftToRight, rightToLeft,  topToBottom, bottomToTop, scale, zoom }) => (
         show ? (
