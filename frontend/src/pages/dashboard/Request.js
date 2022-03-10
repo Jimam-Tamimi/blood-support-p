@@ -288,8 +288,9 @@ const RequestDetails = ({
                       setRequestData={setRequestData}
                       requestData={requestData}
                     />
-                    <Complete 
+                    <Complete
                       requestData={requestData}
+                      setRequestData={setRequestData}
                     />
                   </>
                 ) : auth?.user_id !== requestData?.user?.id ? (
@@ -629,19 +630,20 @@ const SendDonorRequestForm = ({
   );
 };
 
-const Complete = ({requestData}) => {
+const Complete = ({ requestData, setRequestData }) => {
   // states
   const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   const [completeReqFormData, setCompleteReqFormData] = useState({
     rating: 3,
-    description: ''
-  })
+    description: "",
+  });
 
   const { rating, description } = completeReqFormData;
 
   // hooks
   const profile = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
 
   const sendRequest = (e) => {
     e.preventDefault();
@@ -656,26 +658,40 @@ const Complete = ({requestData}) => {
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
-    onChange: (newValue) => setCompleteReqFormData({...completeReqFormData, rating: newValue}),
+    onChange: (newValue) =>
+      setCompleteReqFormData({ ...completeReqFormData, rating: newValue }),
   };
 
+  // functions
 
-  // functions 
-
-  const onInputValChange = (e) => setCompleteReqFormData({...completeReqFormData, [e.target.name]: e.target.value});
+  const onInputValChange = (e) =>
+    setCompleteReqFormData({
+      ...completeReqFormData,
+      [e.target.name]: e.target.value,
+    });
 
   const completeBloodRequest = async (e) => {
     e.preventDefault();
-    console.log(completeReqFormData)
-    try{
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`, completeReqFormData)
-      console.log(res)
-
-
-    } catch(err){
-      console.log(err)
+    dispatch(setProgress(30));
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`,
+        completeReqFormData
+      );
+      console.log(res);
+      if (res.status === 200 && res.data.success) {
+        setRequestData({ ...requestData, status: "Completed" });
+        dispatch(alert(res?.data?.message));
+        setShowCompleteModal(false);
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response.data.success === false) {
+        dispatch(alert(err.response.data.error, "danger"));
+      }
     }
-  }
+    dispatch(setProgress(100));
+  };
 
   return (
     <>
@@ -684,43 +700,42 @@ const Complete = ({requestData}) => {
         onClick={(e) => setShowCompleteModal(true)}>
         Complete
       </Button>
-      {(profile.isCompleted && requestData.status === "Accepted") && (
-          <Modal
-            actionText="Complete"
-            title="Review And Complete Request"
-            md
-            info
-            btnText="Complete"
-            fade
-            scale
-            setShow={setShowCompleteModal}
-            show={showCompleteModal}
-            formId="complete-form"
-            >
-            <FormWrap>
-              <Form
-                onSubmit={completeBloodRequest}
-                id="complete-form"
-                >
-
-                <InputDiv>
-                  <Label htmlFor="add-number">
-                    Express your experience with this Donor
-                  </Label>
-                  <TextArea required  onChange={onInputValChange} name="description" value={description} placeholder="Short Description">{description}</TextArea>
-                </InputDiv>
-                <InputDiv>
-                  <Label htmlFor="add-number">
-                    Express your experience with this Donor
-                  </Label>
-                  <ReactStars
-                    style={{ marginTop: "11px" }}
-                    {...secondExample}
-                  />
-                </InputDiv>
-              </Form>
-            </FormWrap>
-          </Modal>
+      {profile.isCompleted && requestData.status === "Accepted" && (
+        <Modal
+          actionText="Complete"
+          title="Review And Complete Request"
+          md
+          info
+          btnText="Complete"
+          fade
+          scale
+          setShow={setShowCompleteModal}
+          show={showCompleteModal}
+          formId="complete-form">
+          <FormWrap>
+            <Form onSubmit={completeBloodRequest} id="complete-form">
+              <InputDiv>
+                <Label htmlFor="add-number">
+                  Express your experience with this Donor
+                </Label>
+                <TextArea
+                  required
+                  onChange={onInputValChange}
+                  name="description"
+                  value={description}
+                  placeholder="Short Description">
+                  {description}
+                </TextArea>
+              </InputDiv>
+              <InputDiv>
+                <Label htmlFor="add-number">
+                  Express your experience with this Donor
+                </Label>
+                <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
+              </InputDiv>
+            </Form>
+          </FormWrap>
+        </Modal>
       )}
     </>
   );
@@ -1056,7 +1071,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
 
   useEffect(async () => {
     dispatch(setProgress(30));
-    getDonorRequestsForBloodRequest();
+    await getDonorRequestsForBloodRequest();
     dispatch(setProgress(100));
   }, [requestData]);
 
@@ -1133,9 +1148,14 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                 <Td>{donorRequest?.number}</Td>
                 {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
                 <div className="table-row-badge">
-                  {donorRequest?.status === "Accepted" && (
+                  {donorRequest?.status === "Accepted" ? (
                     <Badge sm> ACCEPTED </Badge>
+                  ) : donorRequest?.status === "Reviewed" ? (
+                    <Badge sm> REVIEWED </Badge>
+                  ) : (
+                    ""
                   )}
+
                   <Badge sm>
                     <Moment fromNow>{donorRequest.timestamp}</Moment>
                   </Badge>
@@ -1233,7 +1253,7 @@ const DonorRequestMoreDetails = ({
       } else {
         dispatch(alert("Failed to reject this donor request 😐", "danger"));
       }
-      console.log(error );
+      console.log(error);
     }
   };
 
@@ -1245,15 +1265,19 @@ const DonorRequestMoreDetails = ({
       );
       console.log(res);
       if (res.status === 200) {
-        setRequestData({ ...requestData, status: 'Open' });
-        dispatch(alert("Accepted donor request was canceled successfully", "success"));
+        setRequestData({ ...requestData, status: "Open" });
+        dispatch(
+          alert("Accepted donor request was canceled successfully", "success")
+        );
         setShowDonorRequest(false);
       }
     } catch (error) {
       if (error?.response?.data?.success === false) {
         dispatch(alert(error?.response?.data?.error, "danger"));
       } else {
-        dispatch(alert("Failed to cancel this accepted donor request 😐", "danger"));
+        dispatch(
+          alert("Failed to cancel this accepted donor request 😐", "danger")
+        );
       }
     }
   };
@@ -1347,7 +1371,7 @@ const DonorRequestMoreDetails = ({
               : "Accept"}
           </Button>
 
-          {donorRequestMoreDetails.status === "Accepted" ? (
+          {donorRequestMoreDetails.status === "Accepted" || donorRequestMoreDetails?.status === "Reviewed" ? (
             <Button
               onClick={(e) =>
                 window.confirm(
@@ -1365,7 +1389,7 @@ const DonorRequestMoreDetails = ({
                   "Are you sure you want to reject this donor request?"
                 ) && rejectDonorRequest(donorRequestMoreDetails.id)
               }
-              disabled={donorRequestMoreDetails.status === "Accepted"}
+              disabled={donorRequestMoreDetails.status !== "Pending" || (requestData.status !== 'Open' &&  requestData.status !== 'Accepted')  }
               sm>
               Reject
             </Button>
@@ -1460,95 +1484,99 @@ const YourDonorRequest = ({ bloodRequestId }) => {
 
   return (
     <>
-
       {myDonorRequestData === "404_NOT_FOUND" ? (
-                <NotAvailableWrap>
-                <h2>you haven't sent any donor request!</h2>
-              </NotAvailableWrap>
+        <NotAvailableWrap>
+          <h2>you haven't sent any donor request!</h2>
+        </NotAvailableWrap>
+      ) : (
+        myDonorRequestData && (
+          <>
+            <DetailsMap>
+              <Map
+                coords={myDonorRequestData?.location}
+                isMarkerShown
+                googleMapURL=" "
+                loadingElement={
+                  <div style={{ height: `350px`, width: "100%" }} />
+                }
+                containerElement={
+                  <div style={{ height: `350px`, width: "100%" }} />
+                }
+                mapElement={<div style={{ height: `350px`, width: "100%" }} />}
+                defaultZoom={14}>
+                {<Marker position={myDonorRequestData?.location} />}
+              </Map>
+            </DetailsMap>
+            <AllDetails>
+              <DetailsDiv>
+                <DetailHeader>Informations: </DetailHeader>
+                <Detail>
+                  <DetailField>Name: </DetailField>
+                  <DetailFieldValue>
+                    {myDonorRequestData?.name}
+                  </DetailFieldValue>
+                </Detail>
+                <Detail>
+                  <DetailField>Time: </DetailField>
+                  <DetailFieldValue>
+                    <Moment format="DD/MM/YYYY hh:MM A">
+                      {myDonorRequestData?.date_time}
+                    </Moment>{" "}
+                  </DetailFieldValue>
+                </Detail>
 
-      ) : myDonorRequestData &&  (
-        <>
-          <DetailsMap>
-            <Map
-              coords={myDonorRequestData?.location}
-              isMarkerShown
-              googleMapURL=" "
-              loadingElement={
-                <div style={{ height: `350px`, width: "100%" }} />
-              }
-              containerElement={
-                <div style={{ height: `350px`, width: "100%" }} />
-              }
-              mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-              defaultZoom={14}>
-              {<Marker position={myDonorRequestData?.location} />}
-            </Map>
-          </DetailsMap>
-          <AllDetails>
-            <DetailsDiv>
-              <DetailHeader>Informations: </DetailHeader>
-              <Detail>
-                <DetailField>Name: </DetailField>
-                <DetailFieldValue>{myDonorRequestData?.name}</DetailFieldValue>
-              </Detail>
-              <Detail>
-                <DetailField>Time: </DetailField>
-                <DetailFieldValue>
-                  <Moment format="DD/MM/YYYY hh:MM A">
-                    {myDonorRequestData?.date_time}
-                  </Moment>{" "}
-                </DetailFieldValue>
-              </Detail>
+                <Detail>
+                  <DetailField>Number: </DetailField>
+                  <DetailFieldValue>
+                    {myDonorRequestData?.number}
+                  </DetailFieldValue>
+                </Detail>
+                <Detail>
+                  <DetailField>Additional Number: </DetailField>
+                  <DetailFieldValue>
+                    {myDonorRequestData?.number}
+                  </DetailFieldValue>
+                </Detail>
+                <Detail>
+                  <DetailField>Email: </DetailField>
+                  <DetailFieldValue>
+                    {myDonorRequestData?.email}
+                  </DetailFieldValue>
+                </Detail>
 
-              <Detail>
-                <DetailField>Number: </DetailField>
-                <DetailFieldValue>
-                  {myDonorRequestData?.number}
-                </DetailFieldValue>
-              </Detail>
-              <Detail>
-                <DetailField>Additional Number: </DetailField>
-                <DetailFieldValue>
-                  {myDonorRequestData?.number}
-                </DetailFieldValue>
-              </Detail>
-              <Detail>
-                <DetailField>Email: </DetailField>
-                <DetailFieldValue>{myDonorRequestData?.email}</DetailFieldValue>
-              </Detail>
-
-              <DetailHeader>Description: </DetailHeader>
-              <Detail>
-                <DetailFieldValue>
-                  {myDonorRequestData?.description}
-                </DetailFieldValue>
-              </Detail>
-              <ButtonDiv>
-                <UpdateDonorRequest
-                  myDonorRequestData={myDonorRequestData}
-                  setMyDonorRequestData={setMyDonorRequestData}
-                />
-              </ButtonDiv>
-            </DetailsDiv>
-            <ActionDiv>
-              <Action>
-                <Dropdown options={dropDownOption} />
-              </Action>
-              <Action>
-                <Badge
-                  danger={myDonorRequestData?.status === "Rejected"}
-                  style={{
-                    position: "absolute",
-                    width: "max-content",
-                    right: "6px",
-                    top: "20px",
-                  }}>
-                  {myDonorRequestData?.status}
-                </Badge>
-              </Action>
-            </ActionDiv>
-          </AllDetails>
+                <DetailHeader>Description: </DetailHeader>
+                <Detail>
+                  <DetailFieldValue>
+                    {myDonorRequestData?.description}
+                  </DetailFieldValue>
+                </Detail>
+                <ButtonDiv>
+                  <UpdateDonorRequest
+                    myDonorRequestData={myDonorRequestData}
+                    setMyDonorRequestData={setMyDonorRequestData}
+                  />
+                </ButtonDiv>
+              </DetailsDiv>
+              <ActionDiv>
+                <Action>
+                  <Dropdown options={dropDownOption} />
+                </Action>
+                <Action>
+                  <Badge
+                    danger={myDonorRequestData?.status === "Rejected"}
+                    style={{
+                      position: "absolute",
+                      width: "max-content",
+                      right: "6px",
+                      top: "20px",
+                    }}>
+                    {myDonorRequestData?.status}
+                  </Badge>
+                </Action>
+              </ActionDiv>
+            </AllDetails>
           </>
+        )
       )}
     </>
   );

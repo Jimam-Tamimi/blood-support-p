@@ -52,10 +52,20 @@ class DonorRequest(models.Model):
     location = models.JSONField(blank=False, null=False)
     status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Reviewed", "Reviewed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
+     
     
-    
+class DonorRequestReview(models.Model):
+    donor_request = models.ForeignKey(DonorRequest, on_delete=models.CASCADE)
+    rating = models.FloatField(blank=False, null=False)
+    description = models.TextField(max_length=500, blank=False, null=False)
     
 
     
+class BloodRequestReview(models.Model):
+    blood_request = models.ForeignKey(BloodRequest, on_delete=models.CASCADE)
+    rating = models.FloatField(blank=False, null=False)
+    description = models.TextField(max_length=500, blank=False, null=False)
+    
+
     
     
