@@ -77,6 +77,9 @@ import {
 } from "../../apiCalls";
 import Transition from "../../components/Transition/Transition";
 
+import 'moment-timezone';
+
+
 export default function Request({ match }) {
   // hooks
   const dispatch = useDispatch();
@@ -289,8 +292,8 @@ const RequestDetails = ({
               <Detail>
                 <DetailField>Time: </DetailField>
                 <DetailFieldValue>
-                  <Moment format="DD/MM/YYYY hh:MM A">
-                    {requestData?.date_time}
+                  <Moment   format="DD/MM/YYYY hh:mm A">
+                    {requestData?.date_time.replace("Z", "")}
                   </Moment>{" "}
                 </DetailFieldValue>
               </Detail>
@@ -830,7 +833,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   // form data submit
   const defaultRequestFormData = requestData;
   const [updateRequestFormData, setUpdateRequestFormData] = useState(
-    defaultRequestFormData
+    {...defaultRequestFormData, date_time: new Date(defaultRequestFormData.date_time).toISOString().substr(0, 16)}
   );
   useEffect(() => {
     setUpdateRequestFormData({ ...updateRequestFormData, location: mark });
@@ -935,7 +938,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
                   type="datetime-local"
                   name="date_time"
                   onChange={onChange}
-                  value={new Date(date_time).toISOString().substr(0, 16)}
+                  value={date_time}
                   disabled={!profile.isCompleted}
                 />
               </InputDiv>
@@ -1176,8 +1179,8 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                   </Link>
                 </Td>
                 <Td>
-                  <Moment format="DD/MM/YYYY hh:MM A">
-                    {donorRequest?.date_time}
+                  <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+                    {donorRequest?.date_time.replace("Z", "")}
                   </Moment>
                 </Td>
                 <Td>
@@ -1358,8 +1361,8 @@ const DonorRequestMoreDetails = ({
         <Detail>
           <DetailField>Time: </DetailField>
           <DetailFieldValue>
-            <Moment format="DD/MM/YYYY hh:MM A">
-              {donorRequestMoreDetails?.date_time}
+          <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+              {donorRequestMoreDetails?.date_time.replace("Z", "")}
             </Moment>
           </DetailFieldValue>
         </Detail>
@@ -1464,7 +1467,7 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
         }
       );
       if (res.status === 200) {
-        setMyDonorRequestData(res.data);
+        setMyDonorRequestData({...res.data, date_time: new Date(res.data.date_time).toISOString().substr(0, 16)});
       }
     } catch (error) {
       console.log(error);
@@ -1558,8 +1561,8 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
                 <Detail>
                   <DetailField>Time: </DetailField>
                   <DetailFieldValue>
-                    <Moment format="DD/MM/YYYY hh:MM A">
-                      {myDonorRequestData?.date_time}
+                  <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+                      {myDonorRequestData?.date_time.replace("Z", "")}
                     </Moment>{" "}
                   </DetailFieldValue>
                 </Detail>
@@ -1663,11 +1666,11 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
     } catch {}
   };
 
-  const onChange = (e) =>
+  const onChange = (e) =>{
     setDonorRequestFormData({
       ...donorRequestFormData,
       [e.target.name]: e.target.value,
-    });
+    });}
 
   useEffect(() => {}, []);
 
@@ -1759,7 +1762,7 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
                     type="datetime-local"
                     name="date_time"
                     onChange={onChange}
-                    value={new Date(date_time).toISOString().substr(0, 16)}
+                    value={date_time}
                   />
                 </InputDiv>
                 <InputDiv size={4}>
