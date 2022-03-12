@@ -72,13 +72,14 @@ import Moment from "react-moment";
 import {
   getBloodRequestData,
   getCurrentStatusOfBloodRequestForMe,
+  getDonorRequestStatus,
+  getMyDonorRequestStatusForBloodRequest,
   getProfileDetailsForUser,
   getTotalDonorRequestsForBloodRequest,
 } from "../../apiCalls";
 import Transition from "../../components/Transition/Transition";
 
-import 'moment-timezone';
-
+import "moment-timezone";
 
 export default function Request({ match }) {
   // hooks
@@ -91,9 +92,11 @@ export default function Request({ match }) {
   const [requestData, setRequestData] = useState(null);
   const [requestorProfileData, setRequestorProfileData] = useState(null);
   const [totalDonorRequestGot, setTotalDonorRequestGot] = useState(0);
-  const [requestAlertInfo, setRequestAlertInfo] = useState({type: 'info', message: 'You have submitted your donor request. Please wait until the blood requestor checks ur donor request and respond to it.'});
-
-
+  const [requestAlertInfo, setRequestAlertInfo] = useState({
+    type: "info",
+    message:
+      "You have submitted your donor request. Please wait until the blood requestor checks ur donor request and respond to it.",
+  });
 
   // functions
   const getRequestData = async () => {
@@ -122,24 +125,19 @@ export default function Request({ match }) {
   }, []);
 
   const getRequestStatusInfo = async () => {
-    if (requestData?.id){
+    if (requestData?.id) {
       try {
-        const res = await getCurrentStatusOfBloodRequestForMe(requestData?.id )
-        if(res.status=== 200){
-          setRequestAlertInfo(res?.data)
+        const res = await getCurrentStatusOfBloodRequestForMe(requestData?.id);
+        if (res.status === 200) {
+          setRequestAlertInfo(res?.data);
         }
-      } catch (error) {
+      } catch (error) {}
+    }
+  };
 
-      }
-
-    } 
-  }
-  
-  useEffect( async () => {
-    getRequestStatusInfo()
+  useEffect(async () => {
+    getRequestStatusInfo();
   }, [requestData]);
-  
-  
 
   const checkHaveSentDonorRequest = async (bloodRequestId) => {
     if (bloodRequestId) {
@@ -187,12 +185,13 @@ export default function Request({ match }) {
         )}
       </NavWrap>
 
-        {
-          requestData && requestData !== "404_NOT_AVAILABLE" ? 
-            <DetailsAlert type={requestAlertInfo?.type}  > 
-              <p>{requestAlertInfo?.message}</p>
-            </DetailsAlert>: ''
-        }
+      {requestData && requestData !== "404_NOT_AVAILABLE" ? (
+        <DetailsAlert type={requestAlertInfo?.type}>
+          <p>{requestAlertInfo?.message}</p>
+        </DetailsAlert>
+      ) : (
+        ""
+      )}
 
       <Route exact path="/requests/:bloodRequestId/">
         <RequestDetails
@@ -215,7 +214,10 @@ export default function Request({ match }) {
         </Route>
       ) : requestData && requestData !== "404_NOT_AVAILABLE" ? (
         <Route exact path="/requests/:bloodRequestId/donor-request/">
-          <YourDonorRequest getRequestStatusInfo={getRequestStatusInfo}  bloodRequestId={match.params.bloodRequestId} />
+          <YourDonorRequest
+            getRequestStatusInfo={getRequestStatusInfo}
+            bloodRequestId={match.params.bloodRequestId}
+          />
         </Route>
       ) : (
         ""
@@ -231,7 +233,7 @@ const RequestDetails = ({
   setRequestData,
   totalDonorRequestGot,
   checkHaveSentDonorRequest,
-  getRequestStatusInfo
+  getRequestStatusInfo,
 }) => {
   // states
 
@@ -292,7 +294,7 @@ const RequestDetails = ({
               <Detail>
                 <DetailField>Time: </DetailField>
                 <DetailFieldValue>
-                  <Moment   format="DD/MM/YYYY hh:mm A">
+                  <Moment format="DD/MM/YYYY hh:mm A">
                     {requestData?.date_time.replace("Z", "")}
                   </Moment>{" "}
                 </DetailFieldValue>
@@ -318,6 +320,8 @@ const RequestDetails = ({
               <Detail>
                 <DetailFieldValue>{requestData?.description}</DetailFieldValue>
               </Detail>
+              {
+                requestData && 
               <ButtonDiv>
                 {auth?.user_id === requestData?.user.id ? (
                   <>
@@ -331,15 +335,23 @@ const RequestDetails = ({
                     />
                   </>
                 ) : auth?.user_id !== requestData?.user?.id ? (
-                  <SendDonorRequestForm
-                    checkHaveSentDonorRequest={checkHaveSentDonorRequest}
-                    bloodRequestId={requestData?.id}
-                    getRequestStatusInfo={getRequestStatusInfo}
-                  />
+                  <>
+                    <SendDonorRequestForm
+                      checkHaveSentDonorRequest={checkHaveSentDonorRequest}
+                      bloodRequestId={requestData?.id}
+                      getRequestStatusInfo={getRequestStatusInfo}
+                    />
+                    <ReviewForm 
+                      requestData={requestData}
+                      setRequestData={setRequestData}
+                    />
+                  </>
                 ) : (
                   ""
                 )}
               </ButtonDiv>
+              }
+
             </DetailsDiv>
             <ActionDiv>
               <Action>
@@ -374,7 +386,7 @@ const RequestDetails = ({
 const SendDonorRequestForm = ({
   bloodRequestId,
   checkHaveSentDonorRequest,
-  getRequestStatusInfo
+  getRequestStatusInfo,
 }) => {
   const [autoComplete, setAutoComplete] = useState(null);
   const [coords, setCoords] = useState({});
@@ -431,7 +443,6 @@ const SendDonorRequestForm = ({
     setHaveSentDonorRequest(await checkHaveSentDonorRequest(bloodRequestId));
   }, [bloodRequestId]);
 
-
   const onChange = (e) =>
     setDonorRequestFormData({
       ...donorRequestFormData,
@@ -464,11 +475,11 @@ const SendDonorRequestForm = ({
       if (res.status === 201) {
         dispatch(setProgress(90));
         dispatch(
-        alert("Your donor request was sent successfully 🙂", "success")
+          alert("Your donor request was sent successfully 🙂", "success")
         );
         setHaveSentDonorRequest(true);
         setShowDonorReqModal(false);
-        await getRequestStatusInfo()
+        await getRequestStatusInfo();
       }
     } catch (err) {
       if (
@@ -699,8 +710,10 @@ const Complete = ({ requestData, setRequestData }) => {
     emptyIcon: <BsStar />,
     halfIcon: <BsStarHalf />,
     filledIcon: <BsStarFill />,
-    onChange: (newValue) =>
-      setCompleteReqFormData({ ...completeReqFormData, rating: newValue }),
+    onChange: (newValue) => {
+      console.log(newValue);
+      setCompleteReqFormData({ ...completeReqFormData, rating: newValue });
+    },
   };
 
   // functions
@@ -782,6 +795,133 @@ const Complete = ({ requestData, setRequestData }) => {
   );
 };
 
+// review form for donor requestor
+const ReviewForm = ({ requestData, setRequestData }) => {
+  // states
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+
+  const [donorRequestStatus, setDonorRequestStatus] = useState(null)
+  
+
+  const [completeReqFormData, setCompleteReqFormData] = useState({
+    rating: 3,
+    description: "",
+  });
+
+  const { rating, description } = completeReqFormData;
+
+  // hooks
+  const profile = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
+
+
+  useEffect(() => {
+    getMyDonorRequestStatusForBloodRequest(requestData?.id, false).then((res) => {setDonorRequestStatus(res?.data)})
+  }, [])
+  
+  
+ 
+  const secondExample = {
+    size: 35,
+    count: 5,
+    activeColor: "var(--primary-color)",
+    value: rating,
+    a11y: true,
+    isHalf: true,
+    emptyIcon: <BsStar />,
+    halfIcon: <BsStarHalf />,
+    filledIcon: <BsStarFill />,
+    onChange: (newValue) => {
+      console.log(newValue);
+      setCompleteReqFormData({ ...completeReqFormData, rating: newValue });
+    },
+  };
+
+  // functions
+
+  const onInputValChange = (e) =>
+    setCompleteReqFormData({
+      ...completeReqFormData,
+      [e.target.name]: e.target.value,
+    });
+
+  const completeBloodRequest = async (e) => {
+    e.preventDefault();
+    dispatch(setProgress(30));
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`,
+        completeReqFormData
+      );
+      console.log(res);
+      if (res.status === 200 && res.data.success) {
+        setRequestData({ ...requestData, status: "Completed" });
+        dispatch(alert(res?.data?.message));
+        setShowCompleteModal(false);
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response.data.success === false) {
+        dispatch(alert(err.response.data.error, "danger"));
+      }
+    }
+    dispatch(setProgress(100));
+  };
+
+  return (
+    <>
+    {
+ 
+      
+          profile.isCompleted && requestData.status === "Completed" && donorRequestStatus?.status === "Reviewed" ? (
+          <Modal
+            actionText="Complete"
+            title="Review And Complete Request"
+            md
+            info
+            btnText="Complete"
+            fade
+            scale
+            setShow={setShowCompleteModal}
+            show={showCompleteModal}
+            formId="complete-form">
+            <FormWrap>
+              <Form onSubmit={completeBloodRequest} id="complete-form">
+                <InputDiv>
+                  <Label htmlFor="add-number">
+                    Express your experience with this Donor
+                  </Label>
+                  <TextArea
+                    required
+                    onChange={onInputValChange}
+                    name="description"
+                    value={description}
+                    placeholder="Short Description">
+                    {description}
+                  </TextArea>
+                </InputDiv>
+                <InputDiv>
+                  <Label htmlFor="add-number">
+                    Express your experience with this Donor
+                  </Label>
+                  <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
+                </InputDiv>
+              </Form>
+            </FormWrap>
+          </Modal>
+        ) : ''
+      
+    }
+      <Button
+        disabled={!profile.isCompleted }
+        onClick={(e) => setCompleteReqFormData(true)}>
+        Complete
+      </Button>
+
+    </>
+  );
+};
+
 const UpdateRequest = ({ requestData, setRequestData }) => {
   const bloodGroups = [
     { value: "Select", label: "Select" },
@@ -832,9 +972,12 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
 
   // form data submit
   const defaultRequestFormData = requestData;
-  const [updateRequestFormData, setUpdateRequestFormData] = useState(
-    {...defaultRequestFormData, date_time: new Date(defaultRequestFormData.date_time).toISOString().substr(0, 16)}
-  );
+  const [updateRequestFormData, setUpdateRequestFormData] = useState({
+    ...defaultRequestFormData,
+    date_time: new Date(defaultRequestFormData.date_time)
+      .toISOString()
+      .substr(0, 16),
+  });
   useEffect(() => {
     setUpdateRequestFormData({ ...updateRequestFormData, location: mark });
   }, [mark]);
@@ -1361,7 +1504,7 @@ const DonorRequestMoreDetails = ({
         <Detail>
           <DetailField>Time: </DetailField>
           <DetailFieldValue>
-          <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+            <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
               {donorRequestMoreDetails?.date_time.replace("Z", "")}
             </Moment>
           </DetailFieldValue>
@@ -1412,7 +1555,8 @@ const DonorRequestMoreDetails = ({
               : "Accept"}
           </Button>
 
-          {donorRequestMoreDetails.status === "Accepted" || donorRequestMoreDetails?.status === "Reviewed" ? (
+          {donorRequestMoreDetails.status === "Accepted" ||
+          donorRequestMoreDetails?.status === "Reviewed" ? (
             <Button
               onClick={(e) =>
                 window.confirm(
@@ -1430,7 +1574,11 @@ const DonorRequestMoreDetails = ({
                   "Are you sure you want to reject this donor request?"
                 ) && rejectDonorRequest(donorRequestMoreDetails.id)
               }
-              disabled={donorRequestMoreDetails.status !== "Pending" || (requestData.status !== 'Open' &&  requestData.status !== 'Accepted')  }
+              disabled={
+                donorRequestMoreDetails.status !== "Pending" ||
+                (requestData.status !== "Open" &&
+                  requestData.status !== "Accepted")
+              }
               sm>
               Reject
             </Button>
@@ -1467,7 +1615,10 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
         }
       );
       if (res.status === 200) {
-        setMyDonorRequestData({...res.data, date_time: new Date(res.data.date_time).toISOString().substr(0, 16)});
+        setMyDonorRequestData({
+          ...res.data,
+          date_time: new Date(res.data.date_time).toISOString().substr(0, 16),
+        });
       }
     } catch (error) {
       console.log(error);
@@ -1499,7 +1650,7 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
         dispatch(alert("Your donor request has been deleted successfully"));
         history.push("/requests/" + myDonorRequestData?.blood_request + "/");
         dispatch(setProgress(80));
-        await getRequestStatusInfo()
+        await getRequestStatusInfo();
         setMyDonorRequestData(null);
       }
     } catch (error) {
@@ -1561,7 +1712,7 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
                 <Detail>
                   <DetailField>Time: </DetailField>
                   <DetailFieldValue>
-                  <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+                    <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
                       {myDonorRequestData?.date_time.replace("Z", "")}
                     </Moment>{" "}
                   </DetailFieldValue>
@@ -1666,11 +1817,12 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
     } catch {}
   };
 
-  const onChange = (e) =>{
+  const onChange = (e) => {
     setDonorRequestFormData({
       ...donorRequestFormData,
       [e.target.name]: e.target.value,
-    });}
+    });
+  };
 
   useEffect(() => {}, []);
 

@@ -95,3 +95,27 @@ export const getCurrentStatusOfBloodRequestForMe = async (id, showAlert = true) 
       }
     }
   });
+
+// function that takes in an blood request id and return a promise that resolves to the blood request details of that blood request id
+export const getMyDonorRequestStatusForBloodRequest = async (id, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/get-my-donor-request-status-for-blood-request/`, {params: {blood_request_id: id}}
+      );
+      console.log(res)
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if (error?.response?.status === 404) {
+          store.dispatch(alert("This donor request is not available 😒", "danger"));
+        } else if(error?.response?.data?.success === false) {
+            store.dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+            store.dispatch(alert("Failed to get status for donor request 😕", "danger"));
+        }
+      }
+    }
+  });

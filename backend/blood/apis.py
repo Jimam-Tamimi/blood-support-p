@@ -104,7 +104,7 @@ class BloodRequestViewSet(ModelViewSet):
             
             elif(bloodRequest.status == 'Completed'): 
                 reviewedDonorRequest = DonorRequestReview.objects.get(donor_request__blood_request=bloodRequest)
-                return Response({'success': True, 'message': f'Your blood request was completed and you gave {reviewedDonorRequest.rating} star review to the donor 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
+                return Response({'success': True, 'message': f'You have completed the blood request and you gave {reviewedDonorRequest.rating} star review to the donor 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
             
             elif(bloodRequest.status == 'Reviewed'):
                 reviewedBloodRequest = DonorRequestReview.objects.get(donor_request__blood_request=bloodRequest)
@@ -123,9 +123,8 @@ class BloodRequestViewSet(ModelViewSet):
                 
                 if(donorRequest.status == 'Reviewed' and donorRequest.blood_request.status == 'Completed'):
                     donorRequestReview = DonorRequestReview.objects.get(donor_request=donorRequest)
-                    return Response({'success': True, 'message': f'The blood requestor has completed the request and gave you a {donorRequestReview.rating} star rating 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
-                    return Response({'success': True, 'message': f'The blood requestor has completed the request and gave you a {donorRequestReview.rating} star rating 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
-                
+                    return Response({'success': True, 'message': f'The blood requestor has completed the request and gave you a review. Please review the blood requestor to see your review 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
+ 
                 if(donorRequest.status == 'Reviewed' and donorRequest.blood_request.status == 'Reviewed'):
                     donorRequestReview = DonorRequestReview.objects.get(donor_request=donorRequest)
                     bloodRequestReview = BloodRequestReview.objects.get(blood_request=donorRequest.blood_request)
@@ -333,3 +332,23 @@ class DonorRequestViewSet(ModelViewSet):
 
 
         
+    @action(detail=False, methods=['get'], url_path='get-my-donor-request-status-for-blood-request')
+    def getMyDonorRequestStatusForBloodRequest(self, request):
+        try:
+            donor_request = DonorRequest.objects.get(blood_request__id=request.query_params['blood_request_id'])
+        except DonorRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(e)
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+        if(donor_request.user != request.user):
+            return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'status': DonorRequestSerializer(donor_request).data['status']}, status=status.HTTP_200_OK)
+
+        
+    @action(detail=True, methods=['get'], url_path='get-donor-request-status')
+    def getDonorRequestStatus(self, request, pk=None):
+        donor_request = self.get_object() 
+        if(donor_request.user != request.user):
+            return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(DonorRequestSerializer(donor_request).data['status'], status=status.HTTP_200_OK)
