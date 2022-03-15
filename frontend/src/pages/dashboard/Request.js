@@ -329,11 +329,11 @@ const RequestDetails = ({
                       setRequestData={setRequestData}
                       requestData={requestData}
                     />
-                    <Complete
+                    <ReviewDonor
                       requestData={requestData}
                       setRequestData={setRequestData}
                     />
-                  </>
+                  </> 
                 ) : auth?.user_id !== requestData?.user?.id ? (
                   <>
                     <SendDonorRequestForm
@@ -682,24 +682,21 @@ const SendDonorRequestForm = ({
   );
 };
 
-const Complete = ({ requestData, setRequestData }) => {
+const ReviewDonor = ({ requestData, setRequestData }) => {
   // states
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showReviewDonorModal, setShowReviewDonorModal] = useState(false);
 
-  const [completeReqFormData, setCompleteReqFormData] = useState({
+  const [reviewReqFormData, setReviewReqFormData] = useState({
     rating: 3,
     description: "",
   });
 
-  const { rating, description } = completeReqFormData;
+  const { rating, description } = reviewReqFormData;
 
   // hooks
   const profile = useSelector((state) => state.profile);
   const dispatch = useDispatch();
-
-  const sendRequest = (e) => {
-    e.preventDefault();
-  };
+ 
   const secondExample = {
     size: 35,
     count: 5,
@@ -712,31 +709,31 @@ const Complete = ({ requestData, setRequestData }) => {
     filledIcon: <BsStarFill />,
     onChange: (newValue) => {
       console.log(newValue);
-      setCompleteReqFormData({ ...completeReqFormData, rating: newValue });
+      setReviewReqFormData({ ...reviewReqFormData, rating: newValue });
     },
   };
 
   // functions
 
   const onInputValChange = (e) =>
-    setCompleteReqFormData({
-      ...completeReqFormData,
+    setReviewReqFormData({
+      ...reviewReqFormData,
       [e.target.name]: e.target.value,
     });
 
-  const completeBloodRequest = async (e) => {
+  const reviewDonorForBloodRequest = async (e) => {
     e.preventDefault();
     dispatch(setProgress(30));
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`,
-        completeReqFormData
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/review-donor-for-blood-request/`,
+        reviewReqFormData
       );
       console.log(res);
       if (res.status === 200 && res.data.success) {
         setRequestData({ ...requestData, status: "Completed" });
         dispatch(alert(res?.data?.message));
-        setShowCompleteModal(false);
+        setShowReviewDonorModal(false);
       }
     } catch (err) {
       console.log(err);
@@ -751,23 +748,23 @@ const Complete = ({ requestData, setRequestData }) => {
     <>
       <Button
         disabled={!profile.isCompleted || requestData.status !== "Accepted"}
-        onClick={(e) => setShowCompleteModal(true)}>
+        onClick={(e) => setShowReviewDonorModal(true)}>
         Complete
       </Button>
       {profile.isCompleted && requestData.status === "Accepted" && (
         <Modal
-          actionText="Complete"
-          title="Review And Complete Request"
+          actionText="Review Donor"
+          title="Give a feedback to the donor"
           md
           info
-          btnText="Complete"
+          btnText="Review Donor"
           fade
           scale
-          setShow={setShowCompleteModal}
-          show={showCompleteModal}
-          formId="complete-form">
+          setShow={setShowReviewDonorModal}
+          show={showReviewDonorModal}
+          formId="review-form">
           <FormWrap>
-            <Form onSubmit={completeBloodRequest} id="complete-form">
+            <Form onSubmit={reviewDonorForBloodRequest} id="review-form">
               <InputDiv>
                 <Label htmlFor="add-number">
                   Express your experience with this Donor
@@ -783,7 +780,7 @@ const Complete = ({ requestData, setRequestData }) => {
               </InputDiv>
               <InputDiv>
                 <Label htmlFor="add-number">
-                  Express your experience with this Donor
+                  Give the donor a rating out of 5
                 </Label>
                 <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
               </InputDiv>
@@ -798,17 +795,17 @@ const Complete = ({ requestData, setRequestData }) => {
 // review form for donor requestor
 const ReviewForm = ({ requestData, setRequestData }) => {
   // states
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const [donorRequestStatus, setDonorRequestStatus] = useState(null)
   
 
-  const [completeReqFormData, setCompleteReqFormData] = useState({
+  const [reviewReqFormData, setReviewReqFormData] = useState({
     rating: 3,
     description: "",
   });
 
-  const { rating, description } = completeReqFormData;
+  const { rating, description } = reviewReqFormData;
 
   // hooks
   const profile = useSelector((state) => state.profile);
@@ -833,31 +830,31 @@ const ReviewForm = ({ requestData, setRequestData }) => {
     filledIcon: <BsStarFill />,
     onChange: (newValue) => {
       console.log(newValue);
-      setCompleteReqFormData({ ...completeReqFormData, rating: newValue });
+      setReviewReqFormData({ ...reviewBloodRequest, rating: newValue });
     },
   };
 
   // functions
 
   const onInputValChange = (e) =>
-    setCompleteReqFormData({
-      ...completeReqFormData,
+  setReviewReqFormData({
+      ...reviewReqFormData,
       [e.target.name]: e.target.value,
     });
 
-  const completeBloodRequest = async (e) => {
+  const reviewBloodRequest = async (e) => {
     e.preventDefault();
     dispatch(setProgress(30));
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/complete-blood-request/`,
-        completeReqFormData
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/review-blood-requestor-for-blood-request/`,
+        reviewReqFormData
       );
       console.log(res);
       if (res.status === 200 && res.data.success) {
-        setRequestData({ ...requestData, status: "Completed" });
+        setRequestData({ ...requestData, status: "Reviewed" });
         dispatch(alert(res?.data?.message));
-        setShowCompleteModal(false);
+        setShowReviewModal(false);
       }
     } catch (err) {
       console.log(err);
@@ -875,21 +872,21 @@ const ReviewForm = ({ requestData, setRequestData }) => {
       
           profile.isCompleted && requestData.status === "Completed" && donorRequestStatus?.status === "Reviewed" ? (
           <Modal
-            actionText="Complete"
-            title="Review And Complete Request"
+            actionText="Submit Review"
+            title="Review Blood Requestor Request"
             md
             info
-            btnText="Complete"
+            btnText="Review"
             fade
             scale
-            setShow={setShowCompleteModal}
-            show={showCompleteModal}
-            formId="complete-form">
+            setShow={setShowReviewModal}
+            show={showReviewModal}
+            formId="review-form">
             <FormWrap>
-              <Form onSubmit={completeBloodRequest} id="complete-form">
+              <Form onSubmit={reviewBloodRequest} id="review-form">
                 <InputDiv>
                   <Label htmlFor="add-number">
-                    Express your experience with this Donor
+                    Express your experience with this Blood Requestor
                   </Label>
                   <TextArea
                     required
@@ -902,7 +899,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
                 </InputDiv>
                 <InputDiv>
                   <Label htmlFor="add-number">
-                    Express your experience with this Donor
+                    Give him a rating out of 5
                   </Label>
                   <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
                 </InputDiv>
@@ -913,8 +910,8 @@ const ReviewForm = ({ requestData, setRequestData }) => {
       
     }
       <Button
-        disabled={!profile.isCompleted }
-        onClick={(e) => setCompleteReqFormData(true)}>
+        disabled={!profile.isCompleted || requestData.status !== "Completed" || donorRequestStatus?.status !== "Reviewed" }
+        onClick={(e) => {setShowReviewModal(true); console.log(!profile.isCompleted); console.log(requestData.status !== "Completed"); console.log( donorRequestStatus?.status === "Reviewed")}}>
         Complete
       </Button>
 

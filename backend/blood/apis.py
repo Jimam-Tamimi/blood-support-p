@@ -48,8 +48,8 @@ class BloodRequestViewSet(ModelViewSet):
         donorRequests = donorRequests.filter(~Q(status="Rejected")) 
         return Response({"total": len(donorRequests)}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='complete-blood-request')
-    def completeBloodRequest(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='review-donor-for-blood-request')
+    def reviewDonorForBloodRequest(self, request, pk=None):
         try:
             bloodRequest = BloodRequest.objects.get(id=pk)
         except BloodRequest.DoesNotExist:
@@ -78,11 +78,41 @@ class BloodRequestViewSet(ModelViewSet):
                 bloodRequest.save()
 
                         
-                return Response({'success': True, 'message': 'Blood request was completed successfully 😀'}, status=status.HTTP_200_OK)
+                return Response({'success': True, 'message': 'You have submitted your feedback. Please wait for the donor to give his feedback. 😀'}, status=status.HTTP_200_OK)
             else:
-                return Response({'success': False, 'error': 'You can not complete accepted blood request'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'success': False, 'error': 'You can only review accepted donor request'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'success': False, 'error': 'You are not authorized to complete this blood request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'success': False, 'error': 'You are not authorized review this donor for this blood request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    @action(detail=True, methods=['post'], url_path='review-blood-requestor-for-blood-request')
+    def reviewBloodRequestorForBloodRequest(self, request, pk=None):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=pk)
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e :
+            return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            rating = request.data['rating']
+            description = request.data['description']
+        except Exception as e:
+            print(type(e))
+            e = str(e).replace("\'", "").capitalize()
+            return Response({'success': False, 'error':  f'{e} is required 😒'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            donorRequest = DonorRequest.objects.get(blood_request=bloodRequest, user=request.user)
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'You haven\'t sent any donor request to this blood request'}, status=status.HTTP_401_UNAUTHORIZED)
+        if(donorRequest.user == request.user):
+            if(bloodRequest.status == 'Completed'):
+                BloodRequestReview.objects.create(blood_request=bloodRequest, rating=rating, description=description) 
+                bloodRequest.status = 'Reviewed'
+                bloodRequest.save()
+                return Response({'success': True, 'message': 'Your review was submitted successfully 😀'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'success': False, 'error': 'Please wait until the blood requestor submits his review.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'success': False, 'error': 'You are not authorized to review this blood requestor for this blood request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
 
     @action(detail=True, methods=['get'], url_path='get-current-status-of-blood-request-for-me')
     def getCurrentStatusOfBloodRequestForMe(self, request, pk=None):

@@ -31,23 +31,7 @@ import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
 function App() {
-  // Moment.globalMoment = moment;
-
-  // // Set the locale for every react-moment instance to French.
-  // Moment.globalLocale = 'fr';
-  
-  // // Set the output format for every react-moment instance.
-  // Moment.globalFormat = 'D MMM YYYY';
-  
-  // // Set the timezone for every instance.
-  // Moment.globalTimezone = 'America/Los_Angeles';
-  
-  // // Set the output timezone for local for every instance.
-  // Moment.globalLocal = true;
-  
-  // // Use a <span> tag for every react-moment instance.
-  // Moment.globalElement = 'span';
-  
+ 
   // hooks
   const dispatch = useDispatch();
   const progress = useSelector((state) => state.progress);
@@ -89,7 +73,9 @@ function App() {
     // dispatch(getProfileDetails());
   }, []);
   useEffect(() => {
-    dispatch(getProfileDetails());
+    if(auth?.isAuthenticated){
+      dispatch(getProfileDetails());
+    }
   }, [auth]) 
  
 
