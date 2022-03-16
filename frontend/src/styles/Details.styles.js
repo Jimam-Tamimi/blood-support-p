@@ -110,7 +110,7 @@ export const NotAvailableWrap = styled.div`
 
 export const DetailsAlert = styled.div`
     width: 100%;
-    height: 43px;
+    min-height: 43px;
     background-color: ${({type}) => type === 'info'? 'rgb(195, 221, 253)' : type==='danger'? 'rgb(251, 213, 213)' : '#BCF0DA'};
     margin: 0 0 15px 0px;
     border-radius: 3px;

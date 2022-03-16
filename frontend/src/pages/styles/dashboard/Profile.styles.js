@@ -16,16 +16,18 @@ export const ReviewWrap = styled.div`
 
 export const ReviewDiv = styled(Link)`
     width: 100%;
-    height: 120px;
+    min-height: 120px;
     padding: 0px 5%;
     ${Flex}
     justify-content: flex-start;
     position: relative;
+    ${({changeBackground=true}) => changeBackground && `  
     background: var(--secendory-color);
     &:hover {
         background: var(--secendory-hover-color);
     }
-    margin: 10px 0px;
+    `}
+    margin: 15px 0px;
     border-radius: 10px;
 `
 

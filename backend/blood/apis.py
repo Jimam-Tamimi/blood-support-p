@@ -137,8 +137,10 @@ class BloodRequestViewSet(ModelViewSet):
                 return Response({'success': True, 'message': f'You have completed the blood request and you gave {reviewedDonorRequest.rating} star review to the donor 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
             
             elif(bloodRequest.status == 'Reviewed'):
-                reviewedBloodRequest = DonorRequestReview.objects.get(donor_request__blood_request=bloodRequest)
-                return Response({'success': True, 'message': f'Everything was done successfully and the donor gave you {reviewedBloodRequest.rating} star rating 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
+                
+                donorRequestReview = DonorRequestReview.objects.get(donor_request=DonorRequest.objects.get(blood_request=bloodRequest, status='Reviewed'))
+                bloodRequestReview = BloodRequestReview.objects.get(blood_request=bloodRequest)
+                return Response({'success': True, 'message': f'Everything was completed successfully with this blood request the donor requestor gave you {bloodRequestReview.rating} star rating and you gave him {donorRequestReview.rating} 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
             
 
         else:

@@ -77,9 +77,14 @@ import {
   getProfileDetailsForUser,
   getTotalDonorRequestsForBloodRequest,
 } from "../../apiCalls";
-import Transition from "../../components/Transition/Transition";
+import prof from "../../assets/img/prof.jpg";
 
 import "moment-timezone";
+import {
+  ReviewContent,
+  ReviewDiv,
+  ReviewWrap,
+} from "../styles/dashboard/Profile.styles";
 
 export default function Request({ match }) {
   // hooks
@@ -183,6 +188,13 @@ export default function Request({ match }) {
             </NavTab>
           )
         )}
+
+        <NavTab
+          activeClassName="active"
+          exact
+          to={`/requests/${match.params.bloodRequestId}/review/`}>
+          Review
+        </NavTab>
       </NavWrap>
 
       {requestData && requestData !== "404_NOT_AVAILABLE" ? (
@@ -222,6 +234,11 @@ export default function Request({ match }) {
       ) : (
         ""
       )}
+
+      <Route exact path="/requests/:bloodRequestId/review/">
+        <ReviewForDonor />
+        <ReviewForRequestor />
+      </Route>
     </>
   );
 }
@@ -320,38 +337,36 @@ const RequestDetails = ({
               <Detail>
                 <DetailFieldValue>{requestData?.description}</DetailFieldValue>
               </Detail>
-              {
-                requestData && 
-              <ButtonDiv>
-                {auth?.user_id === requestData?.user.id ? (
-                  <>
-                    <UpdateRequest
-                      setRequestData={setRequestData}
-                      requestData={requestData}
-                    />
-                    <ReviewDonor
-                      requestData={requestData}
-                      setRequestData={setRequestData}
-                    />
-                  </> 
-                ) : auth?.user_id !== requestData?.user?.id ? (
-                  <>
-                    <SendDonorRequestForm
-                      checkHaveSentDonorRequest={checkHaveSentDonorRequest}
-                      bloodRequestId={requestData?.id}
-                      getRequestStatusInfo={getRequestStatusInfo}
-                    />
-                    <ReviewForm 
-                      requestData={requestData}
-                      setRequestData={setRequestData}
-                    />
-                  </>
-                ) : (
-                  ""
-                )}
-              </ButtonDiv>
-              }
-
+              {requestData && (
+                <ButtonDiv>
+                  {auth?.user_id === requestData?.user.id ? (
+                    <>
+                      <UpdateRequest
+                        setRequestData={setRequestData}
+                        requestData={requestData}
+                      />
+                      <ReviewDonor
+                        requestData={requestData}
+                        setRequestData={setRequestData}
+                      />
+                    </>
+                  ) : auth?.user_id !== requestData?.user?.id ? (
+                    <>
+                      <SendDonorRequestForm
+                        checkHaveSentDonorRequest={checkHaveSentDonorRequest}
+                        bloodRequestId={requestData?.id}
+                        getRequestStatusInfo={getRequestStatusInfo}
+                      />
+                      <ReviewForm
+                        requestData={requestData}
+                        setRequestData={setRequestData}
+                      />
+                    </>
+                  ) : (
+                    ""
+                  )}
+                </ButtonDiv>
+              )}
             </DetailsDiv>
             <ActionDiv>
               <Action>
@@ -696,7 +711,7 @@ const ReviewDonor = ({ requestData, setRequestData }) => {
   // hooks
   const profile = useSelector((state) => state.profile);
   const dispatch = useDispatch();
- 
+
   const secondExample = {
     size: 35,
     count: 5,
@@ -797,8 +812,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
   // states
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const [donorRequestStatus, setDonorRequestStatus] = useState(null)
-  
+  const [donorRequestStatus, setDonorRequestStatus] = useState(null);
 
   const [reviewReqFormData, setReviewReqFormData] = useState({
     rating: 3,
@@ -811,13 +825,14 @@ const ReviewForm = ({ requestData, setRequestData }) => {
   const profile = useSelector((state) => state.profile);
   const dispatch = useDispatch();
 
-
   useEffect(() => {
-    getMyDonorRequestStatusForBloodRequest(requestData?.id, false).then((res) => {setDonorRequestStatus(res?.data)})
-  }, [])
-  
-  
- 
+    getMyDonorRequestStatusForBloodRequest(requestData?.id, false).then(
+      (res) => {
+        setDonorRequestStatus(res?.data);
+      }
+    );
+  }, []);
+
   const secondExample = {
     size: 35,
     count: 5,
@@ -837,7 +852,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
   // functions
 
   const onInputValChange = (e) =>
-  setReviewReqFormData({
+    setReviewReqFormData({
       ...reviewReqFormData,
       [e.target.name]: e.target.value,
     });
@@ -867,54 +882,59 @@ const ReviewForm = ({ requestData, setRequestData }) => {
 
   return (
     <>
-    {
- 
-      
-          profile.isCompleted && requestData.status === "Completed" && donorRequestStatus?.status === "Reviewed" ? (
-          <Modal
-            actionText="Submit Review"
-            title="Review Blood Requestor Request"
-            md
-            info
-            btnText="Review"
-            fade
-            scale
-            setShow={setShowReviewModal}
-            show={showReviewModal}
-            formId="review-form">
-            <FormWrap>
-              <Form onSubmit={reviewBloodRequest} id="review-form">
-                <InputDiv>
-                  <Label htmlFor="add-number">
-                    Express your experience with this Blood Requestor
-                  </Label>
-                  <TextArea
-                    required
-                    onChange={onInputValChange}
-                    name="description"
-                    value={description}
-                    placeholder="Short Description">
-                    {description}
-                  </TextArea>
-                </InputDiv>
-                <InputDiv>
-                  <Label htmlFor="add-number">
-                    Give him a rating out of 5
-                  </Label>
-                  <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
-                </InputDiv>
-              </Form>
-            </FormWrap>
-          </Modal>
-        ) : ''
-      
-    }
+      {profile.isCompleted &&
+      requestData.status === "Completed" &&
+      donorRequestStatus?.status === "Reviewed" ? (
+        <Modal
+          actionText="Submit Review"
+          title="Review Blood Requestor Request"
+          md
+          info
+          btnText="Review"
+          fade
+          scale
+          setShow={setShowReviewModal}
+          show={showReviewModal}
+          formId="review-form">
+          <FormWrap>
+            <Form onSubmit={reviewBloodRequest} id="review-form">
+              <InputDiv>
+                <Label htmlFor="add-number">
+                  Express your experience with this Blood Requestor
+                </Label>
+                <TextArea
+                  required
+                  onChange={onInputValChange}
+                  name="description"
+                  value={description}
+                  placeholder="Short Description">
+                  {description}
+                </TextArea>
+              </InputDiv>
+              <InputDiv>
+                <Label htmlFor="add-number">Give him a rating out of 5</Label>
+                <ReactStars style={{ marginTop: "11px" }} {...secondExample} />
+              </InputDiv>
+            </Form>
+          </FormWrap>
+        </Modal>
+      ) : (
+        ""
+      )}
       <Button
-        disabled={!profile.isCompleted || requestData.status !== "Completed" || donorRequestStatus?.status !== "Reviewed" }
-        onClick={(e) => {setShowReviewModal(true); console.log(!profile.isCompleted); console.log(requestData.status !== "Completed"); console.log( donorRequestStatus?.status === "Reviewed")}}>
+        disabled={
+          !profile.isCompleted ||
+          requestData.status !== "Completed" ||
+          donorRequestStatus?.status !== "Reviewed"
+        }
+        onClick={(e) => {
+          setShowReviewModal(true);
+          console.log(!profile.isCompleted);
+          console.log(requestData.status !== "Completed");
+          console.log(donorRequestStatus?.status === "Reviewed");
+        }}>
         Complete
       </Button>
-
     </>
   );
 };
@@ -2026,6 +2046,122 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
           </Modal>
         </form>
       )}
+    </>
+  );
+};
+
+const ReviewForRequestor = () => {
+  const firstExample = {
+    size: 30,
+    value: 2.5,
+    edit: false,
+    activeColor: "var(--primary-color)",
+  };
+
+  return (
+    <>
+      <ReviewWrap>
+        <ReviewDiv
+          to={"#"}
+          style={{
+            padding: "0 10% 0 0",
+            boxShadow: "0px 0px 4px 0px #00000061",
+            borderRadius: "0",
+          }}
+          onClick={(e) => e.preventDefault()}
+          changeBackground={false}>
+          <ReviewContent>
+            <h3 style={{ color: "var(--secendory-text-color)",     fontWeight: 600 }}>
+              Review By Donor
+            </h3>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div
+                style={{
+                  position: "relative",
+                  // bottom: "2px",
+                  // left: "18px",
+                }}>
+                <ReactStars {...firstExample} />
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--secendory-text-color)",
+              }}>
+              aa quick brown fox jumped over the lazy doga quick brown fox
+              jumped over the lazy doga quick brown fox jumped over the lazy
+              doga quick brown fox jumped over the lazy doga quick brown fox
+              jumped over the lazy doga quick brown fox jumped over the lazy
+              doga quick brown fox jumped over the lazy dog quick brown fox
+              jumped over the lazy dog
+            </p>
+            <Badge
+              sm
+              style={{ position: "absolute", top: "13px", right: "18px" }}>
+              3 days ago
+            </Badge>
+          </ReviewContent>
+        </ReviewDiv>
+      </ReviewWrap>
+    </>
+  );
+};
+
+const ReviewForDonor = () => {
+  const firstExample = {
+    size: 30,
+    value: 2.5,
+    edit: false,
+    activeColor: "var(--primary-color)",
+  };
+
+  return (
+    <>
+      <ReviewWrap>
+        <ReviewDiv
+          to={"#"}
+          style={{
+            padding: "0 10% 0 0",
+            boxShadow: "0px 0px 4px 0px #00000061",
+            borderRadius: "0",
+          }}
+          onClick={(e) => e.preventDefault()}
+          changeBackground={false}>
+          <ReviewContent>
+            <h3 style={{ color: "var(--secendory-text-color)" }}>
+              Review By Donor
+            </h3>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div
+                style={{
+                  position: "relative",
+                  // bottom: "2px",
+                  // left: "18px",
+                }}>
+                <ReactStars {...firstExample} />
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--secendory-text-color)",
+              }}>
+              aa quick brown fox jumped over the lazy doga quick brown fox
+              jumped over the lazy doga quick brown fox jumped over the lazy
+              doga quick brown fox jumped over the lazy doga quick brown fox
+              jumped over the lazy doga quick brown fox jumped over the lazy
+              doga quick brown fox jumped over the lazy dog quick brown fox
+              jumped over the lazy dog
+            </p>
+            <Badge
+              sm
+              style={{ position: "absolute", top: "13px", right: "18px" }}>
+              3 days ago
+            </Badge>
+          </ReviewContent>
+        </ReviewDiv>
+      </ReviewWrap>
     </>
   );
 };
