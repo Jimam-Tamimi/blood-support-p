@@ -188,13 +188,15 @@ export default function Request({ match }) {
             </NavTab>
           )
         )}
-
-        <NavTab
-          activeClassName="active"
-          exact
-          to={`/requests/${match.params.bloodRequestId}/review/`}>
-          Review
-        </NavTab>
+        {(requestData?.status === "Completed" ||
+          requestData?.status === "Reviewed") && (
+          <NavTab
+            activeClassName="active"
+            exact
+            to={`/requests/${match.params.bloodRequestId}/review/`}>
+            Review
+          </NavTab>
+        )}
       </NavWrap>
 
       {requestData && requestData !== "404_NOT_AVAILABLE" ? (
@@ -235,10 +237,13 @@ export default function Request({ match }) {
         ""
       )}
 
-      <Route exact path="/requests/:bloodRequestId/review/">
-        <ReviewForDonor />
-        <ReviewForRequestor />
-      </Route>
+      {(requestData?.status === "Completed" ||
+        requestData?.status === "Reviewed") && (
+        <Route exact path="/requests/:bloodRequestId/review/">
+          <ReviewForDonor requestData={requestData} />
+          <ReviewForRequestor requestData={requestData} />
+        </Route>
+      )}
     </>
   );
 }
@@ -933,7 +938,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
           console.log(requestData.status !== "Completed");
           console.log(donorRequestStatus?.status === "Reviewed");
         }}>
-        Complete
+        Review
       </Button>
     </>
   );
@@ -2050,117 +2055,221 @@ const UpdateDonorRequest = ({ myDonorRequestData, setMyDonorRequestData }) => {
   );
 };
 
-const ReviewForRequestor = () => {
+const ReviewForRequestor = ({ requestData }) => {
   const firstExample = {
     size: 30,
-    value: 2.5,
     edit: false,
+    isHalf: true,
+
     activeColor: "var(--primary-color)",
   };
+
+  const [requestorReview, setRequestorReview] = useState(null);
+
+  // hooks
+  const dispatch = useDispatch();
+
+  useEffect(async () => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/get-requestors-review-for-blood-request/`
+      );
+      setRequestorReview(res.data);
+    } catch (err) {
+      if (err?.response?.data?.success === false) {
+        if (err?.response?.data?.code === "requestors_review_not_found") {
+          setRequestorReview("requestors_review_not_found");
+        } else {
+          dispatch(alert(err?.response?.data?.error, "error"));
+        }
+      } else {
+        dispatch(alert("Something went wrong", "error"));
+      }
+    }
+  }, []);
 
   return (
     <>
       <ReviewWrap>
-        <ReviewDiv
-          to={"#"}
-          style={{
-            padding: "0 10% 0 0",
-            boxShadow: "0px 0px 4px 0px #00000061",
-            borderRadius: "0",
-          }}
-          onClick={(e) => e.preventDefault()}
-          changeBackground={false}>
-          <ReviewContent>
-            <h3 style={{ color: "var(--secendory-text-color)",     fontWeight: 600 }}>
-              Review By Donor
-            </h3>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <div
+        {requestorReview === "requestors_review_not_found" ? (
+          <ReviewDiv
+            to={"#"}
+            style={{
+              padding: "10px 10% 10px 0",
+              boxShadow: "0px 0px 4px 0px #00000061",
+              borderRadius: "0",
+              minHeight: "max-content",
+            }}
+            onClick={(e) => e.preventDefault()}
+            changeBackground={false}>
+            <ReviewContent>
+              <h3
                 style={{
-                  position: "relative",
-                  // bottom: "2px",
-                  // left: "18px",
+                  color: "var(--secendory-text-color)",
+                  fontWeight: 600,
                 }}>
-                <ReactStars {...firstExample} />
+                The donor hasn't submitted his review
+              </h3>
+            </ReviewContent>
+          </ReviewDiv>
+        ) : requestorReview ? (
+          <ReviewDiv
+            to={"#"}
+            style={{
+              padding: "0 10% 0 0",
+              boxShadow: "0px 0px 4px 0px #00000061",
+              borderRadius: "0",
+            }}
+            onClick={(e) => e.preventDefault()}
+            changeBackground={false}>
+            <ReviewContent>
+              <h3
+                style={{
+                  color: "var(--secendory-text-color)",
+                  fontWeight: 600,
+                }}>
+                Review By Donor
+              </h3>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    position: "relative",
+                    // bottom: "2px",
+                    // left: "18px",
+                  }}>
+                  <ReactStars
+                    {...firstExample}
+                    value={requestorReview?.review?.rating}
+                  />
+                </div>
               </div>
-            </div>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--secendory-text-color)",
-              }}>
-              aa quick brown fox jumped over the lazy doga quick brown fox
-              jumped over the lazy doga quick brown fox jumped over the lazy
-              doga quick brown fox jumped over the lazy doga quick brown fox
-              jumped over the lazy doga quick brown fox jumped over the lazy
-              doga quick brown fox jumped over the lazy dog quick brown fox
-              jumped over the lazy dog
-            </p>
-            <Badge
-              sm
-              style={{ position: "absolute", top: "13px", right: "18px" }}>
-              3 days ago
-            </Badge>
-          </ReviewContent>
-        </ReviewDiv>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "var(--secendory-text-color)",
+                }}>
+                {requestorReview.review.description}
+              </p>
+              <Badge
+                sm
+                style={{ position: "absolute", top: "13px", right: "18px" }}>
+                <Moment fromNow>{requestorReview?.timestamp?.replace("Z", "")}</Moment>
+              </Badge>
+            </ReviewContent>
+          </ReviewDiv>
+        ) : (
+          ""
+        )}
       </ReviewWrap>
     </>
   );
 };
 
-const ReviewForDonor = () => {
+const ReviewForDonor = ({ requestData }) => {
   const firstExample = {
     size: 30,
-    value: 2.5,
     edit: false,
+    isHalf: true,
+
     activeColor: "var(--primary-color)",
   };
+
+  const [donorReview, setDonorReview] = useState(null);
+
+  // hooks
+  const dispatch = useDispatch();
+
+  useEffect(async () => {
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/${requestData?.id}/get-donors-review-for-blood-request/`
+      );
+      setDonorReview(res.data);
+    } catch (err) {
+      if (err?.response?.data?.success === false) {
+        if (err?.response?.data?.code === "donors_review_not_found") {
+          setDonorReview("donors_review_not_found");
+        } else {
+          dispatch(alert(err?.response?.data?.error, "error"));
+        }
+      } else {
+        dispatch(alert("Something went wrong", "error"));
+      }
+    }
+  }, []);
 
   return (
     <>
       <ReviewWrap>
-        <ReviewDiv
-          to={"#"}
-          style={{
-            padding: "0 10% 0 0",
-            boxShadow: "0px 0px 4px 0px #00000061",
-            borderRadius: "0",
-          }}
-          onClick={(e) => e.preventDefault()}
-          changeBackground={false}>
-          <ReviewContent>
-            <h3 style={{ color: "var(--secendory-text-color)" }}>
-              Review By Donor
-            </h3>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <div
+        {donorReview === "donors_review_not_found" ? (
+          <ReviewDiv
+            to={"#"}
+            style={{
+              padding: "10px 10% 10px 0",
+              boxShadow: "0px 0px 4px 0px #00000061",
+              borderRadius: "0",
+              minHeight: "max-content",
+            }}
+            onClick={(e) => e.preventDefault()}
+            changeBackground={false}>
+            <ReviewContent>
+              <h3
                 style={{
-                  position: "relative",
-                  // bottom: "2px",
-                  // left: "18px",
+                  color: "var(--secendory-text-color)",
+                  fontWeight: 600,
                 }}>
-                <ReactStars {...firstExample} />
+                The requestor hasn't submitted his review
+              </h3>
+            </ReviewContent>
+          </ReviewDiv>
+        ) : donorReview ? (
+          <ReviewDiv
+            to={"#"}
+            style={{
+              padding: "0 10% 0 0",
+              boxShadow: "0px 0px 4px 0px #00000061",
+              borderRadius: "0",
+            }}
+            onClick={(e) => e.preventDefault()}
+            changeBackground={false}>
+            <ReviewContent>
+              <h3
+                style={{
+                  color: "var(--secendory-text-color)",
+                  fontWeight: 600,
+                }}>
+                Review By Requestor
+              </h3>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    position: "relative",
+                    // bottom: "2px",
+                    // left: "18px",
+                  }}>
+                  <ReactStars
+                    {...firstExample}
+                    value={donorReview?.review?.rating}
+                  />
+                </div>
               </div>
-            </div>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--secendory-text-color)",
-              }}>
-              aa quick brown fox jumped over the lazy doga quick brown fox
-              jumped over the lazy doga quick brown fox jumped over the lazy
-              doga quick brown fox jumped over the lazy doga quick brown fox
-              jumped over the lazy doga quick brown fox jumped over the lazy
-              doga quick brown fox jumped over the lazy dog quick brown fox
-              jumped over the lazy dog
-            </p>
-            <Badge
-              sm
-              style={{ position: "absolute", top: "13px", right: "18px" }}>
-              3 days ago
-            </Badge>
-          </ReviewContent>
-        </ReviewDiv>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "var(--secendory-text-color)",
+                }}>
+                {donorReview?.review?.description}
+              </p>
+              <Badge
+                sm
+                style={{ position: "absolute", top: "13px", right: "18px" }}>
+                <Moment fromNow>{donorReview?.timestamp?.replace("Z", "")}</Moment>
+              </Badge>
+            </ReviewContent>
+          </ReviewDiv>
+        ) : (
+          ""
+        )}
       </ReviewWrap>
     </>
   );

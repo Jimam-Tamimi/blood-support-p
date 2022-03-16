@@ -168,6 +168,44 @@ class BloodRequestViewSet(ModelViewSet):
             except DonorRequest.DoesNotExist:
                 return Response({'success': True, 'message': 'You haven\'t sent any donor request to this blood request 😶', 'type': 'info'}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], url_path='get-donors-review-for-blood-request')
+    def getDonorsReviewForBloodRequest(self, request, pk=None):
+        bloodRequest = self.get_object()
+
+        
+        try:
+            donorRequest = DonorRequest.objects.get(blood_request=bloodRequest, status='Reviewed')
+        except DonorRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'No reviewed donor request was found for this blood request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            donorsReviewData = DonorRequestReviewSerializer(DonorRequestReview.objects.get(donor_request=donorRequest)).data
+        except DonorRequestReview.DoesNotExist:
+            return Response({'success': False, 'error': 'Donor\'s review for this blood request was not found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        respose = {
+            'success': True,
+            'review': donorsReviewData,
+        }
+        return Response(respose, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='get-requestors-review-for-blood-request')
+    def getRequestorsReviewForBloodRequest(self, request, pk=None):
+        bloodRequest = self.get_object()
+        try:
+            requestorsReviewData = BloodRequestReviewSerializer(BloodRequestReview.objects.get(blood_request=bloodRequest)).data
+        except BloodRequestReview.DoesNotExist:
+            return Response({'success': False, 'error': 'Requestors\'s review for this blood request was not found', 'code': 'requestor_review_not_found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        respose = {
+            'success': True,
+            'review': requestorsReviewData,
+        }
+        return Response(respose, status=status.HTTP_200_OK)
+
+    
+
             
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')

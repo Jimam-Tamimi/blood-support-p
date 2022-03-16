@@ -81,11 +81,16 @@ class ProfileViewSet(ModelViewSet):
     @action(detail=False, methods=['get'], url_path='get-profile-details-for-user')
     def get_profile_details_by_user(self, request):
         try:
+            User.objects.get(id=request.GET['user_id'])
+        except User.DoesNotExist:
+            return Response({'status': False,  'error': 'User with this id does not exist', 'code': 'user_not_found'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
             profile = Profile.objects.get(user__id=request.GET['user_id'])
             serializer = ProfileSerializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Profile.DoesNotExist:
-            return Response({'error': 'Profile with this user does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': False,  'error': 'Profile with this user does not exist', 'code': 'profile_not_found'}, status=status.HTTP_404_NOT_FOUND)
         
         except Exception:
             return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)

@@ -98,6 +98,10 @@ export default function Profile({ match }) {
         setProfile(res.data)
       }
     } catch (error) {
+      if(error?.response?.status === false && error?.response?.data?.code === "profile_not_found"){
+        setProfile(error?.response?.data?.code)
+        
+      }
     }
   }, [])
 
@@ -215,7 +219,7 @@ function Details( {profile}) {
                 closeOnOutsideClick={false}
                 show={showUpdateFormModal}
                 setShow={setShowUpdateFormModal}>
-                <UpdateProfileForm
+                <UpdateAndCompleteProfileForm
                   setShowUpdateFormModal={setShowUpdateFormModal}
                 />
               </Modal>
@@ -245,7 +249,7 @@ function Details( {profile}) {
   );
 }
 
-function UpdateProfileForm({ setShowUpdateFormModal }) {
+function UpdateAndCompleteProfileForm({ setShowUpdateFormModal }) {
   // hooks
   const dispatch = useDispatch();
   const profile = useSelector((state) => state.profile);
@@ -578,6 +582,7 @@ function UpdateProfileForm({ setShowUpdateFormModal }) {
     </>
   );
 }
+ 
 
 function Review({ match }) {
   const history = useHistory();

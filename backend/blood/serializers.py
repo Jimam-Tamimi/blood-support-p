@@ -29,6 +29,18 @@ class DonorRequestSerializer(ModelSerializer):
         return super().create(validated_data)
     
     
+class DonorRequestReviewSerializer(ModelSerializer):
+    class Meta:
+        model = DonorRequestReview
+        fields = "__all__" 
+ 
+class BloodRequestReviewSerializer(ModelSerializer):
+    class Meta:
+        model = BloodRequestReview
+        fields = "__all__" 
+ 
+    
+    
 
     
     
