@@ -850,7 +850,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
     filledIcon: <BsStarFill />,
     onChange: (newValue) => {
       console.log(newValue);
-      setReviewReqFormData({ ...reviewBloodRequest, rating: newValue });
+      setReviewReqFormData({ ...reviewReqFormData, rating: newValue });
     },
   };
 
@@ -913,7 +913,6 @@ const ReviewForm = ({ requestData, setRequestData }) => {
                   name="description"
                   value={description}
                   placeholder="Short Description">
-                  {description}
                 </TextArea>
               </InputDiv>
               <InputDiv>
@@ -958,8 +957,8 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   ];
   // states
   const [autoComplete, setAutoComplete] = useState(null);
-  const [mark, setMark] = useState(false);
-
+  const [mark, setMark] = useState(requestData?.location);
+  const [coords, setCoords] = useState(requestData?.location)
   const [showUpdateRequestModal, setShowUpdateRequestModal] = useState(false);
 
   // hooks
@@ -975,14 +974,15 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
           lat: location.coords.latitude,
           lng: location.coords.longitude,
         });
+        setCoords({
+          lat: location.coords.latitude,
+          lng: location.coords.longitude,
+        });
       },
       () => console.log("error :)"),
       { timeout: 10000 }
     );
-  }
-  useEffect(() => {
-    setCurrentLocation();
-  }, []);
+  } 
 
   const onPlaceChanged = () => {
     try {
@@ -1002,6 +1002,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   });
   useEffect(() => {
     setUpdateRequestFormData({ ...updateRequestFormData, location: mark });
+    
   }, [mark]);
 
   const {
@@ -1215,7 +1216,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
                 height="400px"
                 size={12}>
                 <Map
-                  coords={mark}
+                  coords={coords}
                   isMarkerShown
                   googleMapURL=" "
                   loadingElement={<div style={{ height: `100%` }} />}
@@ -1349,7 +1350,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                   </Moment>
                 </Td>
                 <Td>
-                  {calcDistance(donorRequest?.location, currentLocation)} KM
+                  {calcDistance(donorRequest?.location, donorRequest.blood_request.location)} KM
                 </Td>
                 <Td>{donorRequest?.number}</Td>
                 {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
@@ -1362,8 +1363,8 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                     ""
                   )}
 
-                  <Badge sm>
-                    <Moment fromNow>{donorRequest.timestamp}</Moment>
+                  <Badge sm> 
+                    <Moment fromNow >{donorRequest.timestamp}</Moment>
                   </Badge>
                 </div>
               </Tr>
@@ -1534,7 +1535,7 @@ const DonorRequestMoreDetails = ({
         <Detail>
           <DetailField>Distance: </DetailField>
           <DetailFieldValue>
-            {calcDistance(donorRequestMoreDetails?.location, currentLocation)}{" "}
+            {calcDistance(donorRequestMoreDetails?.location,  donorRequestMoreDetails.blood_request.location)}{" "}
             KM
           </DetailFieldValue>
         </Detail>
@@ -1670,7 +1671,7 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
       console.log(res);
       if (res.status === 204) {
         dispatch(alert("Your donor request has been deleted successfully"));
-        history.push("/requests/" + myDonorRequestData?.blood_request + "/");
+        history.push("/requests/" + myDonorRequestData?.blood_request?.id + "/");
         dispatch(setProgress(80));
         await getRequestStatusInfo();
         setMyDonorRequestData(null);
@@ -2090,6 +2091,8 @@ const ReviewForRequestor = ({ requestData }) => {
 
   return (
     <>
+    {
+      requestorReview &&
       <ReviewWrap>
         {requestorReview === "requestors_review_not_found" ? (
           <ReviewDiv
@@ -2112,55 +2115,58 @@ const ReviewForRequestor = ({ requestData }) => {
               </h3>
             </ReviewContent>
           </ReviewDiv>
-        ) : requestorReview ? (
-          <ReviewDiv
-            to={"#"}
-            style={{
-              padding: "0 10% 0 0",
-              boxShadow: "0px 0px 4px 0px #00000061",
-              borderRadius: "0",
-            }}
-            onClick={(e) => e.preventDefault()}
-            changeBackground={false}>
-            <ReviewContent>
-              <h3
-                style={{
-                  color: "var(--secendory-text-color)",
-                  fontWeight: 600,
-                }}>
-                Review By Donor
-              </h3>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <div
+        ) : requestorReview?.code !== 'review_not_submitted' ? (
+            <ReviewDiv
+              to={"#"}
+              style={{
+                padding: "0 10% 0 0",
+                boxShadow: "0px 0px 4px 0px #00000061",
+                borderRadius: "0",
+              }}
+              onClick={(e) => e.preventDefault()}
+              changeBackground={false}>
+              <ReviewContent>
+                <h3
                   style={{
-                    position: "relative",
-                    // bottom: "2px",
-                    // left: "18px",
+                    color: "var(--secendory-text-color)",
+                    fontWeight: 600,
                   }}>
-                  <ReactStars
-                    {...firstExample}
-                    value={requestorReview?.review?.rating}
-                  />
+                  Review By Donor
+                </h3>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      // bottom: "2px",
+                      // left: "18px",
+                    }}>
+                    <ReactStars
+                      {...firstExample}
+                      value={requestorReview?.review?.rating}
+                    />
+                  </div>
                 </div>
-              </div>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "var(--secendory-text-color)",
-                }}>
-                {requestorReview.review.description}
-              </p>
-              <Badge
-                sm
-                style={{ position: "absolute", top: "13px", right: "18px" }}>
-                <Moment fromNow>{requestorReview?.timestamp?.replace("Z", "")}</Moment>
-              </Badge>
-            </ReviewContent>
-          </ReviewDiv>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--secendory-text-color)",
+                  }}>
+                  {requestorReview?.review?.description}
+                </p>
+                <Badge
+                  sm
+                  style={{ position: "absolute", top: "13px", right: "18px" }}> 
+
+                  <Moment fromNow>{requestorReview?.review?.timestamp}</Moment>
+                </Badge>
+              </ReviewContent>
+            </ReviewDiv>
         ) : (
           ""
         )}
       </ReviewWrap>
+    }
+
     </>
   );
 };
@@ -2187,8 +2193,8 @@ const ReviewForDonor = ({ requestData }) => {
       setDonorReview(res.data);
     } catch (err) {
       if (err?.response?.data?.success === false) {
-        if (err?.response?.data?.code === "donors_review_not_found") {
-          setDonorReview("donors_review_not_found");
+        if (err?.response?.data?.code) {
+          setDonorReview(err?.response?.data?.code);
         } else {
           dispatch(alert(err?.response?.data?.error, "error"));
         }
@@ -2200,6 +2206,8 @@ const ReviewForDonor = ({ requestData }) => {
 
   return (
     <>
+    {
+      donorReview &&
       <ReviewWrap>
         {donorReview === "donors_review_not_found" ? (
           <ReviewDiv
@@ -2222,55 +2230,64 @@ const ReviewForDonor = ({ requestData }) => {
               </h3>
             </ReviewContent>
           </ReviewDiv>
-        ) : donorReview ? (
+        ) :  donorReview ? (
           <ReviewDiv
-            to={"#"}
-            style={{
-              padding: "0 10% 0 0",
-              boxShadow: "0px 0px 4px 0px #00000061",
-              borderRadius: "0",
-            }}
-            onClick={(e) => e.preventDefault()}
-            changeBackground={false}>
-            <ReviewContent>
-              <h3
+          to={"#"}
+          style={{
+            padding: "0 10% 0 0",
+            boxShadow: "0px 0px 4px 0px #00000061",
+            borderRadius: "0",
+          }}
+          onClick={(e) => e.preventDefault()}
+          changeBackground={false}>
+          <ReviewContent>
+            <h3
+              style={{
+                color: "var(--secendory-text-color)",
+                fontWeight: 600,
+              }}>
+              Review By Requestor
+            </h3>
+
+            {
+              donorReview?.code !== 'blood_request_not_reviewed'? (
+                <>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div
                 style={{
-                  color: "var(--secendory-text-color)",
-                  fontWeight: 600,
+                  position: "relative",
+                  // bottom: "2px",
+                  // left: "18px",
                 }}>
-                Review By Requestor
-              </h3>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <div
-                  style={{
-                    position: "relative",
-                    // bottom: "2px",
-                    // left: "18px",
-                  }}>
-                  <ReactStars
-                    {...firstExample}
-                    value={donorReview?.review?.rating}
-                  />
-                </div>
+                <ReactStars
+                  {...firstExample}
+                  value={donorReview?.review?.rating}
+                />
               </div>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "var(--secendory-text-color)",
-                }}>
-                {donorReview?.review?.description}
-              </p>
-              <Badge
-                sm
-                style={{ position: "absolute", top: "13px", right: "18px" }}>
-                <Moment fromNow>{donorReview?.timestamp?.replace("Z", "")}</Moment>
-              </Badge>
-            </ReviewContent>
-          </ReviewDiv>
-        ) : (
-          ""
-        )}
+            </div>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "var(--secendory-text-color)",
+              }}>
+              {donorReview?.review?.description}
+            </p>
+                </>
+              ) : <p> <br/> Review the blood requestor to see his review</p>
+            }
+            <Badge
+              sm
+              style={{ position: "absolute", top: "13px", right: "18px" }}>
+                  <p>{donorReview.timestamp}</p>
+
+              <Moment fromNow>{donorReview?.review?.timestamp}</Moment>
+            </Badge>
+          </ReviewContent>
+        </ReviewDiv>
+        ): ''
+      }
       </ReviewWrap>
+    }
     </>
   );
 };

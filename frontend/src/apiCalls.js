@@ -14,7 +14,7 @@ export const getProfileDetailsForUser = async (id, showAlert = true) =>
     } catch (error) {
       if (showAlert) {
         if (error?.response?.status === 404) {
-          store.dispatch(alert("Profile not found for this user 😐", "danger"));
+          store.dispatch(alert(`${error?.response?.data?.code === 'profile_not_found'? error?.response?.data?.error : error?.response?.data?.code==='user_not_found' ? error?.response?.data?.error : ''} `, "danger"));
         } else {  
           store.dispatch(alert("Failed to get profile details 😶", "danger"));
         }

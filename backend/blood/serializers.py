@@ -18,7 +18,7 @@ class BloodRequestSerializer(ModelSerializer):
 class DonorRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
     timestamp = serializers.DateTimeField(read_only=True)
-
+    blood_request = BloodRequestSerializer(read_only=True)
     class Meta:
         model = DonorRequest
         fields = "__all__" 
@@ -26,6 +26,13 @@ class DonorRequestSerializer(ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         validated_data['user'] = user
+        bloodRequestId = self.context['request'].data['blood_request']
+        try:
+            bloodRequest = BloodRequest.objects.get(id=bloodRequestId)
+        except BloodRequest.DoesNotExist:
+            raise serializers.ValidationError("Blood Request does not exist")
+        validated_data['blood_request'] = bloodRequest
+        print(self.context['request'].data['blood_request'])
         return super().create(validated_data)
     
     

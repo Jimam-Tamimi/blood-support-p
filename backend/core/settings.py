@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "account",
     "blood",
+        'django_filters',
+
 ]
 
 MIDDLEWARE = [

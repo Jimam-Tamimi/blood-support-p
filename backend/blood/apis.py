@@ -4,6 +4,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response  import Response
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.filters import OrderingFilter
 
 from django.db.models import Q
 
@@ -174,6 +177,7 @@ class BloodRequestViewSet(ModelViewSet):
 
         
         try:
+            
             donorRequest = DonorRequest.objects.get(blood_request=bloodRequest, status='Reviewed')
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'No reviewed donor request was found for this blood request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -183,12 +187,17 @@ class BloodRequestViewSet(ModelViewSet):
         except DonorRequestReview.DoesNotExist:
             return Response({'success': False, 'error': 'Donor\'s review for this blood request was not found'}, status=status.HTTP_400_BAD_REQUEST)
         
-        
+
+
+        if( not  BloodRequestReview.objects.filter(blood_request=bloodRequest).exists() and bloodRequest.user != request.user):
+            return Response({'success': True, 'message': 'You have not reviewed the blood requestor yet. Please review the blood requestor to see your review 🙂', 'code': 'blood_request_not_reviewed'}, status=status.HTTP_200_OK)
+            
         respose = {
             'success': True,
             'review': donorsReviewData,
         }
         return Response(respose, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['get'], url_path='get-requestors-review-for-blood-request')
     def getRequestorsReviewForBloodRequest(self, request, pk=None):
@@ -196,7 +205,12 @@ class BloodRequestViewSet(ModelViewSet):
         try:
             requestorsReviewData = BloodRequestReviewSerializer(BloodRequestReview.objects.get(blood_request=bloodRequest)).data
         except BloodRequestReview.DoesNotExist:
+            if(bloodRequest.status != 'Reviewed'):
+                return Response({'success': True, 'message': 'The donor has not submitted his review. Please until the donor submits his review',  'code': 'review_not_submitted'}, status=status.HTTP_200_OK)                
             return Response({'success': False, 'error': 'Requestors\'s review for this blood request was not found', 'code': 'requestor_review_not_found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+                
+
         
         respose = {
             'success': True,
@@ -210,10 +224,13 @@ class BloodRequestViewSet(ModelViewSet):
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
-     
-
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    authentication_classes = [SessionAuthentication]
+    filterset_fields = ['status']
+    ordering_fields = ['date_time', 'timestamp', 'location']
     def list(self, request, *args, **kwargs):
-        if(request.user.is_admin):
+ 
+        if(request.user.is_staff):
             return super().list(request, *args, **kwargs)
         else:
             return Response({'success': False, 'error': 'You are not authorized to view this page'}, status=status.HTTP_401_UNAUTHORIZED)

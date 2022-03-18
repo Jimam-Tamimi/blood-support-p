@@ -23,6 +23,8 @@ import {
   DetailsMap,
   ActionDiv,
   Action,
+  NotAvailableWrap,
+  DetailsAlert,
 } from "../../styles/Details.styles";
 import Dropdown from "../../components/Dropdown/Dropdown";
 
@@ -77,9 +79,10 @@ export default function Profile({ match }) {
   // hooks
   const history = useHistory();
   const location = useLocation();
-  
-  const [profile, setProfile] = useState({})
-  
+  const dispatch = useDispatch();
+
+  const [profile, setProfile] = useState({});
+
   useEffect(() => {
     if (
       location.pathname === `/profile/${match.params.id}/` ||
@@ -90,69 +93,101 @@ export default function Profile({ match }) {
     // eslint-disable-next-line
   }, [location]);
 
- 
-  useEffect( async () => {
+  const getProfile = async () => {
     try {
-      const res = await getProfileDetailsForUser(match?.params?.id)
-      if(res.status === 200){
-        setProfile(res.data)
+      const res = await getProfileDetailsForUser(match?.params?.id, false);
+      if (res.status === 200) {
+        setProfile(res.data);
       }
     } catch (error) {
-      if(error?.response?.status === false && error?.response?.data?.code === "profile_not_found"){
-        setProfile(error?.response?.data?.code)
-        
+
+      if (
+        error?.response?.data?.status === false &&
+        error?.response?.data?.code === "profile_not_found"
+      ) {
+        setProfile(error?.response?.data?.code);
+      } else if (
+        error?.response?.data?.status === false &&
+        error?.response?.data?.code === "user_not_found"
+      ) {
+
+        setProfile(error?.response?.data?.code);
       }
     }
-  }, [])
+  }
+  
+  useEffect(async () => {
+    dispatch(setProgress(20));
+    await getProfile()
+    dispatch(setProgress(100));
+    console.log(profile)
+  }, []);
 
-  return (
-    <>
-      <DetailsMap>
-        <Map
-          coords={profile?.location}
-          isMarkerShown
-          googleMapURL=" "
-          loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
-          containerElement={<div style={{ height: `350px`, width: "100%" }} />}
-          mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-          defaultZoom={14}>
-          {<Marker position={profile?.location} />}
-        </Map>
-      </DetailsMap>
-      <ProfileImgDiv>
-        <ProfileImg
-          src={`${process.env.REACT_APP_MEDIA_URL}${profile?.profile_img}`}
-          size="130px"
-          style={{ position: "absolute", bottom: "15px", left: "15px" }}
-        />
-      </ProfileImgDiv>
-
-      <NavWrap>
-        <NavTab
-          activeClassName="active"
-          exact
-          to={`/profile/${match.params.id}/details/`}>
-          Details
-        </NavTab>
-        <NavTab
-          activeClassName="active"
-          to={`/profile/${match.params.id}/review/`}>
-          Review
-        </NavTab>
-      </NavWrap>
-
-      <Route exact path="/profile/:id/details/" >
-        <Details profile={profile}  />
+  if (profile === "user_not_found") {
+    return (
+      <NotAvailableWrap>
+        <h2>404 user not found</h2>
+      </NotAvailableWrap>
+    ); 
+ 
+  } else {
+    return (
+      <>
+      {
+        profile === "profile_not_found" &&
+              <DetailsAlert type="danger">
+              <p>Your Profile is not completed</p>
+            </DetailsAlert>
+      }
+        <DetailsMap>
+          <Map
+            coords={profile?.location}
+            isMarkerShown
+            googleMapURL=" "
+            loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
+            containerElement={<div style={{ height: `350px`, width: "100%" }} />}
+            mapElement={<div style={{ height: `350px`, width: "100%" }} />}
+            defaultZoom={14}>
+            {<Marker position={profile?.location} />}
+          </Map>
+        </DetailsMap>
+        <ProfileImgDiv>
+          <ProfileImg
+            src={`${process.env.REACT_APP_MEDIA_URL}${profile?.profile_img}`}
+            size="130px"
+            style={{ position: "absolute", bottom: "15px", left: "15px" }}
+          />
+        </ProfileImgDiv>
+  
+        <NavWrap>
+          <NavTab
+            activeClassName="active"
+            exact
+            to={`/profile/${match.params.id}/details/`}>
+            Details
+          </NavTab>
+          <NavTab
+            activeClassName="active"
+            to={`/profile/${match.params.id}/review/`}>
+            Review
+          </NavTab>
+        </NavWrap>
+  
+        <Route exact path="/profile/:id/details/">
+          <Details getProfile={getProfile} profile={profile} />
         </Route>
+  
+        <Route path="/profile/:id/review/" component={Review} />
+      </>
+    );
+  }
 
-      <Route path="/profile/:id/review/" component={Review} />
-    </>
-  );
+
 }
 
-function Details( {profile}) { 
-  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false); 
-  
+function Details({ profile, getProfile }) {
+  const [showUpdateFormModal, setShowUpdateFormModal] = useState(false);
+
   const report = () => {
     // call api to report this request
     console.log("report request");
@@ -161,11 +196,8 @@ function Details( {profile}) {
     { name: "Report", icon: FaBan, onClick: report },
   ]);
 
-  // hooks 
+  // hooks
   const auth = useSelector((state) => state.auth);
-  
-
-  
 
   return (
     <>
@@ -201,31 +233,29 @@ function Details( {profile}) {
           <Detail>
             <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
-          {
-            auth.user_id === profile?.user?.id ?
-            <ButtonDiv style={{ marginTop: "20px" }}>
-              <Button onClick={(e) => setShowUpdateFormModal(true)} type="button">
-                {profile.isCompleted ? "Update Profile" : "Complete Profile"}
-              </Button>
 
-              <Modal
-                btnText="Update Profile"
-                title="Update Profile"
-                actionText="Update"
-                formId="updateProfileForm"
-                md
-                wrapStyle={{ alignItems: "baseline" }}
-                scale
-                closeOnOutsideClick={false}
-                show={showUpdateFormModal}
-                setShow={setShowUpdateFormModal}>
-                <UpdateAndCompleteProfileForm
-                  setShowUpdateFormModal={setShowUpdateFormModal}
-                />
-              </Modal>
-            </ButtonDiv>:''
-          }
+          <ButtonDiv style={{ marginTop: "20px" }}>
+            <Button onClick={(e) => setShowUpdateFormModal(true)} type="button">
+              {profile.isCompleted ? "Update Profile" : "Complete Profile"}
+            </Button>
 
+            <Modal
+              btnText="Update Profile"
+              title="Update Profile"
+              actionText="Update"
+              formId="updateProfileForm"
+              md
+              wrapStyle={{ alignItems: "baseline" }}
+              scale
+              closeOnOutsideClick={false}
+              show={showUpdateFormModal}
+              setShow={setShowUpdateFormModal}>
+              <UpdateAndCompleteProfileForm
+                setShowUpdateFormModal={setShowUpdateFormModal}
+                getProfile={getProfile}
+              />
+            </Modal>
+          </ButtonDiv>
         </DetailsDiv>
         <ActionDiv>
           <Action>
@@ -249,7 +279,7 @@ function Details( {profile}) {
   );
 }
 
-function UpdateAndCompleteProfileForm({ setShowUpdateFormModal }) {
+function UpdateAndCompleteProfileForm({ setShowUpdateFormModal, getProfile }) {
   // hooks
   const dispatch = useDispatch();
   const profile = useSelector((state) => state.profile);
@@ -378,7 +408,8 @@ function UpdateAndCompleteProfileForm({ setShowUpdateFormModal }) {
         dispatch(alert("Profile Updated Successfully 😎", "success"));
         setShowUpdateFormModal(false);
         setSubmitReq(false);
-        setProfileFormData(initialProfileData);
+        setProfileFormData(formData);
+        getProfile()
         dispatch(getProfileDetails());
       }
     } catch (err) {
@@ -473,7 +504,7 @@ function UpdateAndCompleteProfileForm({ setShowUpdateFormModal }) {
               onChange={(e) =>
                 setProfileFormData({
                   ...profileFormData,
-                  blood_group: e.value,
+                  blood_group: e?.value,
                 })
               }
             />
@@ -582,7 +613,6 @@ function UpdateAndCompleteProfileForm({ setShowUpdateFormModal }) {
     </>
   );
 }
- 
 
 function Review({ match }) {
   const history = useHistory();
