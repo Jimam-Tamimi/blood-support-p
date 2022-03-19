@@ -225,7 +225,7 @@ class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    authentication_classes = [SessionAuthentication]
+    # authentication_classes = [SessionAuthentication]
     filterset_fields = ['status']
     ordering_fields = ['date_time', 'timestamp', 'location']
     def list(self, request, *args, **kwargs):

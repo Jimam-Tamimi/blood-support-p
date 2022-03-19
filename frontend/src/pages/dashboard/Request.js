@@ -66,7 +66,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
-import { calcDistance, getCurrentLocation } from "../../helpers";
+import { calcDistance, getCurrentLocation, sortByDistance, sortByTime } from "../../helpers";
 import Select from "react-select";
 import Moment from "react-moment";
 import {
@@ -1296,8 +1296,12 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     }, 450);
   };
 
+ 
+
   return (
     <>
+    <Button onClick={e =>  sortByDistance(currentLocation, donorRequestData).then(res => setDonorRequestData([...res])).catch(err => console.log(err))}>Distance</Button>
+    <Button onClick={e =>  sortByTime(donorRequestData).then(res => setDonorRequestData([...res])).catch(err => console.log(err))}>CLick me</Button>
       <Wrap>
         <TopSection>
           <SearchForm>

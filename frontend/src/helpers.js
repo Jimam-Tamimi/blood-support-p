@@ -72,3 +72,29 @@ export function calcDistance(location, myLocation) {
   var d = R * c;
   return d.toFixed(2);
 }
+
+
+export function sortByDistance(myLocation, locations) {
+  return new Promise( async (resolve, reject) =>  {
+    try {
+      let newLocations = await locations.sort((a, b) => {
+        return calcDistance(a.location, myLocation) - calcDistance(b.location, myLocation);
+      });
+        resolve(newLocations);
+    } catch (error) {
+        reject(error);
+    }
+  })
+}
+
+export function sortByTime(data) {
+  return new Promise( async (resolve, reject) =>  {
+    try{
+      resolve(data.sort((a,b) =>  new Date(a.date_time) - new Date(b.date_time)));
+    } catch (error) {
+        reject(error);
+    }
+
+  })
+
+}
