@@ -98,3 +98,12 @@ export function sortByTime(data) {
   })
 
 }
+
+
+export const donorRequestFilterOption = [
+  { value: "status", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "accepted", label: "Accepted" },
+  { value: "reviewed", label: "Reviewed" },
+  { value: "rejected", label: "Rejected" }, 
+]

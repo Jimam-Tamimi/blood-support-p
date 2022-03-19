@@ -62,6 +62,8 @@ export const TopSection = styled.div`
   ${Flex}
   justify-content: space-between;
   width: 100%;
+  flex-wrap: wrap;
+
 `;
 
 export const SearchForm = styled.form`
@@ -76,9 +78,15 @@ export const SearchInp = styled.input`
   outline: none;
   color: var(--secendory-text-color);
   width: 215px;
+
 `;
 
-export const OrderedBySection = styled.div``;
+export const OrderedBySection = styled.div`
+  .filter-div{
+    width: 200px;
+
+  }
+`;
 
 export const Select = styled.select``;
 

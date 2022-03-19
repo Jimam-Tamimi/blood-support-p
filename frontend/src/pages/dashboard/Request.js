@@ -55,6 +55,7 @@ import {
   SearchForm,
   SearchInp,
   TopSection,
+  Option,
 } from "../../styles/Table.styles";
 
 import { Wrap } from "../styles/dashboard/Request.styles";
@@ -66,7 +67,13 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setProgress } from "../../redux/progress/actions";
 import alert from "../../redux/alert/actions";
-import { calcDistance, getCurrentLocation, sortByDistance, sortByTime } from "../../helpers";
+import {
+  calcDistance,
+  donorRequestFilterOption,
+  getCurrentLocation,
+  sortByDistance,
+  sortByTime,
+} from "../../helpers";
 import Select from "react-select";
 import Moment from "react-moment";
 import {
@@ -912,8 +919,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
                   onChange={onInputValChange}
                   name="description"
                   value={description}
-                  placeholder="Short Description">
-                </TextArea>
+                  placeholder="Short Description"></TextArea>
               </InputDiv>
               <InputDiv>
                 <Label htmlFor="add-number">Give him a rating out of 5</Label>
@@ -958,7 +964,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   // states
   const [autoComplete, setAutoComplete] = useState(null);
   const [mark, setMark] = useState(requestData?.location);
-  const [coords, setCoords] = useState(requestData?.location)
+  const [coords, setCoords] = useState(requestData?.location);
   const [showUpdateRequestModal, setShowUpdateRequestModal] = useState(false);
 
   // hooks
@@ -982,7 +988,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
       () => console.log("error :)"),
       { timeout: 10000 }
     );
-  } 
+  }
 
   const onPlaceChanged = () => {
     try {
@@ -1002,7 +1008,6 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
   });
   useEffect(() => {
     setUpdateRequestFormData({ ...updateRequestFormData, location: mark });
-    
   }, [mark]);
 
   const {
@@ -1296,24 +1301,50 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     }, 450);
   };
 
- 
-
   return (
     <>
-    <Button onClick={e =>  sortByDistance(currentLocation, donorRequestData).then(res => setDonorRequestData([...res])).catch(err => console.log(err))}>Distance</Button>
-    <Button onClick={e =>  sortByTime(donorRequestData).then(res => setDonorRequestData([...res])).catch(err => console.log(err))}>CLick me</Button>
+      <Button
+        onClick={(e) =>
+          sortByDistance(currentLocation, donorRequestData)
+            .then((res) => setDonorRequestData([...res]))
+            .catch((err) => console.log(err))
+        }>
+        Distance
+      </Button>
+      <Button
+        onClick={(e) =>
+          sortByTime(donorRequestData)
+            .then((res) => setDonorRequestData([...res]))
+            .catch((err) => console.log(err))
+        }>
+        CLick me
+      </Button>
       <Wrap>
         <TopSection>
           <SearchForm>
             <SearchInp placeholder="Search..." />
           </SearchForm>
-          <OrderedBySection>
-            {/* <Select>
-                            <Option>Request Time</Option>
-                            <Option>A - Z</Option>
-                            <Option>Z - A</Option>
-                        </Select> */}
-          </OrderedBySection>
+          {/* <OrderedBySection>
+            <div  className="filter-div">
+
+            <Select
+              className="basic-single"
+              classNamePrefix="select"
+              defaultValue={'status'}
+              disabledValue={donorRequestFilterOption[0]}
+              isDisabled={false}
+              isLoading={false}
+              isClearable={true}
+              isRtl={false}
+              isSearchable={true}
+              name="donor-request-filter"
+              options={donorRequestFilterOption}
+              styles={customStyles}
+              onChange={""}
+              // disabled={!profile.isCompleted}
+              />
+              </div>
+          </OrderedBySection> */}
         </TopSection>
         <BottomSection>
           <HtmlTable>
@@ -1354,7 +1385,11 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                   </Moment>
                 </Td>
                 <Td>
-                  {calcDistance(donorRequest?.location, donorRequest.blood_request.location)} KM
+                  {calcDistance(
+                    donorRequest?.location,
+                    donorRequest.blood_request.location
+                  )}{" "}
+                  KM
                 </Td>
                 <Td>{donorRequest?.number}</Td>
                 {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
@@ -1367,8 +1402,8 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                     ""
                   )}
 
-                  <Badge sm> 
-                    <Moment fromNow >{donorRequest.timestamp}</Moment>
+                  <Badge sm>
+                    <Moment fromNow>{donorRequest.timestamp}</Moment>
                   </Badge>
                 </div>
               </Tr>
@@ -1539,7 +1574,10 @@ const DonorRequestMoreDetails = ({
         <Detail>
           <DetailField>Distance: </DetailField>
           <DetailFieldValue>
-            {calcDistance(donorRequestMoreDetails?.location,  donorRequestMoreDetails.blood_request.location)}{" "}
+            {calcDistance(
+              donorRequestMoreDetails?.location,
+              donorRequestMoreDetails.blood_request.location
+            )}{" "}
             KM
           </DetailFieldValue>
         </Detail>
@@ -1675,7 +1713,9 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
       console.log(res);
       if (res.status === 204) {
         dispatch(alert("Your donor request has been deleted successfully"));
-        history.push("/requests/" + myDonorRequestData?.blood_request?.id + "/");
+        history.push(
+          "/requests/" + myDonorRequestData?.blood_request?.id + "/"
+        );
         dispatch(setProgress(80));
         await getRequestStatusInfo();
         setMyDonorRequestData(null);
@@ -2095,31 +2135,30 @@ const ReviewForRequestor = ({ requestData }) => {
 
   return (
     <>
-    {
-      requestorReview &&
-      <ReviewWrap>
-        {requestorReview === "requestors_review_not_found" ? (
-          <ReviewDiv
-            to={"#"}
-            style={{
-              padding: "10px 10% 10px 0",
-              boxShadow: "0px 0px 4px 0px #00000061",
-              borderRadius: "0",
-              minHeight: "max-content",
-            }}
-            onClick={(e) => e.preventDefault()}
-            changeBackground={false}>
-            <ReviewContent>
-              <h3
-                style={{
-                  color: "var(--secendory-text-color)",
-                  fontWeight: 600,
-                }}>
-                The donor hasn't submitted his review
-              </h3>
-            </ReviewContent>
-          </ReviewDiv>
-        ) : requestorReview?.code !== 'review_not_submitted' ? (
+      {requestorReview && (
+        <ReviewWrap>
+          {requestorReview === "requestors_review_not_found" ? (
+            <ReviewDiv
+              to={"#"}
+              style={{
+                padding: "10px 10% 10px 0",
+                boxShadow: "0px 0px 4px 0px #00000061",
+                borderRadius: "0",
+                minHeight: "max-content",
+              }}
+              onClick={(e) => e.preventDefault()}
+              changeBackground={false}>
+              <ReviewContent>
+                <h3
+                  style={{
+                    color: "var(--secendory-text-color)",
+                    fontWeight: 600,
+                  }}>
+                  The donor hasn't submitted his review
+                </h3>
+              </ReviewContent>
+            </ReviewDiv>
+          ) : requestorReview?.code !== "review_not_submitted" ? (
             <ReviewDiv
               to={"#"}
               style={{
@@ -2159,18 +2198,16 @@ const ReviewForRequestor = ({ requestData }) => {
                 </p>
                 <Badge
                   sm
-                  style={{ position: "absolute", top: "13px", right: "18px" }}> 
-
+                  style={{ position: "absolute", top: "13px", right: "18px" }}>
                   <Moment fromNow>{requestorReview?.review?.timestamp}</Moment>
                 </Badge>
               </ReviewContent>
             </ReviewDiv>
-        ) : (
-          ""
-        )}
-      </ReviewWrap>
-    }
-
+          ) : (
+            ""
+          )}
+        </ReviewWrap>
+      )}
     </>
   );
 };
@@ -2210,88 +2247,91 @@ const ReviewForDonor = ({ requestData }) => {
 
   return (
     <>
-    {
-      donorReview &&
-      <ReviewWrap>
-        {donorReview === "donors_review_not_found" ? (
-          <ReviewDiv
-            to={"#"}
-            style={{
-              padding: "10px 10% 10px 0",
-              boxShadow: "0px 0px 4px 0px #00000061",
-              borderRadius: "0",
-              minHeight: "max-content",
-            }}
-            onClick={(e) => e.preventDefault()}
-            changeBackground={false}>
-            <ReviewContent>
-              <h3
-                style={{
-                  color: "var(--secendory-text-color)",
-                  fontWeight: 600,
-                }}>
-                The requestor hasn't submitted his review
-              </h3>
-            </ReviewContent>
-          </ReviewDiv>
-        ) :  donorReview ? (
-          <ReviewDiv
-          to={"#"}
-          style={{
-            padding: "0 10% 0 0",
-            boxShadow: "0px 0px 4px 0px #00000061",
-            borderRadius: "0",
-          }}
-          onClick={(e) => e.preventDefault()}
-          changeBackground={false}>
-          <ReviewContent>
-            <h3
+      {donorReview && (
+        <ReviewWrap>
+          {donorReview === "donors_review_not_found" ? (
+            <ReviewDiv
+              to={"#"}
               style={{
-                color: "var(--secendory-text-color)",
-                fontWeight: 600,
-              }}>
-              Review By Requestor
-            </h3>
+                padding: "10px 10% 10px 0",
+                boxShadow: "0px 0px 4px 0px #00000061",
+                borderRadius: "0",
+                minHeight: "max-content",
+              }}
+              onClick={(e) => e.preventDefault()}
+              changeBackground={false}>
+              <ReviewContent>
+                <h3
+                  style={{
+                    color: "var(--secendory-text-color)",
+                    fontWeight: 600,
+                  }}>
+                  The requestor hasn't submitted his review
+                </h3>
+              </ReviewContent>
+            </ReviewDiv>
+          ) : donorReview ? (
+            <ReviewDiv
+              to={"#"}
+              style={{
+                padding: "0 10% 0 0",
+                boxShadow: "0px 0px 4px 0px #00000061",
+                borderRadius: "0",
+              }}
+              onClick={(e) => e.preventDefault()}
+              changeBackground={false}>
+              <ReviewContent>
+                <h3
+                  style={{
+                    color: "var(--secendory-text-color)",
+                    fontWeight: 600,
+                  }}>
+                  Review By Requestor
+                </h3>
 
-            {
-              donorReview?.code !== 'blood_request_not_reviewed'? (
-                <>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <div
-                style={{
-                  position: "relative",
-                  // bottom: "2px",
-                  // left: "18px",
-                }}>
-                <ReactStars
-                  {...firstExample}
-                  value={donorReview?.review?.rating}
-                />
-              </div>
-            </div>
-            <p
-              style={{
-                fontSize: "14px",
-                color: "var(--secendory-text-color)",
-              }}>
-              {donorReview?.review?.description}
-            </p>
-                </>
-              ) : <p> <br/> Review the blood requestor to see his review</p>
-            }
-            <Badge
-              sm
-              style={{ position: "absolute", top: "13px", right: "18px" }}>
+                {donorReview?.code !== "blood_request_not_reviewed" ? (
+                  <>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <div
+                        style={{
+                          position: "relative",
+                          // bottom: "2px",
+                          // left: "18px",
+                        }}>
+                        <ReactStars
+                          {...firstExample}
+                          value={donorReview?.review?.rating}
+                        />
+                      </div>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--secendory-text-color)",
+                      }}>
+                      {donorReview?.review?.description}
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    {" "}
+                    <br /> Review the blood requestor to see his review
+                  </p>
+                )}
+                <Badge
+                  sm
+                  style={{ position: "absolute", top: "13px", right: "18px" }}>
                   <p>{donorReview.timestamp}</p>
 
-              <Moment fromNow>{donorReview?.review?.timestamp}</Moment>
-            </Badge>
-          </ReviewContent>
-        </ReviewDiv>
-        ): ''
-      }
-      </ReviewWrap>
-    }
+                  <Moment fromNow>{donorReview?.review?.timestamp}</Moment>
+                </Badge>
+              </ReviewContent>
+            </ReviewDiv>
+          ) : (
+            ""
+          )}
+        </ReviewWrap>
+      )}
     </>
   );
 };
