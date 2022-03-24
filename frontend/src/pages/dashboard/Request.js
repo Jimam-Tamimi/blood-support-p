@@ -71,7 +71,9 @@ import {
   calcDistance,
   donorRequestFilterOption,
   getCurrentLocation,
+  searchTable,
   sortByDistance,
+  sortById,
   sortByTime,
 } from "../../helpers";
 import Select from "react-select";
@@ -83,6 +85,7 @@ import {
   getMyDonorRequestStatusForBloodRequest,
   getProfileDetailsForUser,
   getTotalDonorRequestsForBloodRequest,
+  searchDonorRequestsForBloodRequest,
 } from "../../apiCalls";
 import prof from "../../assets/img/prof.jpg";
 
@@ -1301,28 +1304,29 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     }, 450);
   };
 
+
+  const searchDonReq = (e) => {
+    if(e.key=== 'Enter'){
+      e.preventDefault();
+      searchDonorRequestsForBloodRequest(
+        requestData?.id,
+        e?.target?.value
+      ).then((res) =>
+        res.status === 200 ? setDonorRequestData([...res?.data]) : ""
+      )
+    }
+  }
+  
+
   return (
     <>
-      <Button
-        onClick={(e) =>
-          sortByDistance(currentLocation, donorRequestData)
-            .then((res) => setDonorRequestData([...res]))
-            .catch((err) => console.log(err))
-        }>
-        Distance
-      </Button>
-      <Button
-        onClick={(e) =>
-          sortByTime(donorRequestData)
-            .then((res) => setDonorRequestData([...res]))
-            .catch((err) => console.log(err))
-        }>
-        CLick me
-      </Button>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp placeholder="Search..." />
+            <SearchInp
+              onKeyDown={searchDonReq}
+              placeholder="Search..."
+            />
           </SearchForm>
           {/* <OrderedBySection>
             <div  className="filter-div">
@@ -1349,65 +1353,92 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
         <BottomSection>
           <HtmlTable>
             <Tr style={{ cursor: "default" }}>
-              <Th>$</Th>
+              <Th
+                onClick={(e) =>
+                  sortById(donorRequestData)
+                    .then((res) => setDonorRequestData([...res]))
+                    .catch((err) => console.log(err))
+                }>
+                $
+              </Th>
               <Th>Profile</Th>
-              <Th>Time</Th>
-              <Th>Distance</Th>
+              <Th
+                onClick={(e) =>
+                  sortByTime(donorRequestData)
+                    .then((res) => setDonorRequestData([...res]))
+                    .catch((err) => console.log(err))
+                }>
+                Time
+              </Th>
+              <Th
+                onClick={(e) =>
+                  sortByDistance(
+                    donorRequestData[0].blood_request.location,
+                    donorRequestData
+                  )
+                    .then((res) => setDonorRequestData([...res]))
+                    .catch((err) => console.log(err))
+                }>
+                Distance
+              </Th>
               <Th>Number</Th>
               {showEmail ? <Th>Email</Th> : ""}
             </Tr>
-            {donorRequestData.map((donorRequest, index) => (
-              <Tr key={index} onClick={(e) => showMoreDetails(donorRequest.id)}>
-                <Td>{index + 1}</Td>
-                <Td>
-                  {" "}
-                  <Link
-                    style={{ display: "flex", alignItems: "center" }}
-                    to={`/profile/${donorRequest?.user?.id}/`}>
-                    <ProfileImg
-                      size="45px"
-                      src={`${process.env.REACT_APP_MEDIA_URL}${donorRequest?.profile.profile_img}`}
-                    />{" "}
-                    <p
-                      className="profile-link-name"
-                      style={{
-                        position: "relative",
-                        left: "15px",
-                        fontWeight: "600",
-                      }}>
-                      {donorRequest?.profile?.name}
-                    </p>
-                  </Link>
-                </Td>
-                <Td>
-                  <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
-                    {donorRequest?.date_time.replace("Z", "")}
-                  </Moment>
-                </Td>
-                <Td>
-                  {calcDistance(
-                    donorRequest?.location,
-                    donorRequest.blood_request.location
-                  )}{" "}
-                  KM
-                </Td>
-                <Td>{donorRequest?.number}</Td>
-                {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
-                <div className="table-row-badge">
-                  {donorRequest?.status === "Accepted" ? (
-                    <Badge sm> ACCEPTED </Badge>
-                  ) : donorRequest?.status === "Reviewed" ? (
-                    <Badge sm> REVIEWED </Badge>
-                  ) : (
-                    ""
-                  )}
+            {donorRequestData !== undefined &&
+              donorRequestData?.map((donorRequest, index) => (
+                <Tr
+                  key={index}
+                  onClick={(e) => showMoreDetails(donorRequest.id)}>
+                  <Td>{donorRequest?.id}</Td>
+                  <Td>
+                    {" "}
+                    <Link
+                      style={{ display: "flex", alignItems: "center" }}
+                      to={`/profile/${donorRequest?.user?.id}/`}>
+                      <ProfileImg
+                        size="45px"
+                        src={`${process.env.REACT_APP_MEDIA_URL}${donorRequest?.profile?.profile_img}`}
+                      />{" "}
+                      <p
+                        className="profile-link-name"
+                        style={{
+                          position: "relative",
+                          left: "15px",
+                          fontWeight: "600",
+                        }}>
+                        {donorRequest?.profile?.name}
+                      </p>
+                    </Link>
+                  </Td>
+                  <Td>
+                    <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
+                      {donorRequest?.date_time.replace("Z", "")}
+                    </Moment>
+                  </Td>
+                  <Td>
+                    {calcDistance(
+                      donorRequest?.location,
+                      donorRequest.blood_request.location
+                    )}{" "}
+                    KM
+                  </Td>
+                  <Td>{donorRequest?.number}</Td>
+                  {showEmail ? <Td>{donorRequest?.email}</Td> : ""}
+                  <div className="table-row-badge">
+                    {donorRequest?.status === "Accepted" ? (
+                      <Badge sm> ACCEPTED </Badge>
+                    ) : donorRequest?.status === "Reviewed" ? (
+                      <Badge sm> REVIEWED </Badge>
+                    ) : (
+                      ""
+                    )}
 
-                  <Badge sm>
-                    <Moment fromNow>{donorRequest.timestamp}</Moment>
-                  </Badge>
-                </div>
-              </Tr>
-            ))}
+                    <Badge sm>
+                      <Moment fromNow>{donorRequest.timestamp}</Moment>
+                    </Badge>
+                  </div>
+                </Tr>
+              ))}
           </HtmlTable>
         </BottomSection>
 

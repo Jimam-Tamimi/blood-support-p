@@ -1,5 +1,6 @@
 import axios from "axios";
 import alert from "./redux/alert/actions";
+import { setProgress } from "./redux/progress/actions";
 import store from "./redux/store";
 
 // function that takes in an user id and return a promise that resolves to the profile details of the user
@@ -118,4 +119,30 @@ export const getMyDonorRequestStatusForBloodRequest = async (id, showAlert = tru
         }
       }
     }
+  });
+
+
+  export const searchDonorRequestsForBloodRequest = async (id,value, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(30));
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/donor-request/filter-donor-request-for-blood-request/?search=${value}`, {params: {blood_request_id: id}}
+      ); 
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if (error?.response?.status === 404) {
+          store.dispatch(alert("This blood request is not available 😒", "danger"));
+        } else if(error?.response?.data?.success === false) {
+            store.dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+            store.dispatch(alert("Failed to get status for donor request 😕", "danger"));
+        }
+      }
+    }
+    store.dispatch(setProgress(100));
+
   });

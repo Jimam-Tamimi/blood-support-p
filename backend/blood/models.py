@@ -1,3 +1,4 @@
+from profile import Profile
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
@@ -53,7 +54,9 @@ class DonorRequest(models.Model):
     status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Reviewed", "Reviewed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
      
-    
+    def profile(self):
+        return Profile.objects.get(user=self.user)
+
 class DonorRequestReview(models.Model):
     donor_request = models.OneToOneField(DonorRequest, on_delete=models.CASCADE, unique=True)
     rating = models.FloatField(blank=False, null=False)

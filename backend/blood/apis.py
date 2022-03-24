@@ -1,4 +1,3 @@
-from time import time, sleep
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
@@ -6,9 +5,10 @@ from rest_framework.response  import Response
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter ,SearchFilter
 
 from django.db.models import Q
+import time
 
 # from rest_framework.permissions import 
 
@@ -224,12 +224,12 @@ class BloodRequestViewSet(ModelViewSet):
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
     serializer_class = DonorRequestSerializer 
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     # authentication_classes = [SessionAuthentication]
     filterset_fields = ['status']
     ordering_fields = ['date_time', 'timestamp', 'location']
-    def list(self, request, *args, **kwargs):
- 
+    search_fields = ['name', 'email', 'number', 'add_number', 'address', 'status']
+    def list(self, request, *args, **kwargs): 
         if(request.user.is_staff):
             return super().list(request, *args, **kwargs)
         else:
@@ -313,17 +313,8 @@ class DonorRequestViewSet(ModelViewSet):
         donorRequests = DonorRequest.objects.filter(blood_request=bloodRequest).order_by('-timestamp')
         donorRequests = donorRequests.filter(~Q(status="Rejected"))
         data = DonorRequestSerializer(donorRequests, many=True).data
-        for d in data:
-            print(d['user']['id'])
-            try:
-                profile = Profile.objects.get(user=d['user']['id'])
-                if(profile.isCompleted):
-                    d['profile'] = ProfileSerializer(profile).data
-                else:
-                    data.remove(d)
-            except Profile.DoesNotExist:
-                data.remove(d)
-        
+
+ 
         return Response(data, status=status.HTTP_200_OK) 
     
     
@@ -433,9 +424,35 @@ class DonorRequestViewSet(ModelViewSet):
         return Response({'status': DonorRequestSerializer(donor_request).data['status']}, status=status.HTTP_200_OK)
 
         
-    @action(detail=True, methods=['get'], url_path='get-donor-request-status')
-    def getDonorRequestStatus(self, request, pk=None):
-        donor_request = self.get_object() 
-        if(donor_request.user != request.user):
-            return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(DonorRequestSerializer(donor_request).data['status'], status=status.HTTP_200_OK)
+    # @action(detail=True, methods=['get'], url_path='search-donor-request-for-blood-request')
+    # def getDonorRequestStatus(self, request, pk=None):
+    #     donor_request = self.get_object() 
+    #     if(donor_request.user != request.user):
+    #         return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+    #     return Response(DonorRequestSerializer(donor_request).data['status'], status=status.HTTP_200_OK)
+
+    
+    @action(detail=False, methods=['get'], url_path='filter-donor-request-for-blood-request')
+    def filterDonorRequestForBloodRequest(self, request):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=request.query_params['blood_request_id'])
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+
+        if(bloodRequest.user != request.user):
+            return Response({'success': False, 'error': 'You are not authorized to view this blood request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        donor_requests = DonorRequest.objects.filter(blood_request=bloodRequest)
+        filtered_donor_requests = self.filter_queryset(donor_requests)
+        return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+
+        
+        
+        
+        # def filter_queryset(self, queryset):
+        #     print(self.request.query_params)
+        # if(self.request.user.is_superuser):
+        #     return super().filter_queryset(queryset)
+        # else:
+        #     return queryset.filter(blood_request__user=self.request.user, blood_request=self.request.query_params['blood_request_id'])
+            

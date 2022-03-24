@@ -1,4 +1,6 @@
 import axios from "axios";
+import { setProgress } from "./redux/progress/actions";
+import store from "./redux/store";
 // import Geocode from "react-geocode";
 
 // Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
@@ -56,7 +58,9 @@ export const getProfileData = async userId => {
 export function calcDistance(location, myLocation) {
   // Converts numeric degrees to radians
 
-  
+  if(JSON.stringify(location) === JSON.stringify(myLocation)){
+    return 0
+  }
   function toRad(Value) {
     return Value * Math.PI / 180;
   }
@@ -74,26 +78,71 @@ export function calcDistance(location, myLocation) {
 }
 
 
-export function sortByDistance(myLocation, locations) {
+export function sortById(data) {
   return new Promise( async (resolve, reject) =>  {
+    store.dispatch(setProgress(30));
     try {
-      let newLocations = await locations.sort((a, b) => {
-        return calcDistance(a.location, myLocation) - calcDistance(b.location, myLocation);
+      console.log('111111')
+      let tmpData = [...data]
+      await data.sort((a, b) => {
+ 
+        return a.id - b.id
       });
-        resolve(newLocations);
+      if(JSON.stringify(tmpData) === JSON.stringify(data)){
+        resolve(data.reverse());
+      } else {
+        resolve(data);
+      } 
     } catch (error) {
         reject(error);
     }
+    store.dispatch(setProgress(100));
+  })
+}
+
+export function sortByDistance(myLocation, data) {
+  return new Promise( async (resolve, reject) =>  {
+    store.dispatch(setProgress(30));
+
+    try {
+      console.log('111111')
+      let tmpData = [...data]
+      await data.sort((a, b) => {
+ 
+        return calcDistance(a.location, myLocation) - calcDistance(b.location, myLocation);
+      });
+      if(JSON.stringify(tmpData) === JSON.stringify(data)){
+        resolve(data.reverse());
+      } else {
+        resolve(data);
+      } 
+    } catch (error) {
+        reject(error);
+    }
+    store.dispatch(setProgress(100));
+
   })
 }
 
 export function sortByTime(data) {
   return new Promise( async (resolve, reject) =>  {
+    store.dispatch(setProgress(30));
+
     try{
-      resolve(data.sort((a,b) =>  new Date(a.date_time) - new Date(b.date_time)));
+      console.log('2222222')
+      let tmpData = [...data]
+      await data.sort((a,b) =>  new Date(a.date_time) - new Date(b.date_time))
+      if(JSON.stringify(tmpData) === JSON.stringify(data)){
+        resolve(data.reverse());
+      } else {
+        resolve(data);
+      }
     } catch (error) {
         reject(error);
     }
+
+    store.dispatch(setProgress(100));
+
 
   })
 
@@ -107,3 +156,6 @@ export const donorRequestFilterOption = [
   { value: "reviewed", label: "Reviewed" },
   { value: "rejected", label: "Rejected" }, 
 ]
+
+
+ 
