@@ -146,3 +146,33 @@ export const getMyDonorRequestStatusForBloodRequest = async (id, showAlert = tru
     store.dispatch(setProgress(100));
 
   });
+
+export const report = async (formData, formId, data, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(30));
+    console.log(formId)
+    if(formId === "blood-request-report") {
+      try {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}api/blood/blood-request/${data?.blood_request_id}/report/`, formData
+        ); 
+        console.log({res})
+        resolve(res);
+      } catch (error) {
+  
+          reject(error)
+        if (showAlert) {
+          if (error?.response?.status === 404) {
+            store.dispatch(alert("This blood request is not available 😒", "danger"));
+          } else if(error?.response?.data?.success === false) {
+              store.dispatch(alert(error?.response?.data?.error, "danger"));
+          } else {
+              store.dispatch(alert("Failed to  report this blood request 😕", "danger"));
+          }
+        }
+      }
+    }
+
+    store.dispatch(setProgress(100));
+
+  });

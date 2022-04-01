@@ -70,6 +70,28 @@ class BloodRequestReview(models.Model):
     rating = models.FloatField(blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
-
+ 
+ 
+# reports 
+class BloodRequestReport(models.Model):
+    blood_request = models.ForeignKey(BloodRequest, on_delete=models.CASCADE)
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(max_length=500, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
+        
+class DonorRequestReport(models.Model):
+    donor_request = models.ForeignKey(DonorRequest, on_delete=models.CASCADE)
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(max_length=500, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
+        
+        
+class UserReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reported")
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reporter")
+    description = models.TextField(max_length=500, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+        

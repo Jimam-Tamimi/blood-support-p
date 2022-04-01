@@ -13,8 +13,7 @@ import { IoClose } from "react-icons/io5";
 import { Button } from "../../styles/Essentials.styles";
 import Transition from "../Transition/Transition";
 
-export default function Modal({
-  btnText,
+export default function Modal({ 
   style,
   wrapStyle,
   info,
@@ -22,8 +21,8 @@ export default function Modal({
   sm,
   md,
   lg,
-  title,
-  actionText,
+  title="Modal",
+  actionText="Submit",
   children,
   fade=true ,
   leftToRight,

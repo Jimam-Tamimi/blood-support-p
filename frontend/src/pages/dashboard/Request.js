@@ -1306,14 +1306,17 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
 
 
   const searchDonReq = (e) => {
-    if(e.key=== 'Enter'){
+    if(e.key=== 'Enter' ){
       e.preventDefault();
-      searchDonorRequestsForBloodRequest(
-        requestData?.id,
-        e?.target?.value
-      ).then((res) =>
-        res.status === 200 ? setDonorRequestData([...res?.data]) : ""
-      )
+      if(e.target.value.trim().length > 0){
+
+        searchDonorRequestsForBloodRequest(
+          requestData?.id,
+          e?.target?.value?.trim() 
+          ).then((res) =>
+          res.status === 200 ? setDonorRequestData([...res?.data]) : ""
+          )
+        }
     }
   }
   

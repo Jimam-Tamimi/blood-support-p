@@ -220,6 +220,26 @@ class BloodRequestViewSet(ModelViewSet):
 
     
 
+    @action(detail=True, methods=['post'], url_path='report')
+    def report(self, request, pk=None):
+        bloodRequest = self.get_object()
+        if(bloodRequest.user == request.user):
+            return Response({'success': False, 'error': 'You cannot report your own blood request'}, status=status.HTTP_400_BAD_REQUEST)
+ 
+        if(BloodRequestReport.objects.filter(blood_request=bloodRequest, reported_by=request.user).exists()):
+            return Response({'success': False, 'error': 'You have already reported this blood request'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            BloodRequestReport.objects.create(blood_request=bloodRequest, reported_by=request.user, description=request.data['description'])
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'success': True, 'message': 'You have reported this blood request. We will review it soon'}, status=status.HTTP_200_OK)
+ 
+ 
+
+    
+
             
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
@@ -413,7 +433,7 @@ class DonorRequestViewSet(ModelViewSet):
     @action(detail=False, methods=['get'], url_path='get-my-donor-request-status-for-blood-request')
     def getMyDonorRequestStatusForBloodRequest(self, request):
         try:
-            donor_request = DonorRequest.objects.get(blood_request__id=request.query_params['blood_request_id'])
+            donor_request = DonorRequest.objects.get(blood_request__id=request.query_params['blood_request_id'], user=request.user)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:

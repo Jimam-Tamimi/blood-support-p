@@ -47,6 +47,7 @@ import { Marker } from "@react-google-maps/api";
 export default  function AllRequest () {
   const location = useLocation();
   const history = useHistory();
+
   useEffect(() => {
     if (
       location.pathname === "/all-requests/" ||
