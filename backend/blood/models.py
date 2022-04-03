@@ -53,6 +53,8 @@ class DonorRequest(models.Model):
     location = models.JSONField(blank=False, null=False)
     status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Reviewed", "Reviewed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    
      
     def profile(self):
         return Profile.objects.get(user=self.user)

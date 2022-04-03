@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Route, Link, useHistory, useLocation, useParams } from "react-router-dom";
+import {
+  Route,
+  Link,
+  useHistory,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import "../../assets/css/transitions.css";
 import { Autocomplete } from "@react-google-maps/api";
 import { Marker } from "react-google-maps";
@@ -44,7 +50,7 @@ import {
 
 import Map from "../../components/Map/Map";
 
-import useModal from "../../hooks/useModal"
+import useModal from "../../hooks/useModal";
 import { NavWrap, NavTab } from "../../styles/Nav.styles";
 
 import {
@@ -227,7 +233,6 @@ export default function Request({ match }) {
           checkHaveSentDonorRequest={checkHaveSentDonorRequest}
           totalDonorRequestGot={totalDonorRequestGot}
           getRequestStatusInfo={getRequestStatusInfo}
-
         />
       </Route>
 
@@ -270,19 +275,23 @@ const RequestDetails = ({
   getRequestStatusInfo,
 }) => {
   // states
-  const {bloodRequestId} = useParams()
+  const { bloodRequestId } = useParams();
   const report = () => {
-      modalController.showModal('blood-request-report', {blood_request_id: bloodRequestId}, ReportForm)
+    modalController.showModal(
+      "blood-request-report",
+      { blood_request_id: bloodRequestId },
+      ReportForm
+    );
   };
   const [dropDownOption, setDropDownOption] = useState([
     { name: "Report", icon: <FaBan />, onClick: report },
   ]);
 
   // hooks
-  const location = useLocation()
+  const location = useLocation();
   const dispatch = useDispatch();
-  const modalController = useModal()
-  
+  const modalController = useModal();
+
   const auth = useSelector((state) => state.auth);
 
   return (
@@ -1308,32 +1317,33 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     }, 450);
   };
 
-
   const searchDonReq = (e) => {
-    if(e.key=== 'Enter' ){
-      e.preventDefault();
-      if(e.target.value.trim().length > 0){
+    const run = () => {
+      searchDonorRequestsForBloodRequest(
+        requestData?.id,
+        e?.target?.value?.trim()
+      ).then((res) =>
+        res.status === 200 ? setDonorRequestData([...res?.data]) : ""
+      );
+    };
 
-        searchDonorRequestsForBloodRequest(
-          requestData?.id,
-          e?.target?.value?.trim() 
-          ).then((res) =>
-          res.status === 200 ? setDonorRequestData([...res?.data]) : ""
-          )
-        }
+    if (e.target.value === "") {
+      run();
     }
-  }
-  
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (e.target.value.trim().length > 0) {
+        run();
+      }
+    }
+  };
 
   return (
     <>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp
-              onKeyDown={searchDonReq}
-              placeholder="Search..."
-            />
+            <SearchInp onChange={searchDonReq} onKeyDown={searchDonReq} placeholder="Search..." />
           </SearchForm>
           {/* <OrderedBySection>
             <div  className="filter-div">
@@ -1473,22 +1483,29 @@ const DonorRequestMoreDetails = ({
   donorRequestMoreDetails,
   requestData,
   setRequestData,
-  setShowDonorRequest,
+  setShowDonorRequest, 
 }) => {
   // hooks
 
   const dispatch = useDispatch();
-  const modalController = useModal()
+  const modalController = useModal();
 
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
-  
+
   const report = (id) => {
-    modalController.showModal('donor-request-report', {donor_request_id: donorRequestMoreDetails?.id} , ReportForm)
+
+    modalController.showModal(
+      "donor-request-report",
+      { donor_request_id: donorRequestMoreDetails?.id },
+      ReportForm
+    );
+    setShowDonorRequest(false)
   };
 
-  const dropDownOptions = [{ name: "Report", icon: <FaBan />, onClick: report }];
- 
-  
+  const dropDownOptions = [
+    { name: "Report", icon: <FaBan />, onClick: report },
+  ];
+
   useEffect(() => {
     getCurrentLocation((crds) => {
       setCurrentLocation(crds);
