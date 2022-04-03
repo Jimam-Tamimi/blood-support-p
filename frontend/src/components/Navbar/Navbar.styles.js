@@ -13,7 +13,7 @@ export const NavbarWraper = styled.header`
     background: var(--main-bg-color); 
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 1;
 `
 
 export const NavSearchForm = styled.form`

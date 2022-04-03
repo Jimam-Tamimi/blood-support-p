@@ -1,6 +1,6 @@
 import { Autocomplete } from "@react-google-maps/api";
 import { Marker } from "react-google-maps";
-
+import {useParams} from 'react-router-dom'
 import React, { useState } from "react";
 import ReactStars from "react-rating-stars-component";
 
@@ -62,6 +62,8 @@ import { getProfileDetails } from "../../redux/profile/actions";
 
 import { setProgress } from "../../redux/progress/actions";
 import { getProfileDetailsForUser } from "../../apiCalls";
+import useModal from "../../hooks/useModal";
+import ReportForm from "../../components/ReportForm";
 
 const bloodGroups = [
   { value: "Select", label: "Select" },
@@ -187,17 +189,21 @@ export default function Profile({ match }) {
 
 function Details({ profile, getProfile }) {
   const [showUpdateFormModal, setShowUpdateFormModal] = useState(false);
-
-  const report = () => {
-    // call api to report this request
-    console.log("report request");
-  };
-  const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
-  ]);
+  const modalController = useModal()
 
   // hooks
   const auth = useSelector((state) => state.auth);
+  const {id} = useParams()
+  
+  const report = () => {
+    console.log(auth?.user_id)
+    console.log(id)
+    modalController.showModal('user-report', {user_id: profile?.user?.id}, ReportForm)
+  };
+  const dropDownOption = [
+    auth?.user_id != id ? { name: "Report", icon: <FaBan />, onClick: report } : null,
+  ]
+
 
   return (
     <>

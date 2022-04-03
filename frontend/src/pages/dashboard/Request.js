@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Route, Link, useHistory, useLocation } from "react-router-dom";
+import { Route, Link, useHistory, useLocation, useParams } from "react-router-dom";
 import "../../assets/css/transitions.css";
 import { Autocomplete } from "@react-google-maps/api";
 import { Marker } from "react-google-maps";
@@ -9,6 +9,7 @@ import ReactStars from "react-rating-stars-component";
 import logo from "../../assets/img/logo.png";
 
 import Modal from "../../components/Modal/Modal";
+import ReportForm from "../../components/ReportForm";
 import OffCanvas from "../../components/OffCanvas/OffCanvas";
 import {
   ProfileImg,
@@ -43,6 +44,7 @@ import {
 
 import Map from "../../components/Map/Map";
 
+import useModal from "../../hooks/useModal"
 import { NavWrap, NavTab } from "../../styles/Nav.styles";
 
 import {
@@ -225,6 +227,7 @@ export default function Request({ match }) {
           checkHaveSentDonorRequest={checkHaveSentDonorRequest}
           totalDonorRequestGot={totalDonorRequestGot}
           getRequestStatusInfo={getRequestStatusInfo}
+
         />
       </Route>
 
@@ -259,7 +262,6 @@ export default function Request({ match }) {
 }
 
 const RequestDetails = ({
-  match,
   requestData,
   requestorProfileData,
   setRequestData,
@@ -268,17 +270,19 @@ const RequestDetails = ({
   getRequestStatusInfo,
 }) => {
   // states
-
+  const {bloodRequestId} = useParams()
   const report = () => {
-    // call api to report this request
-    console.log("report request");
+      modalController.showModal('blood-request-report', {blood_request_id: bloodRequestId}, ReportForm)
   };
   const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
+    { name: "Report", icon: <FaBan />, onClick: report },
   ]);
 
   // hooks
+  const location = useLocation()
   const dispatch = useDispatch();
+  const modalController = useModal()
+  
   const auth = useSelector((state) => state.auth);
 
   return (
@@ -1474,16 +1478,17 @@ const DonorRequestMoreDetails = ({
   // hooks
 
   const dispatch = useDispatch();
+  const modalController = useModal()
 
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
-
-  const report = () => {
-    // call api to report this request
-    console.log("report request");
+  
+  const report = (id) => {
+    modalController.showModal('donor-request-report', {donor_request_id: donorRequestMoreDetails?.id} , ReportForm)
   };
 
-  const dropDownOptions = [{ name: "Report", icon: FaBan, onClick: report }];
-
+  const dropDownOptions = [{ name: "Report", icon: <FaBan />, onClick: report }];
+ 
+  
   useEffect(() => {
     getCurrentLocation((crds) => {
       setCurrentLocation(crds);

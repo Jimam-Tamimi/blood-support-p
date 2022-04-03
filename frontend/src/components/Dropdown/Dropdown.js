@@ -35,7 +35,7 @@ export default function Dropdown({ absolute, options, style }) {
           <DropdownMenu
             onClick={(e) => (showDropdown ? setShowDropdown(false) : "")}
           >
-            {options?.map((option, i ) => (
+            {options?.map((option, i ) => option && (
                  
               <DropdownLink disabled={option.hidden} key={i} onClick={ !option.hidden&& option.onClick}>
                 <LinkIcon>

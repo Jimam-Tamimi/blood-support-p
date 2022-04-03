@@ -5,9 +5,9 @@ import { showModalAction } from "../redux/modal/actions";
 export default function useModal() {
     const dispatch = useDispatch()
     const modal = useSelector((state) => state.modal)
-    const showModal = (formId="report-form", data) => {
+    const showModal = (formId="report-form", data, Component= () => <></>) => {
  
-        dispatch(showModalAction(formId, data))
+        dispatch(showModalAction(formId, data, Component))
     }
 
  

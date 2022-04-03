@@ -13,8 +13,10 @@ export const Wrap = styled.div`
     justify-content: flex-end;
     background: #00000047;
     opacity: 0;
+    z-index: 2;
+    visibility: hidden;
     ${({show}) => show?`
-    z-index: 343433;
+    visibility: visible;
         opacity: 1;
 
     `:''}

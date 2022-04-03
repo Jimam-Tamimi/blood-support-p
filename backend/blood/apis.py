@@ -237,8 +237,7 @@ class BloodRequestViewSet(ModelViewSet):
         return Response({'success': True, 'message': 'You have reported this blood request. We will review it soon'}, status=status.HTTP_200_OK)
  
  
-
-    
+ 
 
             
 class DonorRequestViewSet(ModelViewSet):
@@ -249,6 +248,8 @@ class DonorRequestViewSet(ModelViewSet):
     filterset_fields = ['status']
     ordering_fields = ['date_time', 'timestamp', 'location']
     search_fields = ['name', 'email', 'number', 'add_number', 'address', 'status']
+    
+    
     def list(self, request, *args, **kwargs): 
         if(request.user.is_staff):
             return super().list(request, *args, **kwargs)
@@ -284,6 +285,9 @@ class DonorRequestViewSet(ModelViewSet):
                 
         else:
             return Response({'success': False, 'error': 'You are not authorized to update this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
     def partial_update(self, request, *args, **kwargs):
         if(request.user.is_staff):
             return super().partial_update(request, *args, **kwargs)
@@ -296,6 +300,8 @@ class DonorRequestViewSet(ModelViewSet):
                 
         else:
             return Response({'success': False, 'error': 'You are not authorized to update this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            
     def destroy(self, request, *args, **kwargs):
         if(request.user.is_staff):
             return super().destroy(request, *args, **kwargs)
@@ -444,12 +450,6 @@ class DonorRequestViewSet(ModelViewSet):
         return Response({'status': DonorRequestSerializer(donor_request).data['status']}, status=status.HTTP_200_OK)
 
         
-    # @action(detail=True, methods=['get'], url_path='search-donor-request-for-blood-request')
-    # def getDonorRequestStatus(self, request, pk=None):
-    #     donor_request = self.get_object() 
-    #     if(donor_request.user != request.user):
-    #         return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
-    #     return Response(DonorRequestSerializer(donor_request).data['status'], status=status.HTTP_200_OK)
 
     
     @action(detail=False, methods=['get'], url_path='filter-donor-request-for-blood-request')
@@ -467,12 +467,20 @@ class DonorRequestViewSet(ModelViewSet):
         return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
 
         
+    @action(detail=True, methods=['post'], url_path='report')
+    def report(self, request, pk=None):
+        donorRequest = self.get_object()
+        if(donorRequest.user == request.user):
+            return Response({'success': False, 'error': 'You cannot report your own donor request'}, status=status.HTTP_400_BAD_REQUEST)
+ 
+        if(DonorRequestReport.objects.filter(donor_request=donorRequest, reported_by=request.user).exists()):
+            return Response({'success': False, 'error': 'You have already reported this donor request'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            DonorRequestReport.objects.create(donor_request=donorRequest, reported_by=request.user, description=request.data['description'])
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
         
-        
-        # def filter_queryset(self, queryset):
-        #     print(self.request.query_params)
-        # if(self.request.user.is_superuser):
-        #     return super().filter_queryset(queryset)
-        # else:
-        #     return queryset.filter(blood_request__user=self.request.user, blood_request=self.request.query_params['blood_request_id'])
-            
+        return Response({'success': True, 'message': 'You have reported this donor request. We will review it soon'}, status=status.HTTP_200_OK)
+ 
+ 

@@ -171,6 +171,46 @@ export const report = async (formData, formId, data, showAlert = true) =>
           }
         }
       }
+    } else if (formId === "donor-request-report") {
+      try {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}api/blood/donor-request/${data?.donor_request_id}/report/`, formData
+        ); 
+        console.log({res})
+        resolve(res);
+      } catch (error) {
+  
+          reject(error)
+        if (showAlert) {
+          if (error?.response?.status === 404) {
+            store.dispatch(alert("This donor request is not available 😒", "danger"));
+          } else if(error?.response?.data?.success === false) {
+              store.dispatch(alert(error?.response?.data?.error, "danger"));
+          } else {
+              store.dispatch(alert("Failed to  report this donor request 😕", "danger"));
+          }
+        }
+      }
+    } else if (formId === "user-report") {
+      try {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}api/account/users/${data?.user_id}/report/`, formData
+        ); 
+        console.log({res})
+        resolve(res);
+      } catch (error) {
+  
+          reject(error)
+        if (showAlert) {
+          if (error?.response?.status === 404) {
+            store.dispatch(alert("This user is not available 😒", "danger"));
+          } else if(error?.response?.data?.success === false) {
+              store.dispatch(alert(error?.response?.data?.error, "danger"));
+          } else {
+              store.dispatch(alert("Failed to report this user 😕", "danger"));
+          }
+        }
+      }
     }
 
     store.dispatch(setProgress(100));

@@ -81,7 +81,7 @@ export const Button = styled.button`
   &:hover {
     background: var(--primary-hover-color);
   }
-
+  
   &:active {
     transform: var(--for-active-click);
   }
@@ -165,6 +165,7 @@ export const ButtonLink = styled(Link)`
 export const Badge = styled.span`
   background: var(--primary-color);
   width: max-content;
+  z-index: -1;
 
   border-radius: 7px;
   padding: 4px 6px;

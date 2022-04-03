@@ -19,7 +19,7 @@ const GlobalStyle = createGlobalStyle`
     
     --for-active-click: scale(.92);
     --hover: scale(1.08);
-    --main-transition: all .2s ease;
+    --main-transition: all .2s ease-in-out;
     /* --main-transition: all .3s cubic-bezier(0.25, 0.46, 0.45, 0.94); */
     --primary-color: #dc3545;
     --primary-text-color: white ;

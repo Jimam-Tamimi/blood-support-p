@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.authentication import BasicAuthentication
 
 from account.models import *
+from blood.models import UserReport
 from .serializers import *
 from account.threads import SendEmail
 from account.helpers import sendVerificationEmail
@@ -49,6 +50,25 @@ class UserViewSets(ModelViewSet):
         data['success'] = True
         sendVerificationEmail([user.email], code)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers, )
+    
+        
+    @action(detail=True, methods=['post'], url_path='report')
+    def report(self, request, pk=None):
+        reported_user = self.get_object()
+        if(reported_user == request.user):
+            return Response({'success': False, 'error': 'You cannot report your self'}, status=status.HTTP_400_BAD_REQUEST)
+ 
+        if(UserReport.objects.filter(user=reported_user, reported_by=request.user).exists()):
+            return Response({'success': False, 'error': 'You have already reported this user'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            UserReport.objects.create(user=reported_user, reported_by=request.user, description=request.data['description'])
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'success': True, 'message': 'You have reported this user. We will review it soon'}, status=status.HTTP_200_OK)
+ 
+ 
     
 
 class ProfileViewSet(ModelViewSet):
@@ -94,6 +114,9 @@ class ProfileViewSet(ModelViewSet):
         
         except Exception:
             return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+            
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

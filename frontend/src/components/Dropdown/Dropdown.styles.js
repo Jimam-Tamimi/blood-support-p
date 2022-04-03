@@ -4,7 +4,7 @@ import {Flex} from '../../globalStyles'
 
 export const Wrap = styled.div`
         position: relative;
-        z-index: 12;
+        /* z-index: ; */
 
 
 `

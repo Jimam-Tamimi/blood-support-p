@@ -27,6 +27,7 @@ import Moment from "react-moment";
 import { getProfileDetailsForUser } from "../../apiCalls";
 import useModal from "../../hooks/useModal";
 import { Form, InputDiv, Label, TextArea } from "../../styles/Form.styles";
+import ReportForm from "../ReportForm";
 
 export default function BloodRequest({
   setShowRequestDetails,
@@ -37,12 +38,12 @@ export default function BloodRequest({
   const report = () => {
     // call api to report this request
  
-    modalController.showModal('blood-request-report', {blood_request_id: requestData?.id})
+    modalController.showModal('blood-request-report', {blood_request_id: requestData?.id}, ReportForm)
     console.log("report request");
   };
 
   const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
+    { name: "Report", icon: <FaBan />, onClick: report },
   ]);
 
   // get user data

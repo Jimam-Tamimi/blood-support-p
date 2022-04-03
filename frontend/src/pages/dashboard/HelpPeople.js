@@ -25,11 +25,11 @@ import Map from "../../components/Map/Map";
 import { FaBan } from "react-icons/fa";
 import { Marker } from "@react-google-maps/api";
 import Dropdown from "../../components/Dropdown/Dropdown";
-import axios from "axios";
-import { getProfileData } from "../../helpers";
-import { useDispatch } from "react-redux";
-import alert from "../../redux/alert/actions";
+import axios from "axios"; 
+import { useDispatch } from "react-redux"; 
 import { getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
+import useModal from "../../hooks/useModal";
+import ReportForm from "../../components/ReportForm";
 
 export default function HelpPeople() {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
@@ -61,7 +61,7 @@ export default function HelpPeople() {
   return (
     <>
       <OffCanvas setShow={setShowRequestDetails} show={showRequestDetails}>
-        <RequestDetails bloodRequestId={bloodRequestId} />
+        <RequestDetails setShowRequestDetails={setShowRequestDetails} bloodRequestId={bloodRequestId} />
       </OffCanvas>
       <Wrap>
 
@@ -82,20 +82,26 @@ export default function HelpPeople() {
   );
 }
 
-const RequestDetails = ({bloodRequestId}) => {
+const RequestDetails = ({bloodRequestId, setShowRequestDetails}) => {
 
   const [requestData, setRequestData] = useState({});
   
   //  hooks
   const dispatch = useDispatch();
 
-  
+  const modalController = useModal();
+
   const report = () => {
     // call api to report this request
-    console.log("report request");
+ 
+    modalController.showModal('blood-request-report', {blood_request_id: requestData?.id}, ReportForm)
+    setShowRequestDetails(false);
   };
+
+  
+ 
   const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: FaBan, onClick: report },
+    { name: "Report", icon: <FaBan />, onClick: report },
   ]); 
 
   // functions
