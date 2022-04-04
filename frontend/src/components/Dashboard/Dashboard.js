@@ -35,8 +35,8 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
         {to:"/", name: 'Dashboard', icon: AiFillDashboard,exact: true, count:null },
         {to:"/help-people/", name: 'Help People', icon:FaHandsHelping,exact: true, count:null },
         {to:"/make-request/", name: 'Make Request', icon:AiOutlineForm,exact: true, count:null },
-        {to:"/current/", name: 'Current', icon:BiTimer,exact: false, count:null },
-        {to:"/all-requests/", name: 'All Requests', icon:GiPlayerPrevious,exact: false, count:null },
+        {to:"/your-blood-requests/", name: 'Your Blood Requests', icon:BiTimer,exact: false, count:null },
+        {to:"/your-donor-requests/", name: 'Your Donor Requests', icon:GiPlayerPrevious,exact: false, count:null },
 
         {to:"/messages/", name: 'Messages', icon:BiMessageRoundedDetail,exact: false, count:44   },
         {to:"/notifications/", name: 'Notifications', icon:IoMdNotificationsOutline,exact: true, count:null },

@@ -56,8 +56,7 @@ class DonorRequest(models.Model):
 
     
      
-    def profile(self):
-        return Profile.objects.get(user=self.user)
+    
 
 class DonorRequestReview(models.Model):
     donor_request = models.OneToOneField(DonorRequest, on_delete=models.CASCADE, unique=True)

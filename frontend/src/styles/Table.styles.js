@@ -5,6 +5,7 @@ import { Flex } from "../globalStyles";
 export const HtmlTable = styled.table`
   width: 100%;
   border-collapse: collapse;
+
 `;
 
 export const Th = styled.th`
@@ -20,6 +21,8 @@ export const Th = styled.th`
 `;
 
 export const Tr = styled.tr`
+height: 65px;
+box-shadow: 0px 0px 3px 0px #00000061;
   background-color: var(--secendory-color);
   &:hover {
     background-color: var(--secendory-hover-color);
@@ -37,13 +40,13 @@ export const Tr = styled.tr`
     right: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-
     height: 100%;
+    justify-content: space-around;
+
     align-items: flex-end;
 
     span {
-      margin-bottom: 7px;
+      /* margin-bottom: 7px; */
       margin-right: 7px;
     }
   }

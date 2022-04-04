@@ -165,7 +165,7 @@ export const ButtonLink = styled(Link)`
 export const Badge = styled.span`
   background: var(--primary-color);
   width: max-content;
-  z-index: -1;
+  /* z-index: 1; */
 
   border-radius: 7px;
   padding: 4px 6px;
@@ -175,12 +175,12 @@ export const Badge = styled.span`
   letter-spacing: 0.8px;
   color: white;
   transition: var(--main-transition) !important;
-  ${({ info, danger }) =>
+  ${({ info, danger, transparent }) =>
     info
       ? `
         background: var(--info-color);       
       `
-      : danger? `background: var(--primary-color);` : ''}
+      : danger? `background: var(--primary-color);` : transparent ? 'background: transparent;' : ''}
   ${({ sm }) =>
     sm
       ? `

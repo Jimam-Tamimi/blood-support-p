@@ -26,8 +26,9 @@ export const getProfileDetailsForUser = async (id, showAlert = true) =>
 
 
 // function that takes in an blood request id and return a promise that resolves to the blood request details of that blood request id
-export const getBloodRequestData = async (id, showAlert = true) => 
+export const getBloodRequestData = async (id, showAlert = true, showProgress= false ) => 
   new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(20));
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}api/blood/blood-request/${id}/`
@@ -47,6 +48,7 @@ export const getBloodRequestData = async (id, showAlert = true) =>
         }
       }
     }
+    store.dispatch(setProgress(100));
   });
 
 // function that takes in an blood request id and return a promise that resolves to the blood request details of that blood request id
@@ -216,3 +218,34 @@ export const report = async (formData, formId, data, showAlert = true) =>
     store.dispatch(setProgress(100));
 
   });
+
+
+ 
+export const getAllBloodRequestByMe = async (showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(30));
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/get-all-blood-request-by-me/`
+      ); 
+      console.log({res})
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if(error?.response?.data?.success === false) {
+            store.dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+            store.dispatch(alert("Failed to  get all blood requests 😕", "danger"));
+        }
+      }
+    }
+    
+
+    store.dispatch(setProgress(100));
+
+  });
+
+
+ 

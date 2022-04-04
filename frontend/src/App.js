@@ -15,8 +15,8 @@ import ResetPassword from "./pages/account/ResetPassword";
 import Activate from "./pages/account/Activate";
 import HelpPeople from "./pages/dashboard/HelpPeople";
 import DesignConfig from "./context/DesignConfig";
-import Current from "./pages/dashboard/Current";
-import AllRequests from "./pages/dashboard/AllRequests";
+import YourBloodRequests from "./pages/dashboard/YourBloodRequests";
+import YourDonorRequests from "./pages/dashboard/YourDonorRequests";
 import Messages from "./pages/dashboard/Messages";
 import Notifications from "./pages/dashboard/Notifications";
 import Favorites from "./pages/dashboard/Favorites";
@@ -95,8 +95,8 @@ function App() {
               <Route path="/make-request/" component={MakeRequest} />
               <Route path="/help-people/" component={HelpPeople} />
               <Route path="/requests/:bloodRequestId/" component={Request} />
-              <Route path="/current/" component={Current} />
-              <Route path="/all-requests/" component={AllRequests} />
+              <Route path="/your-blood-requests/" component={YourBloodRequests} />
+              <Route path="/your-donor-requests/" component={YourDonorRequests} />
               <Route path="/notifications/" component={Notifications} />
               <Route path="/messages/" component={Messages} />
               <Route path="/favorites/" component={Favorites} /> 

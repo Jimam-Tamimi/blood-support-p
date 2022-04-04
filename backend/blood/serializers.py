@@ -9,6 +9,8 @@ from account.serializers import UserSerializer
 class BloodRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
     timestamp = serializers.DateTimeField(read_only=True)
+    donor_request_got = serializers.SerializerMethodField()
+    
     class Meta:
         model = BloodRequest
         fields = "__all__" 
@@ -17,6 +19,11 @@ class BloodRequestSerializer(ModelSerializer):
         user = self.context['request'].user
         validated_data['user'] = user
         return super().create(validated_data)
+
+        
+    def get_donor_request_got(self, obj):
+        return DonorRequest.objects.filter(blood_request=obj).count()
+        
 
 class DonorRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -41,6 +48,11 @@ class DonorRequestSerializer(ModelSerializer):
 
     def get_profile(self, obj):
         return ProfileSerializer(Profile.objects.get(user=obj.user)).data
+    
+
+
+    # def get_donor_request_got(self, obj):
+    #     return Profile.objects.get(user=obj.user)
     
 class DonorRequestReviewSerializer(ModelSerializer):
     class Meta:

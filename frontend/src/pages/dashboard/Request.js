@@ -1450,7 +1450,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                       ""
                     )}
 
-                    <Badge sm>
+                    <Badge transparent sm>
                       <Moment fromNow>{donorRequest.timestamp}</Moment>
                     </Badge>
                   </div>

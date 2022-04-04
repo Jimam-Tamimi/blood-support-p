@@ -237,7 +237,29 @@ class BloodRequestViewSet(ModelViewSet):
         return Response({'success': True, 'message': 'You have reported this blood request. We will review it soon'}, status=status.HTTP_200_OK)
  
  
- 
+
+    @action(detail=False, methods=['get'], url_path='get-all-blood-request-by-me')
+    def getAllBloodRequestByMe(self, request):
+        print("in in in ")
+        bloodRequests = BloodRequest.objects.filter(user=request.user)
+        return Response(BloodRequestSerializer(bloodRequests, many=True).data, status=status.HTTP_200_OK)
+        
+   
+     
+    @action(detail=False, methods=['get'], url_path='filter-my-blood-request')
+    def filterMyBloodRequest(self, request):
+        try:
+            bloodRequest = BloodRequest.objects.get(id=request.query_params['blood_request_id'])
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
+
+        if(bloodRequest.user != request.user):
+            return Response({'success': False, 'error': 'You are not authorized to view this blood request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        donor_requests = DonorRequest.objects.filter(blood_request=bloodRequest)
+        filtered_donor_requests = self.filter_queryset(donor_requests)
+        return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+
 
             
 class DonorRequestViewSet(ModelViewSet):
