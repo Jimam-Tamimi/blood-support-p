@@ -249,3 +249,32 @@ export const getAllBloodRequestByMe = async (showAlert = true) =>
 
 
  
+ 
+export const filterMyBloodRequests = async (params, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(30));
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/filter-my-blood-requests/`, {params: {...params}}
+      ); 
+      console.log({res})
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if(error?.response?.data?.success === false) {
+            store.dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+            store.dispatch(alert("Failed to filter blood requests 😕", "danger"));
+        }
+      }
+    }
+    
+
+    store.dispatch(setProgress(100));
+
+  });
+
+
+ 

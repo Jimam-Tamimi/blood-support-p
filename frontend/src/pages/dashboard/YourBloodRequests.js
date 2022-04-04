@@ -47,7 +47,7 @@ import { useHistory, useLocation } from "react-router";
 import { Marker } from "@react-google-maps/api";
 import { calcDistance, donorRequestFilterOption, sortByDistance, sortById, sortByTime } from "../../helpers";
 import { customStyles } from "../../styles/Form.styles";
-import { getAllBloodRequestByMe, getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
+import { filterMyBloodRequests, getAllBloodRequestByMe, getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
 import { FaBan } from "react-icons/fa";
 import ReportForm from "../../components/ReportForm";
 import useModal from "../../hooks/useModal";
@@ -57,7 +57,36 @@ import Moment from "react-moment";
 export default function YourBloodRequests() { 
   const [requestData, setRequestData] = useState([])
   const [showMoreDetails, setShowMoreDetails] = useState(false)
-  const searchBloodRequest = (e) => {
+
+  // hooks 
+
+  const location = useLocation()
+  const history = useHistory()
+  
+  const searchBloodRequest = async (e) => {
+    
+    const run = async () => {
+      try{
+        const res = await filterMyBloodRequests({search: e.target.value})
+        if(res.status === 200){
+          history.push({
+            pathname: location.pathname,
+            search: "?search=" + e.target.value
+        })
+          setRequestData([...res.data])
+        }
+      } catch(err){
+        console.log(err)
+      }
+    }
+    if(e.key === "Enter" ){
+      e.preventDefault()
+    }
+    if ( e.keyCode === 13) {
+      
+      e.preventDefault();
+      run()
+    }
 
   }
 
@@ -133,7 +162,7 @@ export default function YourBloodRequests() {
                   key={index}
                   onClick={(e) => setTimeout(() => { setShowMoreDetails(bloodRequest.id) }, 1)}
                   >
-                  <Td>{bloodRequest?.id}</Td>
+                  <Td>{index+1}</Td>
                   <Td>{bloodRequest?.name}</Td>
                    
                   <Td>

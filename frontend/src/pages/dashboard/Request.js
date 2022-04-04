@@ -206,8 +206,8 @@ export default function Request({ match }) {
             </NavTab>
           )
         )}
-        {(requestData?.status === "Completed" ||
-          requestData?.status === "Reviewed") && (
+        {(requestData?.status === "Reviewed By Requestor" ||
+          requestData?.status === "Completed") && (
           <NavTab
             activeClassName="active"
             exact
@@ -255,8 +255,8 @@ export default function Request({ match }) {
         ""
       )}
 
-      {(requestData?.status === "Completed" ||
-        requestData?.status === "Reviewed") && (
+      {(requestData?.status === "Reviewed By Requestor" ||
+        requestData?.status === "Completed") && (
         <Route exact path="/requests/:bloodRequestId/review/">
           <ReviewForDonor requestData={requestData} />
           <ReviewForRequestor requestData={requestData} />
@@ -774,7 +774,7 @@ const ReviewDonor = ({ requestData, setRequestData }) => {
       );
       console.log(res);
       if (res.status === 200 && res.data.success) {
-        setRequestData({ ...requestData, status: "Completed" });
+        setRequestData({ ...requestData, status: "Reviewed By Requestor" });
         dispatch(alert(res?.data?.message));
         setShowReviewDonorModal(false);
       }
@@ -895,7 +895,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
       );
       console.log(res);
       if (res.status === 200 && res.data.success) {
-        setRequestData({ ...requestData, status: "Reviewed" });
+        setRequestData({ ...requestData, status: "Completed" });
         dispatch(alert(res?.data?.message));
         setShowReviewModal(false);
       }
@@ -911,7 +911,7 @@ const ReviewForm = ({ requestData, setRequestData }) => {
   return (
     <>
       {profile.isCompleted &&
-      requestData.status === "Completed" &&
+      requestData.status === "Reviewed By Requestor" &&
       donorRequestStatus?.status === "Reviewed" ? (
         <Modal
           actionText="Submit Review"
@@ -950,13 +950,13 @@ const ReviewForm = ({ requestData, setRequestData }) => {
       <Button
         disabled={
           !profile.isCompleted ||
-          requestData.status !== "Completed" ||
+          requestData.status !== "Reviewed By Requestor" ||
           donorRequestStatus?.status !== "Reviewed"
         }
         onClick={(e) => {
           setShowReviewModal(true);
           console.log(!profile.isCompleted);
-          console.log(requestData.status !== "Completed");
+          console.log(requestData.status !== "Reviewed By Requestor");
           console.log(donorRequestStatus?.status === "Reviewed");
         }}>
         Review
