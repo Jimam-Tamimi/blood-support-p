@@ -929,6 +929,7 @@ import ReactSelect from "react-select";
 export default function DonorRequests({}) {
   // hooks
   const location = useLocation();
+  const history = useHistory();
   const dispatch = useDispatch();
 
   const [donorRequestData, setDonorRequestData] = useState([]);
@@ -980,8 +981,10 @@ export default function DonorRequests({}) {
 
   const searchDonReq = (e) => {
     const run = () => {
-      getDonorRequests({ search : e?.target?.value?.trim() })
-      
+      // getDonorRequests({ search : e?.target?.value?.trim() })
+      console.log('first')
+      let params = Object.fromEntries(new URLSearchParams(location.search))
+      history.push(location.pathname +  "?" + new URLSearchParams({...params, search: e?.target?.value}).toString() )  
     };
 
     
@@ -991,12 +994,30 @@ export default function DonorRequests({}) {
     }
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const search = params.get("search");
+    const status = params.get("status");
+    const dataParams = {}
+    if (search) {
+      dataParams.search = search;
+    } 
+    if(status) {
+      dataParams.status = status
+    }
+
+    getDonorRequests(dataParams);
+    
+  }, [location])
+  
+  
+  
   return (
     <>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp   onKeyDown={searchDonReq} placeholder="Search..." />
+            <SearchInp defaultValue={new URLSearchParams(location.search).get('search')}  onKeyDown={searchDonReq} placeholder="Search..." />
           </SearchForm>
           <OrderedBySection>
             <div className="filter-div">
