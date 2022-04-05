@@ -333,3 +333,62 @@ new Promise(async (resolve, reject) => {
 
 });
 
+ 
+  
+export const addBloodRequestToFavorites = async (blood_request_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}api/blood/blood-request/favorites/`, {blood_request_id: parseInt(blood_request_id)}
+    );  
+    if(res.status === 201) {
+      store.dispatch(alert("Blood request added to your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+          store.dispatch(alert("Failed to  get all favorite blood requests 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+ 
+  
+export const removeBloodRequestFromFavorites = async (blood_request_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.delete(
+      `${process.env.REACT_APP_API_URL}api/blood/blood-request/favorites/`, {data: {blood_request_id: parseInt(blood_request_id)}}
+    );  
+    if(res.status === 203) {
+      store.dispatch(alert("Blood request removed from your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+          store.dispatch(alert("Failed to  get all favorite blood requests 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+

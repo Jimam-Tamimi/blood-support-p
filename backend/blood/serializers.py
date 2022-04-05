@@ -10,6 +10,7 @@ class BloodRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
     timestamp = serializers.DateTimeField(read_only=True)
     donor_request_got = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
     
     class Meta:
         model = BloodRequest
@@ -23,6 +24,9 @@ class BloodRequestSerializer(ModelSerializer):
         
     def get_donor_request_got(self, obj):
         return DonorRequest.objects.filter(blood_request=obj).count()
+        
+    def get_is_favorite(self, obj):
+        return FavoriteBloodRequest.objects.filter(user=self.context['request'].user, blood_request=obj).exists()
         
 
 class DonorRequestSerializer(ModelSerializer):
@@ -40,8 +44,8 @@ class DonorRequestSerializer(ModelSerializer):
         bloodRequestId = self.context['request'].data['blood_request']
         try:
             bloodRequest = BloodRequest.objects.get(id=bloodRequestId)
-        except BloodRequest.DoesNotExist:
-            raise serializers.ValidationError("Blood Request does not exist")
+        except BloodRequest.DoesNotExist as e:
+            raise serializers.ValidationError("Blood Request does not exist") from e
         validated_data['blood_request'] = bloodRequest
         print(self.context['request'].data['blood_request'])
         return super().create(validated_data)

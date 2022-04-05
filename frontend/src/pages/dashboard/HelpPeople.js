@@ -71,7 +71,8 @@ export default function HelpPeople() {
             key={i}
               setShowRequestDetails={setShowRequestDetails}
               setBloodRequestId={setBloodRequestId}
-              requestData={requestData}
+              requestDataProp={requestData}
+
             />            
           ))
         }

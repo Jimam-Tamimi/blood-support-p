@@ -24,7 +24,7 @@ import Dropdown from "../Dropdown/Dropdown";
 import axios from "axios";
 
 import Moment from "react-moment";
-import { deleteBloodRequest, getProfileDetailsForUser } from "../../apiCalls";
+import { addBloodRequestToFavorites, deleteBloodRequest, getProfileDetailsForUser, removeBloodRequestFromFavorites } from "../../apiCalls";
 import useModal from "../../hooks/useModal";
 import { Form, InputDiv, Label, TextArea } from "../../styles/Form.styles";
 import ReportForm from "../ReportForm";
@@ -34,8 +34,13 @@ import { useHistory } from "react-router-dom";
 export default function BloodRequest({
   setShowRequestDetails,
   setBloodRequestId,
-  requestData,
+  requestDataProp,
+  
 }) {
+  const [requestData, setRequestData] = useState(requestDataProp)
+
+  
+  
   // hooks
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -55,10 +60,21 @@ export default function BloodRequest({
     }
   };
 
-  const [dropDownOption, setDropDownOption] = useState([
+  const dropDownOption = [
     auth?.user_id == requestData?.user?.id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } : { name: "Report", icon: <FaBan />, onClick: report },
-  ]);
+    !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: false})).catch() },
+  ]
 
+  
+  useEffect(() => {
+    setRequestData(requestDataProp)
+  }, [requestDataProp])
+  
+  useEffect(() => {
+    console.log({dropDownOption})
+  }, [requestDataProp])
+  
+  
   // get user data
   const [requestorData, setRequestorData] = useState(null);
 

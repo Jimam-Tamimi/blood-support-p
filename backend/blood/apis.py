@@ -148,16 +148,17 @@ class BloodRequestViewSet(ModelViewSet):
         except Exception as e:
             print(e)
             return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
-        if(bloodRequest.user == request.user):
+        if (bloodRequest.user == request.user):
 
-            if(bloodRequest.status == 'Open'):
+            if (bloodRequest.status == 'Open'):
                 bloodRequestGot = len(DonorRequest.objects.filter(
                     blood_request=bloodRequest, status="Pending"))
                 return Response({'success': True, 'message': f'You have got total {bloodRequestGot} donor request. Please check them and respond to them 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
-            elif(bloodRequest.status == 'Accepted'):
+            elif bloodRequest.status == 'Accepted':
                 bloodRequestGot = len(DonorRequest.objects.filter(
                     blood_request=bloodRequest, status="Pending"))
-                return Response({'success': True, 'message': f'You have accepted a donor request. That user will come to donate blood.', 'type': 'success'}, status=status.HTTP_200_OK)
+                return Response({'success': True, 'message': 'You have accepted a donor request. That user will come to donate blood.', 'type': 'success'}, status=status.HTTP_200_OK)
+
 
             elif(bloodRequest.status == 'Reviewed By Requestor'):
                 reviewedDonorRequest = DonorRequestReview.objects.get(
@@ -195,16 +196,17 @@ class BloodRequestViewSet(ModelViewSet):
                         blood_request=donorRequest.blood_request)
                     return Response({'success': True, 'message': f'Everything was completed successfully with this blood request the blood requestor gave you {donorRequestReview.rating} star rating and you gave him {bloodRequestReview.rating} 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
 
-                if(donorRequest.status == 'Pending' and donorRequest.blood_request.status != 'Open'):
-                    return Response({'success': True, 'message': f'The blood requestor has accpepted someone else\'s donor request 😐. You still have a chance.', 'type': 'danger'}, status=status.HTTP_200_OK)
+                if (donorRequest.status == 'Pending' and donorRequest.blood_request.status != 'Open'):
+                    return Response({'success': True, 'message': "The blood requestor has accpepted someone else\'s donor request 😐. You still have a chance.", 'type': 'danger'}, status=status.HTTP_200_OK)
+
 
             except DonorRequest.DoesNotExist:
                 if(bloodRequest.status == 'Open'):
                     return Response({'success': True, 'message': 'You haven\'t sent any donor request to this blood request 😶', 'type': 'info'}, status=status.HTTP_200_OK)
-                    
+
                 elif(bloodRequest.status  == 'Accepted'):
                     return Response({'success': True, 'message': 'The requestor has accepted someone\'s donor request. You can still send a donor request, if the blood requestor likes\'s your request then he can accept your request.'}, status=status.HTTP_200_OK)
-                
+
                 else:
                     return Response({'success': True, 'message': 'You can not send any donor request right now 😶', 'type': 'danger'}, status=status.HTTP_200_OK)
                         
@@ -274,14 +276,49 @@ class BloodRequestViewSet(ModelViewSet):
     def getAllBloodRequestByMe(self, request):
         print("in in in ")
         bloodRequests = BloodRequest.objects.filter(user=request.user)
-        return Response(BloodRequestSerializer(bloodRequests, many=True).data, status=status.HTTP_200_OK)
+        return Response(self.get_serializer(bloodRequests, many=True).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='filter-my-blood-requests')
     def filterMyBloodRequests(self, request):
         bloodRequests = BloodRequest.objects.filter(user=request.user)
 
         filtered_blood_requests = self.filter_queryset(bloodRequests)
-        return Response(BloodRequestSerializer(filtered_blood_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+        return Response(self.get_serializer(filtered_blood_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+ 
+
+
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='favorites')
+    def favorites(self, request):
+        if (request.method == 'GET'):
+            favBloodRequests = FavoriteBloodRequest.objects.filter(user=request.user)
+            bloodRequests = [fav.blood_request for fav in favBloodRequests]
+            return Response(self.get_serializer(bloodRequests, many=True).data, status=status.HTTP_200_OK)
+
+        elif(request.method == 'POST'):
+            try:
+                bloodRequest = BloodRequest.objects.get(id=request.data['blood_request_id'])
+                
+            except BloodRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'Blood request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(FavoriteBloodRequest.objects.filter(user=request.user, blood_request=bloodRequest).exists()):
+                return Response({'success': False, 'error': 'You have already added this blood request to your favorites'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            FavoriteBloodRequest.objects.create(user=request.user, blood_request=bloodRequest)
+            return Response({'success': True, 'message': 'Blood request added to your favorites list 🙂'}, status=status.HTTP_201_CREATED)
+
+        elif(request.method == "DELETE"):
+            try:
+                bloodRequest = BloodRequest.objects.get(id=request.data['blood_request_id'])
+            except BloodRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'This blood request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                FavoriteBloodRequest.objects.get(user=request.user, blood_request=bloodRequest).delete()
+            except FavoriteBloodRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'Blood request not found in your favorites list'}, status=status.HTTP_400_BAD_REQUEST)
+            # except Exception:
+            #     return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': True, 'message': 'Blood request removed from your favorites list 🙂'}, status=status.HTTP_204_NO_CONTENT)
  
 
 class DonorRequestViewSet(ModelViewSet):
@@ -365,7 +402,7 @@ class DonorRequestViewSet(ModelViewSet):
         try:
             donorRequest = DonorRequest.objects.get(
                 blood_request=bloodRequest, user=request.user)
-            return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+            return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'You have not sent any donor request'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -380,7 +417,7 @@ class DonorRequestViewSet(ModelViewSet):
         donorRequests = DonorRequest.objects.filter(
             blood_request=bloodRequest).order_by('-timestamp')
         donorRequests = donorRequests.filter(~Q(status="Rejected"))
-        data = DonorRequestSerializer(donorRequests, many=True).data
+        data = self.get_serializer(donorRequests, many=True).data
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -390,25 +427,24 @@ class DonorRequestViewSet(ModelViewSet):
         try:
             donorRequest = DonorRequest.objects.get(
                 id=request.data['donor_request_id'])
-            if(donorRequest.blood_request.user != request.user):
+            if donorRequest.blood_request.user != request.user:
                 return Response({'success': False, 'error': 'You are not authorized to accept this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
-            else:
-                if(donorRequest.status == 'Accepted'):
-                    return Response({'success': False, 'error': 'You have already accepted this donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+            if(donorRequest.status == 'Accepted'):
+                return Response({'success': False, 'error': 'You have already accepted this donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
 
-                if(donorRequest.blood_request.status != 'Open'):
-                    return Response({'success': False, 'error': 'You can\'t accept any donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+            if(donorRequest.blood_request.status != 'Open'):
+                return Response({'success': False, 'error': 'You can\'t accept any donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
 
-                for dr in DonorRequest.objects.filter(blood_request=donorRequest.blood_request):
-                    if(dr.status == 'Accepted'):
-                        return Response({'success': False, 'error': 'You can\'t accept more than one donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
+            for dr in DonorRequest.objects.filter(blood_request=donorRequest.blood_request):
+                if(dr.status == 'Accepted'):
+                    return Response({'success': False, 'error': 'You can\'t accept more than one donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
 
-                if(donorRequest.status == "Pending"):
-                    donorRequest.status = 'Accepted'
-                    donorRequest.save()
-                    donorRequest.blood_request.status = 'Accepted'
-                    donorRequest.blood_request.save()
-                    return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+            if(donorRequest.status == "Pending"):
+                donorRequest.status = 'Accepted'
+                donorRequest.save()
+                donorRequest.blood_request.status = 'Accepted'
+                donorRequest.blood_request.save()
+                return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
 
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
@@ -435,7 +471,7 @@ class DonorRequestViewSet(ModelViewSet):
 
             donorRequest.status = 'Rejected'
             donorRequest.save()
-            return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+            return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -453,15 +489,14 @@ class DonorRequestViewSet(ModelViewSet):
             if(donorRequest.blood_request.status != 'Accepted'):
                 return Response({'success': False, 'error': 'You can\'t accept any donor request 😒'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if(donorRequest.status == 'Accepted'):
-                donorRequest.status = 'Pending'
-                donorRequest.save()
-                donorRequest.blood_request.status = 'Open'
-                donorRequest.blood_request.save()
-            else:
+            if donorRequest.status != 'Accepted':
                 return Response({'success': False, 'error': 'You can only cancel accepted donor requests.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response(DonorRequestSerializer(donorRequest).data, status=status.HTTP_200_OK)
+            donorRequest.status = 'Pending'
+            donorRequest.save()
+            donorRequest.blood_request.status = 'Open'
+            donorRequest.blood_request.save()
+            return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -480,7 +515,7 @@ class DonorRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'Something went wrong 😕'}, status=status.HTTP_400_BAD_REQUEST)
         if(donor_request.user != request.user):
             return Response({'success': False, 'error': 'You are not authorized to view this donor request 😑'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response({'status': DonorRequestSerializer(donor_request).data['status']}, status=status.HTTP_200_OK)
+        return Response({'status': self.get_serializer(donor_request).data['status']}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='filter-donor-request-for-blood-request')
     def filterDonorRequestForBloodRequest(self, request):
@@ -496,13 +531,13 @@ class DonorRequestViewSet(ModelViewSet):
         donor_requests = DonorRequest.objects.filter(
             blood_request=bloodRequest)
         filtered_donor_requests = self.filter_queryset(donor_requests)
-        return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+        return Response(self.get_serializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='get-all-donor-request-by-me')
     def getAllDonorRequestByMe(self, request):
         donor_requests = DonorRequest.objects.filter(user=request.user)
         filtered_donor_requests = self.filter_queryset(donor_requests)
-        return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+        return Response(self.get_serializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='report')
     def report(self, request, pk=None):

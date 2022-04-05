@@ -10,8 +10,7 @@ def random_string_generator(len):
 
 def generate_slug(slugStr, sender, randStrlen=5 ):
     def get_slug():
-        slug = slugify(f"{slugStr} {random_string_generator(randStrlen)}")
-        return slug
+        return slugify(f"{slugStr} {random_string_generator(randStrlen)}")
     while True:
         slug = get_slug()
         if not sender.objects.filter(slug=slug).exists():
