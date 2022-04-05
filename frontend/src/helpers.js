@@ -150,11 +150,22 @@ export function sortByTime(data) {
 
 
 export const donorRequestFilterOption = [
-  { value: "status", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "accepted", label: "Accepted" },
-  { value: "reviewed", label: "Reviewed" },
-  { value: "rejected", label: "Rejected" }, 
+  { value: "", label: "All" },
+  { value: "Pending", label: "Pending" },
+  { value: "Accepted", label: "Accepted" },
+  { value: "Reviewed", label: "Reviewed" },
+  { value: "Rejected", label: "Rejected" }, 
+]
+
+
+
+export const bloodFilterOption = [
+  { value: "All", label: "All" },
+  { value: "Open", label: "Open" },
+  { value: "Accepted", label: "Accepted" },
+  { value: "Reviewed By Requestor", label: "Reviewed By Requestor" },
+  { value: "Completed", label: "Completed" }, 
+  { value: "Expired", label: "Expired" }, 
 ]
 
 

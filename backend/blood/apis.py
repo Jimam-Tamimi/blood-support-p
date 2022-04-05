@@ -483,6 +483,12 @@ class DonorRequestViewSet(ModelViewSet):
         filtered_donor_requests = self.filter_queryset(donor_requests)
         return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], url_path='get-all-donor-request-by-me')
+    def getAllDonorRequestByMe(self, request):
+        donor_requests = DonorRequest.objects.filter(user=request.user)
+        filtered_donor_requests = self.filter_queryset(donor_requests)
+        return Response(DonorRequestSerializer(filtered_donor_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='report')
     def report(self, request, pk=None):
         donorRequest = self.get_object()

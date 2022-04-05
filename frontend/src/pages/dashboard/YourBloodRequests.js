@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Select from 'react-select'
+import Select from "react-select";
 
 import { Link, Route } from "react-router-dom";
 
@@ -13,7 +13,7 @@ import {
   Profile,
   ButtonLink,
 } from "../../styles/Essentials.styles";
- 
+
 import {
   Detail,
   DetailHeader,
@@ -29,7 +29,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr, 
+  Tr,
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -45,91 +45,121 @@ import { Wrap } from "../styles/dashboard/Request.styles";
 
 import { useHistory, useLocation } from "react-router";
 import { Marker } from "@react-google-maps/api";
-import { calcDistance, donorRequestFilterOption, sortByDistance, sortById, sortByTime } from "../../helpers";
+import {
+  bloodFilterOption,
+  calcDistance,
+  donorRequestFilterOption,
+  sortByDistance,
+  sortById,
+  sortByTime,
+} from "../../helpers";
 import { customStyles } from "../../styles/Form.styles";
-import { filterMyBloodRequests, getAllBloodRequestByMe, getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
+import {
+  filterMyBloodRequests,
+  getAllBloodRequestByMe,
+  getBloodRequestData,
+  getProfileDetailsForUser,
+} from "../../apiCalls";
 import { FaBan } from "react-icons/fa";
 import ReportForm from "../../components/ReportForm";
 import useModal from "../../hooks/useModal";
 import { useDispatch } from "react-redux";
 import Moment from "react-moment";
 
-export default function YourBloodRequests() { 
-  const [requestData, setRequestData] = useState([])
-  const [showMoreDetails, setShowMoreDetails] = useState(false)
+export default function YourBloodRequests() {
+  const [requestData, setRequestData] = useState([]);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
 
-  // hooks 
+  // hooks
 
-  const location = useLocation()
-  const history = useHistory()
-  
+  const location = useLocation();
+  const history = useHistory();
+
   const searchBloodRequest = async (e) => {
-    
     const run = async () => {
-      try{
-        const res = await filterMyBloodRequests({search: e.target.value})
-        if(res.status === 200){
-          history.push({
-            pathname: location.pathname,
-            search: "?search=" + e.target.value
-        })
-          setRequestData([...res.data])
+      try {
+        const res = await filterMyBloodRequests({ search: e.target.value });
+        if (res.status === 200) {
+ 
+          setRequestData([...res.data]);
         }
-      } catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       }
-    }
-    if(e.key === "Enter" ){
-      e.preventDefault()
-    }
-    if ( e.keyCode === 13) {
-      
+    };
+    if (e.key === "Enter") {
       e.preventDefault();
-      run()
     }
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      run();
+    }
+  };
 
-  }
-
-  
-  useEffect( async () => {
+  const filterBloodRequest = async (e) => {
+    if(e.value === "All"){
+      getMyBloodRequest()
+      return history.push({
+        pathname: location.pathname, 
+      });
+    } 
     try {
-      const res = await getAllBloodRequestByMe()
-      if(res.status === 200) {
-        setRequestData(res.data)
+      const res = await filterMyBloodRequests({ status: e.value });
+      if (res.status === 200) {
+ 
+        
+        console.log(res.data);
+        setRequestData([...res.data]);
       }
-    } catch (error) {
+    } catch (err) {
+      console.log(err);
     }
-  }, [])
+  };
+
+  const getMyBloodRequest = async () => {
+    try {
+      const res = await getAllBloodRequestByMe();
+      if (res.status === 200) {
+        setRequestData(res.data);
+      }
+    } catch (error) {}
+  }
   
-  
+  useEffect(async () => {
+ 
+      getMyBloodRequest()
+ 
+  }, []);
 
   return (
     <>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp onChange={searchBloodRequest} onKeyDown={searchBloodRequest} placeholder="Search..." />
+            <SearchInp
+              onChange={searchBloodRequest}
+              onKeyDown={searchBloodRequest}
+              placeholder="Search..."
+            />
           </SearchForm>
           <OrderedBySection>
-            <div  className="filter-div">
-
-            <Select
-              className="basic-single"
-              classNamePrefix="select"
-              defaultValue={'status'}
-              disabledValue={donorRequestFilterOption[0]}
-              isDisabled={false}
-              isLoading={false}
-              isClearable={true}
-              isRtl={false}
-              isSearchable={true}
-              name="donor-request-filter"
-              options={donorRequestFilterOption}
-              styles={customStyles}
-              onChange={""}
-              // disabled={!profile.isCompleted}
+            <div className="filter-div">
+              <Select
+                className="basic-single"
+                classNamePrefix="select"
+                defaultValue={bloodFilterOption[0]}
+                disabledValue={bloodFilterOption[0]}
+                isDisabled={false}
+                isLoading={false}
+                isClearable={false}
+                isRtl={false}
+                isSearchable={true}
+                name="donor-request-filter"
+                options={bloodFilterOption}
+                styles={customStyles}
+                onChange={filterBloodRequest}
               />
-              </div>
+            </div>
           </OrderedBySection>
         </TopSection>
         <BottomSection>
@@ -160,11 +190,14 @@ export default function YourBloodRequests() {
               requestData?.map((bloodRequest, index) => (
                 <Tr
                   key={index}
-                  onClick={(e) => setTimeout(() => { setShowMoreDetails(bloodRequest.id) }, 1)}
-                  >
-                  <Td>{index+1}</Td>
+                  onClick={(e) =>
+                    setTimeout(() => {
+                      setShowMoreDetails(bloodRequest.id);
+                    }, 1)
+                  }>
+                  <Td>{index + 1}</Td>
                   <Td>{bloodRequest?.name}</Td>
-                   
+
                   <Td>
                     <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
                       {bloodRequest?.date_time.replace("Z", "")}
@@ -172,9 +205,9 @@ export default function YourBloodRequests() {
                   </Td>
                   <Td>{bloodRequest?.blood_group}</Td>
                   <Td>{bloodRequest?.email}</Td>
- 
+
                   <div className="table-row-badge">
-                      <Badge sm> {bloodRequest?.status} </Badge>
+                    <Badge sm> {bloodRequest?.status} </Badge>
 
                     <Badge transparent sm>
                       <Moment fromNow>{bloodRequest?.timestamp}</Moment>
@@ -190,49 +223,41 @@ export default function YourBloodRequests() {
           setShow={setShowMoreDetails}
           unMountOnHide
           show={showMoreDetails != false}>
-            <RequestDetails 
-              requestData={requestData}
-              showMoreDetails={showMoreDetails}
-            />
+          <RequestDetails
+            requestData={requestData}
+            showMoreDetails={showMoreDetails}
+          />
         </OffCanvas>
       </Wrap>
     </>
   );
 }
 
+const RequestDetails = ({ showMoreDetails, requestData }) => {
+  const [bloodRequestData, setBloodRequestData] = useState({});
 
-
-const RequestDetails = ({showMoreDetails, requestData}) => {
-  const [bloodRequestData, setBloodRequestData] = useState({})
-  
   //  hooks
   const dispatch = useDispatch();
- 
- 
-  const [dropDownOption, setDropDownOption] = useState([ 
-  ]); 
+
+  const [dropDownOption, setDropDownOption] = useState([]);
 
   // functions
   // get blood request data using id
- 
-  
-  useEffect( async () => {
-    console.log({showMoreDetails})
-    if(showMoreDetails){
-      const res = await getBloodRequestData(showMoreDetails);
-      console.log({res})
-      if(res.status === 200) {
-        const userDataRes = await getProfileDetailsForUser(res?.data?.user?.id)
-        setBloodRequestData({ ...res.data, userData: userDataRes.data });
-      } 
 
+  useEffect(async () => {
+    console.log({ showMoreDetails });
+    if (showMoreDetails) {
+      const res = await getBloodRequestData(showMoreDetails);
+      console.log({ res });
+      if (res.status === 200) {
+        const userDataRes = await getProfileDetailsForUser(res?.data?.user?.id);
+        setBloodRequestData({ ...res.data, userData: userDataRes.data });
+      }
     }
-  }, [showMoreDetails])
-  
- 
+  }, [showMoreDetails]);
+
   return (
     <>
-
       <DetailsMap>
         <Map
           coords={bloodRequestData?.location}
@@ -241,8 +266,7 @@ const RequestDetails = ({showMoreDetails, requestData}) => {
           loadingElement={<div style={{ height: `350px`, width: "100%" }} />}
           containerElement={<div style={{ height: `350px`, width: "100%" }} />}
           mapElement={<div style={{ height: `350px`, width: "100%" }} />}
-          defaultZoom={14}
-        >
+          defaultZoom={14}>
           {<Marker position={bloodRequestData?.location} />}
         </Map>
       </DetailsMap>
@@ -255,7 +279,9 @@ const RequestDetails = ({showMoreDetails, requestData}) => {
               style={{ marginRight: "10px" }}
               src={`${process.env.REACT_APP_MEDIA_URL}${bloodRequestData?.userData?.profile_img}`}
             />
-            <DetailFieldValue className="profile-link-name" >{bloodRequestData?.userData?.name}</DetailFieldValue>
+            <DetailFieldValue className="profile-link-name">
+              {bloodRequestData?.userData?.name}
+            </DetailFieldValue>
           </Profile>
           <DetailHeader>Informations: </DetailHeader>
           <Detail>
@@ -290,8 +316,7 @@ const RequestDetails = ({showMoreDetails, requestData}) => {
           <ButtonDiv>
             <ButtonLink
               to={`/requests/${bloodRequestData.id}/`}
-              style={{ padding: "10px 15px", margin: "0" }}
-            >
+              style={{ padding: "10px 15px", margin: "0" }}>
               View
             </ButtonLink>
           </ButtonDiv>
@@ -308,8 +333,7 @@ const RequestDetails = ({showMoreDetails, requestData}) => {
                 width: "max-content",
                 right: "6px",
                 top: "20px",
-              }}
-            >
+              }}>
               {bloodRequestData?.donor_request_got} Requests Got
             </Badge>
           </Action>
@@ -319,11 +343,8 @@ const RequestDetails = ({showMoreDetails, requestData}) => {
   );
 };
 
-
-
-
-const Requests = () => { 
-  const [showRequestDetails, setShowRequestDetails] = useState(false)
+const Requests = () => {
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
   // eslint-disable-next-line
   const report = () => {
     // call api to report this request
@@ -346,11 +367,9 @@ const Requests = () => {
     coords: { lat: 24.0077202, lng: 89.2429551 },
   });
 
- 
-
   const showMoreDetails = (id) => {
     // call the apis
-    setShowRequestDetails(true)
+    setShowRequestDetails(true);
     // setDetails({});
   };
   const onCanvasExit = () => {};
@@ -391,7 +410,6 @@ const Requests = () => {
             </Tr>
           </HtmlTable>
         </BottomSection>
-
       </Wrap>
     </>
   );
@@ -400,14 +418,11 @@ const Requests = () => {
 const Donations = () => {
   const [showDonorRequest, setShowDonorRequest] = useState(false);
   // eslint-disable-next-line
-  const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null); 
- // eslint-disable-next-line
+  const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
+  // eslint-disable-next-line
   const [dropDownOptions, setDropDownOptions] = useState([
     // { name: "Report", icon: FaBan, onClick: report },
   ]);
-
- 
- 
 
   const showMoreDetails = (id) => {
     // call the apis
@@ -448,32 +463,29 @@ const Donations = () => {
                 {" "}
                 <Link
                   style={{ display: "flex", alignItems: "center" }}
-                  to="/user/23/"
-                >
+                  to="/user/23/">
                   <ProfileImg size="45px" src={""} />{" "}
                   <p
                     style={{
                       position: "relative",
                       left: "15px",
                       fontWeight: "600",
-                    }}
-                  >
+                    }}>
                     Jimam Tamimi
                   </p>{" "}
                 </Link>{" "}
               </Td>
               <Td>2 april 2021 4:30 pm </Td>
               <Td>2 KM</Td>
-              <Td>01827485748</Td> 
-              <Td>2 april 2021 4:30 pm </Td> 
+              <Td>01827485748</Td>
+              <Td>2 april 2021 4:30 pm </Td>
             </Tr>
           </HtmlTable>
         </BottomSection>
         <OffCanvas
           onCanvasExit={onCanvasExit}
           setShow={setShowDonorRequest}
-          show={showDonorRequest}
-        >
+          show={showDonorRequest}>
           <AllDetails>
             <DetailsDiv>
               <DetailHeader>Requested By: </DetailHeader>
@@ -486,16 +498,14 @@ const Donations = () => {
               <Detail>
                 <Link
                   style={{ display: "flex", alignItems: "center" }}
-                  to="/user/23/"
-                >
+                  to="/user/23/">
                   <ProfileImg size="45px" src={""} />{" "}
                   <p
                     style={{
                       position: "relative",
                       left: "15px",
                       fontWeight: "600",
-                    }}
-                  >
+                    }}>
                     Jimam Tamimi
                   </p>{" "}
                 </Link>
