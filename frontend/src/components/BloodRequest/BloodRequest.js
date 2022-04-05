@@ -24,26 +24,39 @@ import Dropdown from "../Dropdown/Dropdown";
 import axios from "axios";
 
 import Moment from "react-moment";
-import { getProfileDetailsForUser } from "../../apiCalls";
+import { deleteBloodRequest, getProfileDetailsForUser } from "../../apiCalls";
 import useModal from "../../hooks/useModal";
 import { Form, InputDiv, Label, TextArea } from "../../styles/Form.styles";
 import ReportForm from "../ReportForm";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
 
 export default function BloodRequest({
   setShowRequestDetails,
   setBloodRequestId,
   requestData,
 }) {
+  // hooks
+  const auth = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const history = useHistory();
   const modalController = useModal()
   const report = () => {
     // call api to report this request
  
     modalController.showModal('blood-request-report', {blood_request_id: requestData?.id}, ReportForm)
-    console.log("report request");
+  };
+  const deleteThisBloodRequest = () => {
+    if(window.confirm('Are you sure you want to delete this request?')) {
+      deleteBloodRequest(requestData?.id).then(() => {
+        history.push('/');
+        dispatch(alert('Request deleted successfully!', 'success'));
+      }).catch(() => {});
+    }
   };
 
   const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: <FaBan />, onClick: report },
+    auth?.user_id == requestData?.user?.id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } : { name: "Report", icon: <FaBan />, onClick: report },
   ]);
 
   // get user data

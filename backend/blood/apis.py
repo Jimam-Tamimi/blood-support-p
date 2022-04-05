@@ -32,6 +32,21 @@ class BloodRequestViewSet(ModelViewSet):
     # ordering_fields = ['date_time', 'timestamp', 'location']
     search_fields = ["name", "email", "date_time", "number", "add_number", "blood_group", "location", "status", "description", "timestamp" ]
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if(request.user.is_staff or request.user.is_superuser):
+            return super().destroy(request, *args, **kwargs)
+        
+        if(instance.user == request.user):
+            if(instance.status == "Open"):
+                return super().destroy(request, *args, **kwargs)
+            else:
+                return Response( {'success': False,  "error": "You can't delete this request now "}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({ 'success': False, "error": "You are not authorized to delete this request"}, status=status.HTTP_403_FORBIDDEN)
+        
+        
+
     @action(detail=True, methods=['get'], url_path='have-sent-donor-request')
     def haveSentDonorRequest(self, request, pk=None):
         blood_request = self.get_object()
@@ -267,7 +282,7 @@ class BloodRequestViewSet(ModelViewSet):
 
         filtered_blood_requests = self.filter_queryset(bloodRequests)
         return Response(BloodRequestSerializer(filtered_blood_requests.order_by('-id'), many=True).data, status=status.HTTP_200_OK)
-
+ 
 
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')

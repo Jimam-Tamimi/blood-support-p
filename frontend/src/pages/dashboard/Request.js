@@ -87,6 +87,7 @@ import {
 import Select from "react-select";
 import Moment from "react-moment";
 import {
+  deleteBloodRequest,
   getBloodRequestData,
   getCurrentStatusOfBloodRequestForMe,
   getDonorRequestStatus,
@@ -274,25 +275,42 @@ const RequestDetails = ({
   checkHaveSentDonorRequest,
   getRequestStatusInfo,
 }) => {
+    // hooks
+    const location = useLocation();
+    const history = useHistory();
+    const dispatch = useDispatch();
+    const modalController = useModal();
+  
+    const auth = useSelector((state) => state.auth);
+  
+  
+  
   // states
+
   const { bloodRequestId } = useParams();
+  const deleteThisBloodRequest = () => {
+    if(window.confirm('Are you sure you want to delete this request?')) {
+      deleteBloodRequest(bloodRequestId).then(() => {
+        history.push('/');
+        dispatch(alert('Request deleted successfully!', 'success'));
+      }).catch(() => {});
+    }
+  };
+
+
   const report = () => {
     modalController.showModal(
       "blood-request-report",
       { blood_request_id: bloodRequestId },
       ReportForm
     );
-  };
+  }
+
+  
   const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: <FaBan />, onClick: report },
+    requestData?.user?.id == auth.user_id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } :     { name: "Report", icon: <FaBan />, onClick: report },
   ]);
 
-  // hooks
-  const location = useLocation();
-  const dispatch = useDispatch();
-  const modalController = useModal();
-
-  const auth = useSelector((state) => state.auth);
 
   return (
     <>

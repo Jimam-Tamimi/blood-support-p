@@ -305,3 +305,31 @@ new Promise(async (resolve, reject) => {
 
 });
 
+ 
+  
+export const deleteBloodRequest = async (id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.delete(
+      `${process.env.REACT_APP_API_URL}api/blood/blood-request/${id}/`
+    ); 
+    console.log({res})
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+          store.dispatch(alert("Failed to  get all donor requests 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+

@@ -937,16 +937,6 @@ export default function DonorRequests({}) {
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
 
-  const [showEmail, setShowEmail] = useState(true);
-
-  window.addEventListener("resize", (e) => {
-    if (window.innerWidth <= 550) {
-      setShowEmail(false);
-    } else {
-      setShowEmail(true);
-    }
-  });
-
   const getDonorRequests = async (params={}) => {
     try {
       const res = await getAllDonorRequestByMe(params)
@@ -1034,7 +1024,7 @@ export default function DonorRequests({}) {
                 name="donor-request-filter"
                 options={donorRequestFilterOption}
                 styles={customStyles}
-                onChange={e => getDonorRequests({ status : e?.value })}
+                onChange={e => history.push(location.pathname +  "?" + new URLSearchParams({...Object.fromEntries(new URLSearchParams(location.search)), status: e?.value}).toString() )   }
               />
             </div>
           </OrderedBySection>
@@ -1121,9 +1111,7 @@ export default function DonorRequests({}) {
 };
 
 const DonorRequestMoreDetails = ({
-  donorRequestMoreDetails,
-  requestData,
-  setRequestData,
+  donorRequestMoreDetails,  
   setShowDonorRequest, 
 }) => {
   // hooks
@@ -1153,88 +1141,12 @@ const DonorRequestMoreDetails = ({
     });
   }, []);
 
-  const acceptDonorRequest = async (id) => {
-    if (requestData.status === "Open") {
-      try {
-        const res = await axios.post(
-          `${process.env.REACT_APP_API_URL}api/blood/donor-request/accept-donor-request/`,
-          { donor_request_id: id }
-        );
-        console.log(res);
-        if (res.status === 200) {
-          setRequestData({ ...requestData, status: "Accepted" });
-          dispatch(alert("Donor request accepted", "success"));
-          setShowDonorRequest(false);
-        }
-      } catch (error) {
-        if (error?.response?.data?.success === false) {
-          dispatch(alert(error?.response?.data?.error, "danger"));
-        } else {
-          dispatch(alert("Failed to accept this donor request 😐", "danger"));
-        }
-      }
-    } else {
-      dispatch(alert("You can't accept this request", "danger"));
-    }
-  };
-
-  const rejectDonorRequest = async (id) => {
-    try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/blood/donor-request/reject-donor-request/`,
-        { donor_request_id: id }
-      );
-      console.log(res);
-      if (res.status === 200) {
-        setRequestData({ ...requestData, status: "Open" });
-        dispatch(alert("Donor request rejected", "success"));
-        setShowDonorRequest(false);
-      }
-    } catch (error) {
-      if (error?.response?.data?.success === false) {
-        dispatch(alert(error?.response?.data?.error, "danger"));
-      } else {
-        dispatch(alert("Failed to reject this donor request 😐", "danger"));
-      }
-      console.log(error);
-    }
-  };
-
-  const cancelAcceptedDonorRequest = async (id) => {
-    try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/blood/donor-request/cancel-accepted-donor-request/`,
-        { donor_request_id: id }
-      );
-      console.log(res);
-      if (res.status === 200) {
-        setRequestData({ ...requestData, status: "Open" });
-        dispatch(
-          alert("Accepted donor request was canceled successfully", "success")
-        );
-        setShowDonorRequest(false);
-      }
-    } catch (error) {
-      if (error?.response?.data?.success === false) {
-        dispatch(alert(error?.response?.data?.error, "danger"));
-      } else {
-        dispatch(
-          alert("Failed to cancel this accepted donor request 😐", "danger")
-        );
-      }
-    }
-  };
-
+ 
+ 
   return (
     <AllDetails>
       <DetailsDiv>
         <DetailHeader>Requested By: </DetailHeader>
-        <Detail>
-          <Dropdown
-            style={{ position: "absolute", right: "38px" }}
-            options={dropDownOptions}
-          />
-        </Detail>
         <Detail>
           <Link
             style={{ display: "flex", alignItems: "center" }}
@@ -1303,50 +1215,26 @@ const DonorRequestMoreDetails = ({
         </Detail>
         <DetailHeader>Actions: </DetailHeader>
         <ButtonDiv>
-          <Button
-            onClick={(e) =>
-              window.confirm(
-                "Are you sure you want to accept this donor request? (You can accept only one donor request)"
-              ) && acceptDonorRequest(donorRequestMoreDetails?.id)
-            }
-            sm
-            disabled={requestData.status === "Open" ? false : true}
-            info>
-            {donorRequestMoreDetails.status === "Accepted"
-              ? "Accepted"
-              : "Accept"}
-          </Button>
-
-          {donorRequestMoreDetails.status === "Accepted" ||
-          donorRequestMoreDetails?.status === "Reviewed" ? (
-            <Button
-              onClick={(e) =>
-                window.confirm(
-                  "Are you sure you want to cancel the acceptance of this this donor request?"
-                ) && cancelAcceptedDonorRequest(donorRequestMoreDetails.id)
-              }
-              disabled={donorRequestMoreDetails.status !== "Accepted"}
-              sm>
-              Cancel
-            </Button>
-          ) : (
-            <Button
-              onClick={(e) =>
-                window.confirm(
-                  "Are you sure you want to reject this donor request?"
-                ) && rejectDonorRequest(donorRequestMoreDetails.id)
-              }
-              disabled={
-                donorRequestMoreDetails.status !== "Pending" ||
-                (requestData.status !== "Open" &&
-                  requestData.status !== "Accepted")
-              }
-              sm>
-              Reject
-            </Button>
-          )}
+           <ButtonLink to={`/requests/${donorRequestMoreDetails?.blood_request?.id}/donor-request/`}>View</ButtonLink>
         </ButtonDiv>
+
+
       </DetailsDiv>
+
+      <ActionDiv>
+          <Action>
+            <Badge
+              info
+              style={{
+                position: "absolute",
+                width: "max-content",
+                right: "6px",
+                top: "20px",
+              }}>
+              {donorRequestMoreDetails?.status}
+            </Badge>
+          </Action>
+        </ActionDiv>
     </AllDetails>
   );
 };
