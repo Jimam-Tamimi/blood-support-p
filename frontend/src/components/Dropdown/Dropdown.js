@@ -16,6 +16,23 @@ import Transition from "../Transition/Transition";
 
 export default function Dropdown({ absolute, options, style }) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const refCont = useRef(null)
+
+  const listener = (e) => {  
+    if (refCont.current && !refCont?.current?.contains(e.target)) {
+      setShowDropdown(false);
+    }  
+  };
+
+  useEffect(() => {
+    if (showDropdown) {
+      window.addEventListener("click", listener);
+      return () => {
+        window.removeEventListener("click", listener);
+      };
+    }
+  }, [showDropdown]);
+  
   return (
     <>
       <Wrap style={style}>
@@ -33,11 +50,12 @@ export default function Dropdown({ absolute, options, style }) {
         </IconDiv>
         <Transition timeout={200} show={showDropdown} fade rightToLeft>
           <DropdownMenu
-            onClick={(e) => (showDropdown ? setShowDropdown(false) : "")}
+            // onClick={(e) => (showDropdown ? setShowDropdown(false) : "")}
+            ref={refCont}
           >
             {options?.map((option, i ) => option && (
                  
-              <DropdownLink disabled={option.hidden} key={i} onClick={ !option.hidden&& option.onClick}>
+              <DropdownLink disabled={option.disabled} key={i} onClick={ e => {if (!option.disabled) { option.onClick(); setShowDropdown(false)} } }>
                 <LinkIcon>
                   {option.icon}
                 </LinkIcon>

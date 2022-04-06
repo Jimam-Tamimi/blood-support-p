@@ -1,7 +1,7 @@
 
-export const showModalAction = (formId, data, Component) => async dispatch => {
-    console.log(Component)
-    dispatch({type: 'SHOW_MODAL', payload: {show: true, formId: formId, data:data, Component:Component}})
+export const showModalAction = (Component) => async dispatch => { 
+    console.log(Component.props.formId)
+    dispatch({type: 'SHOW_MODAL', payload: {show: true, Component:Component}})
 }
 
 export const hideModalAction = () => async dispatch => {

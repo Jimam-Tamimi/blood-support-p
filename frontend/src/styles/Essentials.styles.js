@@ -165,7 +165,7 @@ export const ButtonLink = styled(Link)`
 export const Badge = styled.span`
   background: var(--primary-color);
   width: max-content;
-  /* z-index: 1; */
+  /* z-index: -1; */
 
   border-radius: 7px;
   padding: 4px 6px;

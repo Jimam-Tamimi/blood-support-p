@@ -11,6 +11,7 @@ class BloodRequestSerializer(ModelSerializer):
     timestamp = serializers.DateTimeField(read_only=True)
     donor_request_got = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
+    is_reported = serializers.SerializerMethodField()
     
     class Meta:
         model = BloodRequest
@@ -28,12 +29,17 @@ class BloodRequestSerializer(ModelSerializer):
     def get_is_favorite(self, obj):
         return FavoriteBloodRequest.objects.filter(user=self.context['request'].user, blood_request=obj).exists()
         
+    def get_is_reported(self, obj):
+        return BloodRequestReport.objects.filter(reported_by=self.context['request'].user, blood_request=obj).exists()
+        
 
 class DonorRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
     timestamp = serializers.DateTimeField(read_only=True)
     blood_request = BloodRequestSerializer(read_only=True)
     profile = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
+    is_reported = serializers.SerializerMethodField()
     class Meta:
         model = DonorRequest
         fields = "__all__" 
@@ -53,7 +59,12 @@ class DonorRequestSerializer(ModelSerializer):
     def get_profile(self, obj):
         return ProfileSerializer(Profile.objects.get(user=obj.user)).data
     
-
+    def get_is_favorite(self, obj):
+        return FavoriteDonorRequest.objects.filter(user=self.context['request'].user, donor_request=obj).exists()
+        
+    def get_is_reported(self, obj):
+        return DonorRequestReport.objects.filter(reported_by=self.context['request'].user, donor_request=obj).exists()
+        
 
     # def get_donor_request_got(self, obj):
     #     return Profile.objects.get(user=obj.user)

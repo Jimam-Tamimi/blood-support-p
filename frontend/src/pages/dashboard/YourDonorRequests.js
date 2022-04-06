@@ -12,7 +12,7 @@ import {
   ButtonLink,
   Button,
 } from "../../styles/Essentials.styles";
- 
+
 import {
   Detail,
   DetailHeader,
@@ -28,7 +28,7 @@ import {
   HtmlTable,
   Td,
   Th,
-  Tr, 
+  Tr,
   OrderedBySection,
   BottomSection,
   SearchForm,
@@ -42,14 +42,14 @@ import Map from "../../components/Map/Map";
 import { NavWrap, NavTab } from "../../styles/Nav.styles";
 import { Wrap } from "../styles/dashboard/Request.styles";
 
-import {  useHistory, useLocation } from "react-router";
+import { useHistory, useLocation } from "react-router";
 import { Marker } from "@react-google-maps/api";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { calcDistance, donorRequestFilterOption, getCurrentLocation, sortByDistance, sortById, sortByTime } from "../../helpers";
 import alert from "../../redux/alert/actions";
 import { setProgress } from "../../redux/progress/actions";
-import { getAllDonorRequestByMe, searchDonorRequestsForBloodRequest } from "../../apiCalls";
+import { addDonorRequestToFavorites, getAllDonorRequestByMe, removeDonorRequestFromFavorites, searchDonorRequestsForBloodRequest } from "../../apiCalls";
 import Moment from "react-moment";
 import useModal from "../../hooks/useModal";
 import ReportForm from "../../components/ReportForm";
@@ -61,7 +61,7 @@ import ReactSelect from "react-select";
 //   const location = useLocation();
 //   const history = useHistory();
 
- 
+
 
 //   return (
 //     <>
@@ -311,7 +311,7 @@ import ReactSelect from "react-select";
 
 // const Requested = () => {
 //   const [showDonorRequest, setShowDonorRequest] = useState(false);
-  
+
 //   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
 
 //   const [dropDownOptions, setDropDownOptions] = useState([
@@ -926,7 +926,7 @@ import ReactSelect from "react-select";
 //   );
 // };
 
-export default function DonorRequests({}) {
+export default function DonorRequests({ }) {
   // hooks
   const location = useLocation();
   const history = useHistory();
@@ -937,7 +937,7 @@ export default function DonorRequests({}) {
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
   const [donorRequestMoreDetails, setDonorRequestMoreDetails] = useState(null);
 
-  const getDonorRequests = async (params={}) => {
+  const getDonorRequests = async (params = {}) => {
     try {
       const res = await getAllDonorRequestByMe(params)
       if (res.status === 200) {
@@ -974,13 +974,13 @@ export default function DonorRequests({}) {
       // getDonorRequests({ search : e?.target?.value?.trim() })
       console.log('first')
       let params = Object.fromEntries(new URLSearchParams(location.search))
-      history.push(location.pathname +  "?" + new URLSearchParams({...params, search: e?.target?.value}).toString() )  
+      history.push(location.pathname + "?" + new URLSearchParams({ ...params, search: e?.target?.value }).toString())
     };
 
-    
+
     if (e.key === "Enter") {
       e.preventDefault();
-        run();
+      run();
     }
   };
 
@@ -991,23 +991,23 @@ export default function DonorRequests({}) {
     const dataParams = {}
     if (search) {
       dataParams.search = search;
-    } 
-    if(status) {
+    }
+    if (status) {
       dataParams.status = status
     }
 
     getDonorRequests(dataParams);
-    
+
   }, [location])
-  
-  
-  
+
+
+
   return (
     <>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp defaultValue={new URLSearchParams(location.search).get('search')}  onKeyDown={searchDonReq} placeholder="Search..." />
+            <SearchInp defaultValue={new URLSearchParams(location.search).get('search')} onKeyDown={searchDonReq} placeholder="Search..." />
           </SearchForm>
           <OrderedBySection>
             <div className="filter-div">
@@ -1024,7 +1024,7 @@ export default function DonorRequests({}) {
                 name="donor-request-filter"
                 options={donorRequestFilterOption}
                 styles={customStyles}
-                onChange={e => history.push(location.pathname +  "?" + new URLSearchParams({...Object.fromEntries(new URLSearchParams(location.search)), status: e?.value}).toString() )   }
+                onChange={e => history.push(location.pathname + "?" + new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(location.search)), status: e?.value }).toString())}
               />
             </div>
           </OrderedBySection>
@@ -1059,7 +1059,7 @@ export default function DonorRequests({}) {
                     .catch((err) => console.log(err))
                 }>
                 Requested At
-              </Th>  
+              </Th>
             </Tr>
             {donorRequestData !== undefined &&
               donorRequestData?.map((donorRequest, index) => (
@@ -1067,7 +1067,7 @@ export default function DonorRequests({}) {
                   key={index}
                   onClick={(e) => showMoreDetails(donorRequest.id)}>
                   <Td>{donorRequest?.id}</Td>
- 
+
                   <Td>{donorRequest?.name}</Td>
                   <Td>
                     <Moment tz="Asia/Dhaka" format="DD/MM/YYYY hh:mm A">
@@ -1079,9 +1079,9 @@ export default function DonorRequests({}) {
                       {donorRequest?.timestamp.replace("Z", "")}
                     </Moment>
                   </Td>
-                     
+
                   <div className="table-row-badge">
-                      <Badge sm> {donorRequest?.status} </Badge>
+                    <Badge sm> {donorRequest?.status} </Badge>
 
                     <Badge transparent sm>
                       <Moment fromNow>{donorRequest.timestamp}</Moment>
@@ -1098,7 +1098,8 @@ export default function DonorRequests({}) {
           show={showDonorRequest}>
           {donorRequestMoreDetails && showDonorRequest ? (
             <DonorRequestMoreDetails
-              donorRequestMoreDetails={donorRequestMoreDetails} 
+              setDonorRequestMoreDetails={setDonorRequestMoreDetails}
+              donorRequestMoreDetails={donorRequestMoreDetails}
               setShowDonorRequest={setShowDonorRequest}
             />
           ) : (
@@ -1111,8 +1112,9 @@ export default function DonorRequests({}) {
 };
 
 const DonorRequestMoreDetails = ({
-  donorRequestMoreDetails,  
-  setShowDonorRequest, 
+  donorRequestMoreDetails,
+  setDonorRequestMoreDetails,
+  setShowDonorRequest,
 }) => {
   // hooks
 
@@ -1121,19 +1123,9 @@ const DonorRequestMoreDetails = ({
 
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
 
-  const report = (id) => {
 
-    modalController.showModal(
-      "donor-request-report",
-      { donor_request_id: donorRequestMoreDetails?.id },
-      ReportForm
-    );
-    setShowDonorRequest(false)
-  };
 
-  const dropDownOptions = [
-    { name: "Report", icon: <FaBan />, onClick: report },
-  ];
+
 
   useEffect(() => {
     getCurrentLocation((crds) => {
@@ -1141,8 +1133,13 @@ const DonorRequestMoreDetails = ({
     });
   }, []);
 
- 
- 
+
+
+  const dropDownOptions = [
+    !donorRequestMoreDetails?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addDonorRequestToFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({ ...donorRequestMoreDetails, is_favorite: true })).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeDonorRequestFromFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({ ...donorRequestMoreDetails, is_favorite: false })).catch() },
+  ];
+
+
   return (
     <AllDetails>
       <DetailsDiv>
@@ -1215,26 +1212,41 @@ const DonorRequestMoreDetails = ({
         </Detail>
         <DetailHeader>Actions: </DetailHeader>
         <ButtonDiv>
-           <ButtonLink to={`/requests/${donorRequestMoreDetails?.blood_request?.id}/donor-request/`}>View</ButtonLink>
+          <ButtonLink to={`/requests/${donorRequestMoreDetails?.blood_request?.id}/donor-request/`}>View</ButtonLink>
         </ButtonDiv>
 
 
       </DetailsDiv>
 
       <ActionDiv>
-          <Action>
+        <Action>
+          <Dropdown options={dropDownOptions} />
+        </Action>
+        <Action>
+          <Badge
+            info
+            style={{
+              position: "absolute",
+              width: "max-content",
+              right: "6px",
+              top: "20px",
+            }}>
+            {donorRequestMoreDetails?.status}
+          </Badge>
+        </Action>
+        <Action>
+          <div className="action-badge">
             <Badge
               info
               style={{
-                position: "absolute",
                 width: "max-content",
-                right: "6px",
-                top: "20px",
               }}>
               {donorRequestMoreDetails?.status}
             </Badge>
-          </Action>
-        </ActionDiv>
+
+          </div>
+        </Action>
+      </ActionDiv>
     </AllDetails>
   );
 };

@@ -353,7 +353,7 @@ new Promise(async (resolve, reject) => {
       if(error?.response?.data?.success === false) {
           store.dispatch(alert(error?.response?.data?.error, "danger"));
       } else {
-          store.dispatch(alert("Failed to  get all favorite blood requests 😕", "danger"));
+        store.dispatch(alert("Failed to add this blood request to your favorites list 😕", "danger"));
       }
     }
   }
@@ -371,7 +371,7 @@ new Promise(async (resolve, reject) => {
     const res = await axios.delete(
       `${process.env.REACT_APP_API_URL}api/blood/blood-request/favorites/`, {data: {blood_request_id: parseInt(blood_request_id)}}
     );  
-    if(res.status === 203) {
+    if(res.status === 204) {
       store.dispatch(alert("Blood request removed from your favorites list", "success"));
     }
     resolve(res);
@@ -382,7 +382,66 @@ new Promise(async (resolve, reject) => {
       if(error?.response?.data?.success === false) {
           store.dispatch(alert(error?.response?.data?.error, "danger"));
       } else {
-          store.dispatch(alert("Failed to  get all favorite blood requests 😕", "danger"));
+        store.dispatch(alert("Failed to remove this donor request to your favorites list 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+
+ 
+  
+export const addDonorRequestToFavorites = async (donor_request_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}api/blood/donor-request/favorites/`, {donor_request_id: parseInt(donor_request_id)}
+    );  
+    if(res.status === 201) {
+      store.dispatch(alert("Donor request added to your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+          store.dispatch(alert("Failed to add this donor request to your favorites list 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+ 
+  
+export const removeDonorRequestFromFavorites = async (donor_request_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.delete(
+      `${process.env.REACT_APP_API_URL}api/blood/donor-request/favorites/`, {data: {donor_request_id: parseInt(donor_request_id)}}
+    );  
+    if(res.status === 204) {
+      store.dispatch(alert("Donor request removed from your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to remove this donor request to your favorites list 😕", "danger"));
       }
     }
   }

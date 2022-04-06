@@ -26,10 +26,11 @@ import { FaBan } from "react-icons/fa";
 import { Marker } from "@react-google-maps/api";
 import Dropdown from "../../components/Dropdown/Dropdown";
 import axios from "axios"; 
-import { useDispatch } from "react-redux"; 
-import { getBloodRequestData, getProfileDetailsForUser } from "../../apiCalls";
+import { useDispatch, useSelector } from "react-redux"; 
+import { addBloodRequestToFavorites, deleteBloodRequest, getBloodRequestData, getProfileDetailsForUser, removeBloodRequestFromFavorites } from "../../apiCalls";
 import useModal from "../../hooks/useModal";
 import ReportForm from "../../components/ReportForm";
+import { useHistory } from "react-router-dom";
 
 export default function HelpPeople() {
   const [showRequestDetails, setShowRequestDetails] = useState(false);
@@ -89,21 +90,34 @@ const RequestDetails = ({bloodRequestId, setShowRequestDetails}) => {
   
   //  hooks
   const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
+  const history = useHistory()
 
   const modalController = useModal();
 
   const report = () => {
     // call api to report this request
  
-    modalController.showModal('blood-request-report', {blood_request_id: requestData?.id}, ReportForm)
+    modalController.showModal(<ReportForm formId='blood-request-report' data={{blood_request_id: requestData?.id}} onSuccess={ () => {
+      setRequestData({...requestData, is_reported: true}) }} />)
     setShowRequestDetails(false);
   };
-
+  const deleteThisBloodRequest = () => {
+    if(window.confirm('Are you sure you want to delete this request?')) {
+      deleteBloodRequest(requestData?.id).then(() => {
+        history.push('/');
+        dispatch(alert('Request deleted successfully!', 'success'));
+      }).catch(() => {});
+    }
+  };
   
  
-  const [dropDownOption, setDropDownOption] = useState([
-    { name: "Report", icon: <FaBan />, onClick: report },
-  ]); 
+  const dropDownOption = [
+    auth?.user_id == requestData?.user?.id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } : { name:  requestData?.is_reported? "Reported" : "Report", icon: <FaBan />, onClick: !requestData?.is_reported? report : () => '' , disabled: requestData?.is_reported },
+!requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: false})).catch() },
+
+]
+
 
   // functions
   // get blood request data using id
@@ -189,22 +203,27 @@ const RequestDetails = ({bloodRequestId, setShowRequestDetails}) => {
           </ButtonDiv>
         </DetailsDiv>
         <ActionDiv>
-          <Action>
+          <Action    >
             <Dropdown options={dropDownOption} />
           </Action>
           <Action>
-            <Badge
-              info
-              style={{
-                position: "absolute",
-                width: "max-content",
-                right: "6px",
-                top: "20px",
-              }}
-            >
-              10 Request Got
-            </Badge>
-          </Action>
+                <div className="action-badge">
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {requestData?.status}
+                  </Badge>
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {requestData?.donor_request_got} Request Got
+                  </Badge>
+                </div>
+              </Action>
         </ActionDiv>
       </AllDetails>
     </>

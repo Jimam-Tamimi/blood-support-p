@@ -55,10 +55,14 @@ import {
 } from "../../helpers";
 import { customStyles } from "../../styles/Form.styles";
 import {
+  addBloodRequestToFavorites,
+  addDonorRequestToFavorites,
   filterMyBloodRequests,
   getAllBloodRequestByMe,
   getBloodRequestData,
   getProfileDetailsForUser,
+  removeBloodRequestFromFavorites,
+  removeDonorRequestFromFavorites,
 } from "../../apiCalls";
 import { FaBan } from "react-icons/fa";
 import ReportForm from "../../components/ReportForm";
@@ -239,7 +243,10 @@ const RequestDetails = ({ showMoreDetails, requestData }) => {
   //  hooks
   const dispatch = useDispatch();
 
-  const [dropDownOption, setDropDownOption] = useState([]);
+  const dropDownOptions = [
+    !bloodRequestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(bloodRequestData?.id).then(res => setBloodRequestData({...bloodRequestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(bloodRequestData?.id).then(res => setBloodRequestData({...bloodRequestData, is_favorite: false})).catch() },
+  ];
+
 
   // functions
   // get blood request data using id
@@ -323,20 +330,26 @@ const RequestDetails = ({ showMoreDetails, requestData }) => {
         </DetailsDiv>
         <ActionDiv>
           <Action>
-            <Dropdown options={dropDownOption} />
+            <Dropdown options={dropDownOptions} />
           </Action>
           <Action>
-            <Badge
-              info
-              style={{
-                position: "absolute",
-                width: "max-content",
-                right: "6px",
-                top: "20px",
-              }}>
-              {bloodRequestData?.donor_request_got} Requests Got
-            </Badge>
-          </Action>
+                <div className="action-badge">
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {bloodRequestData?.status}
+                  </Badge>
+                  <Badge
+                    info
+                    style={{
+                      width: "max-content",
+                    }}>
+                    {bloodRequestData?.donor_request_got} Request Got
+                  </Badge>
+                </div>
+              </Action>
         </ActionDiv>
       </AllDetails>
     </>

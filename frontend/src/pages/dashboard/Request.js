@@ -87,6 +87,8 @@ import {
 import Select from "react-select";
 import Moment from "react-moment";
 import {
+  addBloodRequestToFavorites,
+  addDonorRequestToFavorites,
   deleteBloodRequest,
   getBloodRequestData,
   getCurrentStatusOfBloodRequestForMe,
@@ -94,6 +96,8 @@ import {
   getMyDonorRequestStatusForBloodRequest,
   getProfileDetailsForUser,
   getTotalDonorRequestsForBloodRequest,
+  removeBloodRequestFromFavorites,
+  removeDonorRequestFromFavorites,
   searchDonorRequestsForBloodRequest,
 } from "../../apiCalls";
 import prof from "../../assets/img/prof.jpg";
@@ -299,17 +303,18 @@ const RequestDetails = ({
 
 
   const report = () => {
-    modalController.showModal(
-      "blood-request-report",
-      { blood_request_id: bloodRequestId },
-      ReportForm
-    );
-  }
+    // call api to report this request
+ 
+    modalController.showModal(<ReportForm formId='blood-request-report' data={{blood_request_id: requestData?.id}} onSuccess={ () => {
+      setRequestData({...requestData, is_reported: true}) }} />)
+  };
 
   
-  const [dropDownOption, setDropDownOption] = useState([
+  const dropDownOption =[
     requestData?.user?.id == auth.user_id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } :     { name: "Report", icon: <FaBan />, onClick: report },
-  ]);
+    !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: false})).catch() },
+
+  ]
 
 
   return (
@@ -1484,6 +1489,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
           {donorRequestMoreDetails && showDonorRequest ? (
             <DonorRequestMoreDetails
               donorRequestMoreDetails={donorRequestMoreDetails}
+              setDonorRequestMoreDetails={setDonorRequestMoreDetails}
               requestData={requestData}
               setRequestData={setRequestData}
               setShowDonorRequest={setShowDonorRequest}
@@ -1499,6 +1505,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
 
 const DonorRequestMoreDetails = ({
   donorRequestMoreDetails,
+  setDonorRequestMoreDetails,
   requestData,
   setRequestData,
   setShowDonorRequest, 
@@ -1510,18 +1517,19 @@ const DonorRequestMoreDetails = ({
 
   const [currentLocation, setCurrentLocation] = useState({ lat: 0, lng: 0 });
 
-  const report = (id) => {
-
-    modalController.showModal(
-      "donor-request-report",
-      { donor_request_id: donorRequestMoreDetails?.id },
-      ReportForm
-    );
-    setShowDonorRequest(false)
+  const report = () => {
+    // call api to report this request
+ 
+    modalController.showModal(<ReportForm formId='donor-request-report' data={{donor_request_id: donorRequestMoreDetails?.id}} onSuccess={ () => {
+      setRequestData({...requestData, is_reported: true}) }} />)
+    setShowDonorRequest(false);
   };
 
   const dropDownOptions = [
-    { name: "Report", icon: <FaBan />, onClick: report },
+    { name:  donorRequestMoreDetails?.is_reported? "Reported" : "Report", icon: <FaBan />, onClick: !donorRequestMoreDetails?.is_reported? report : () => '' , disabled: donorRequestMoreDetails?.is_reported },
+
+    !donorRequestMoreDetails?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addDonorRequestToFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({...donorRequestMoreDetails, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeDonorRequestFromFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({...donorRequestMoreDetails, is_favorite: false})).catch() },
+
   ];
 
   useEffect(() => {
@@ -1807,14 +1815,16 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
     dispatch(setProgress(100));
   };
 
-  const dropDownOption = [
-    {
-      name: "Delete",
-      icon: <FaBan />,
-      onClick: deleteDonorRequest,
-      hidden: myDonorRequestData?.status !== "Pending",
-    },
-  ];
+    const dropDownOption = [
+      {
+        name: "Delete",
+        icon: <FaBan />,
+        onClick: deleteDonorRequest,
+        hidden: myDonorRequestData?.status !== "Pending",
+      },
+    !myDonorRequestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addDonorRequestToFavorites(myDonorRequestData?.id).then(res => setMyDonorRequestData({...myDonorRequestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeDonorRequestFromFavorites(myDonorRequestData?.id).then(res => setMyDonorRequestData({...myDonorRequestData, is_favorite: false})).catch() },
+
+    ];
 
   return (
     <>
@@ -1892,10 +1902,10 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
                 </ButtonDiv>
               </DetailsDiv>
               <ActionDiv>
-                <Action>
+                <Action style={{zIndex: 1}} >
                   <Dropdown options={dropDownOption} />
                 </Action>
-                <Action>
+                <Action style={{zIndex: 0}}>
                   <Badge
                     danger={myDonorRequestData?.status === "Rejected"}
                     style={{

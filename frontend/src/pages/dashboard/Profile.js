@@ -201,10 +201,11 @@ function Details({ profile, getProfile }) {
     );
   };
   const dropDownOption = [
-    auth?.user_id != id
-      ? { name: "Report", icon: <FaBan />, onClick: report }
-      : null,
-  ];
+     { name: requestData?.is_reported ? "Reported" : "Report", icon: <FaBan />, onClick: !requestData?.is_reported ? report : () => '', disabled: requestData?.is_reported },
+
+    !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({ ...requestData, is_favorite: true })).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({ ...requestData, is_favorite: false })).catch() },
+
+  ]
 
   return (
     <>
@@ -269,7 +270,7 @@ function Details({ profile, getProfile }) {
         </DetailsDiv>
         <ActionDiv>
           <Action>
-            <Dropdown options={dropDownOption} />
+            <Dropdown options={dropDownOptions} />
           </Action>
           <Action>
             <Badge
@@ -362,7 +363,7 @@ function UpdateAndCompleteProfileForm({ setShowUpdateFormModal, getProfile }) {
         ...profileFormData,
         coords: { lat: lat, lng: lng },
       });
-    } catch {}
+    } catch { }
   };
 
   const onSubmitUpdateProfile = async (e, values) => {

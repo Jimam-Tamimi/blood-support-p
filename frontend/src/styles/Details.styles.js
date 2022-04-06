@@ -81,6 +81,8 @@ export const Action = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: flex-end ;
+    z-index: -1;
+
     span {
         margin: 5px 0px;
     }

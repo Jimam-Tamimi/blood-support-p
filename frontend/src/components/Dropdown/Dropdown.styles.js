@@ -11,11 +11,12 @@ export const Wrap = styled.div`
 
 
 export const DropdownMenu = styled.div`
-    width: 120px;
+    min-width: 120px;
     padding: 3px 0px;
     position: absolute;
     background: var(--secendory-color);
  
+    width: max-content;
     right: 26px;
  
    
@@ -29,7 +30,7 @@ export const DropdownLink = styled.div`
 
     padding: 0px 14px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     background-color: var(--secendory-color);
     border-radius: 5px;
@@ -74,7 +75,7 @@ export const DropdownLink = styled.div`
     }
 
     ${({disabled}) => disabled && `
-        cursor: not-allowed;
+        pointer-events: none;
         opacity: .5;
         
     `}
@@ -83,24 +84,26 @@ export const DropdownLink = styled.div`
  
  
 export const LinkIcon = styled.div`
-    width: 30%;
+    /* width: 30%; */
     font-size: 15px;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    z-index: 100;
+    /* z-index: 100; */
     color: var(--primary-color);
+    margin-right: 10px;
+
 
 `
  
 export const LinkText = styled.div`
-    width: 82%;
+    /* width: 82%; */
     font-size: 14px;
     font-weight: 500;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    z-index: 100;
+    /* z-index: 100; */
     color: inherit;
 `
  

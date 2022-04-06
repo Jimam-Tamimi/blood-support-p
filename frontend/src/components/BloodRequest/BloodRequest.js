@@ -48,8 +48,9 @@ export default function BloodRequest({
   const modalController = useModal()
   const report = () => {
     // call api to report this request
- 
-    modalController.showModal('blood-request-report', {blood_request_id: requestData?.id}, ReportForm)
+    modalController.showModal(<ReportForm formId='blood-request-report' data={{blood_request_id: requestData?.id}} onSuccess={ () => {
+      setRequestData({...requestData, is_reported: true}) }} />)
+
   };
   const deleteThisBloodRequest = () => {
     if(window.confirm('Are you sure you want to delete this request?')) {
@@ -61,7 +62,7 @@ export default function BloodRequest({
   };
 
   const dropDownOption = [
-    auth?.user_id == requestData?.user?.id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } : { name: "Report", icon: <FaBan />, onClick: report },
+    auth?.user_id == requestData?.user?.id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } : { name:  requestData?.is_reported? "Reported" : "Report", icon: <FaBan />, onClick: !requestData?.is_reported? report : () => '' , disabled: requestData?.is_reported },
     !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: false})).catch() },
   ]
 
@@ -103,8 +104,8 @@ export default function BloodRequest({
           </Map>
         </RequestAddress>
         <RequestDetails>
-          <NumOfReq style={{ width: "100%" }}>
-            <Dropdown options={dropDownOption} absolute />
+          <NumOfReq style={{ width: "100%", zIndex: 1  }}>
+            <Dropdown  options={dropDownOption} absolute />
             {/* <IconDiv onClick={e => setShowDropdown(!showDropdown)} style={{margin: "unset", position: "absolute", top: "-4px", right: "-16px"}} scaleOnHover  width="30px" fontSize="20px" height="30px">
                             <BsThreeDotsVertical/>
                         </IconDiv>
@@ -187,7 +188,7 @@ export default function BloodRequest({
                   right: "-3px",
                   top: "-28px",
                 }}>
-                10
+                {requestData?.donor_request_got}
               </Badge>
               <Badge
                 style={{

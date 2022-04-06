@@ -555,3 +555,41 @@ class DonorRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'success': True, 'message': 'You have reported this donor request. We will review it soon'}, status=status.HTTP_200_OK)
+
+
+
+
+
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='favorites')
+    def favorites(self, request):
+        if (request.method == 'GET'):
+            favDonorRequests = FavoriteDonorRequest.objects.filter(user=request.user)
+            donorRequest = [fav.donor_request for fav in favDonorRequests]
+            return Response(self.get_serializer(donorRequest, many=True).data, status=status.HTTP_200_OK)
+
+        elif(request.method == 'POST'):
+            try:
+                donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
+                
+            except DonorRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'Donor request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(FavoriteDonorRequest.objects.filter(user=request.user, donor_request=donorRequest).exists()):
+                return Response({'success': False, 'error': 'You have already added this donor request to your favorites'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            FavoriteDonorRequest.objects.create(user=request.user, donor_request=donorRequest)
+            return Response({'success': True, 'message': 'Donor request added to your favorites list 🙂'}, status=status.HTTP_201_CREATED)
+
+        elif(request.method == "DELETE"):
+            try:
+                donorRequest = DonorRequest.objects.get(id=request.data['donor_request_id'])
+            except DonorRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'This donor request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                FavoriteDonorRequest.objects.get(user=request.user, donor_request=donorRequest).delete()
+            except FavoriteDonorRequest.DoesNotExist:
+                return Response({'success': False, 'error': 'Donor request not found in your favorites list'}, status=status.HTTP_400_BAD_REQUEST)
+            # except Exception:
+            #     return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': True, 'message': 'Donor request removed from your favorites list 🙂'}, status=status.HTTP_204_NO_CONTENT)
+ 

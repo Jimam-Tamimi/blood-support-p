@@ -111,6 +111,7 @@ export const NumOfReq = styled.div`
     flex-direction: column;
     align-items: flex-end;
     position: relative;
+    /* z-index: 1; */
 `
  
  

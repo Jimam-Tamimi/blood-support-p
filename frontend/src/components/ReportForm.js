@@ -6,7 +6,7 @@ import alert from '../redux/alert/actions'
 import { hideModalAction } from '../redux/modal/actions'
 import { Form, FormWrap, InputDiv, Label, TextArea } from '../styles/Form.styles'
 
-export default function ReportForm({formId, data={}}) {
+export default function ReportForm({formId, data={}, onSuccess=() => ''} ) {
     const [formData, setFormData] = useState({
         description: '',
     })
@@ -22,6 +22,7 @@ export default function ReportForm({formId, data={}}) {
         if(res.status === 200){
           dispatch(alert(res?.data?.message, 'success'))
           dispatch(hideModalAction())
+          onSuccess()
         } 
       } catch (error) { 
       }

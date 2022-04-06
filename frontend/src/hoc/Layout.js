@@ -56,8 +56,8 @@ export default function Layout({ children }) {
         show={modal.show}
         setShow={(val) => (val === false ? dispatch(hideModalAction()) : "")}
           scale
-        formId={modal.formId}>
-         <modal.Component formId={modal.formId} data={modal.data} />
+        formId={modal?.Component?.props?.formId}>
+         {modal.Component}
       </Modal>
 
       <PrivateComponent>
