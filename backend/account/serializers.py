@@ -14,9 +14,11 @@ User = get_user_model()
 class UserSerializer(ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     cpassword = serializers.CharField(required=True, write_only=True)
+    is_reported = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = [ "id", "email", "password", "cpassword"]  
+        fields = [ "id", "email", "password", "cpassword", "is_reported", "is_favorite"]  
         
     
     def create(self, validated_data): 
@@ -35,6 +37,12 @@ class UserSerializer(ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+    
+    def get_is_reported(self, obj):
+        return UserReport.objects.filter(user=obj, reported_by=self.context['request'].user).exists()
+    def get_is_favorite(self, obj):
+        return FavoriteUser.objects.filter(favorite_user=obj, user=self.context['request'].user).exists()
+
         
 class ProfileSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)

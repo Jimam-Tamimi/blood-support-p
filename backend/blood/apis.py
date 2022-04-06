@@ -178,16 +178,18 @@ class BloodRequestViewSet(ModelViewSet):
                 donorRequest = DonorRequest.objects.get(
                     blood_request=bloodRequest, user=request.user)
                 print(donorRequest.date_time)
-                if(donorRequest.status == 'Pending' and donorRequest.blood_request.status == 'Open'):
-                    return Response({'success': True, 'message': f'You have sent a donor request. Please wait for the blood requestor to check your donor request and respond to it 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
+                if (donorRequest.status == 'Pending' and donorRequest.blood_request.status == 'Open'):
+                    return Response({'success': True, 'message': 'You have sent a donor request. Please wait for the blood requestor to check your donor request and respond to it 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
+
 
                 if(donorRequest.status == 'Accepted' and donorRequest.blood_request.status == 'Accepted'):
                     return Response({'success': True, 'message': f'Your donor request was accepted by the blood requestor. You have to donate blood at {donorRequest.date_time.strftime("%I:%M %p on %d %B %Y")} 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
 
-                if(donorRequest.status == 'Reviewed' and donorRequest.blood_request.status == 'Reviewed By Requestor'):
+                if (donorRequest.status == 'Reviewed' and donorRequest.blood_request.status == 'Reviewed By Requestor'):
                     donorRequestReview = DonorRequestReview.objects.get(
                         donor_request=donorRequest)
-                    return Response({'success': True, 'message': f'The blood requestor has completed the request and gave you a review. Please review the blood requestor to see your review 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
+                    return Response({'success': True, 'message': 'The blood requestor has completed the request and gave you a review. Please review the blood requestor to see your review 🙂', 'type': 'success'}, status=status.HTTP_200_OK)
+
 
                 if(donorRequest.status == 'Reviewed' and donorRequest.blood_request.status == 'Completed'):
                     donorRequestReview = DonorRequestReview.objects.get(

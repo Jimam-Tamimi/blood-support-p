@@ -57,15 +57,27 @@ class Profile(models.Model):
     description = models.TextField(blank=False, null=False)
     def save(self, *args, **kwargs):
         print('save() is called.')
-        if(self.profile_img  and  self.name  and  self.blood_group  and  self.address  and  self.number  and  self.add_number  and  self.location):
-            self.isCompleted = True
-        else:
-            self.isCompleted = False
-            
+        self.isCompleted = bool((self.profile_img and self.name and self.blood_group and self.address and self.number and self.add_number and self.location))
+
         super(Profile, self).save(*args, **kwargs)
     
     
 class Verification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
     code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+
+
+# report 
+       
+class UserReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reported")
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reporter")
+    description = models.TextField(max_length=500, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
     
+
+class FavoriteUser(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
+    favorite_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_user")
+    timestamp = models.DateTimeField(auto_now_add=True)

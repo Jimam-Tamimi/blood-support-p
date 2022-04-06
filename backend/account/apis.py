@@ -14,8 +14,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.authentication import BasicAuthentication
 
-from account.models import *
-from blood.models import UserReport
+from account.models import * 
 from .serializers import *
 from account.threads import SendEmail
 from account.helpers import sendVerificationEmail
@@ -68,6 +67,40 @@ class UserViewSets(ModelViewSet):
         
         return Response({'success': True, 'message': 'You have reported this user. We will review it soon'}, status=status.HTTP_200_OK)
  
+
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='favorites')
+    def favorites(self, request):
+        if (request.method == 'GET'):
+            favUsers = FavoriteUser.objects.filter(user=request.user)
+            users = [fav.favorite_user for fav in favUsers]
+            return Response(self.get_serializer(users, many=True).data, status=status.HTTP_200_OK)
+
+        elif(request.method == 'POST'):
+            try:
+                user = User.objects.get(id=request.data['user_id'])
+                
+            except User.DoesNotExist:
+                return Response({'success': False, 'error': 'User request not found'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if(FavoriteUser.objects.filter(user=request.user, favorite_user=user).exists()):
+                return Response({'success': False, 'error': 'You have already added this user to your favorites list'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            FavoriteUser.objects.create(user=request.user, favorite_user=user)
+            return Response({'success': True, 'message': 'User added to your favorites list 🙂'}, status=status.HTTP_201_CREATED)
+
+        elif(request.method == "DELETE"):
+            try:
+                user = User.objects.get(id=request.data['user_id'])
+            except FavoriteUser.DoesNotExist:
+                return Response({'success': False, 'error': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                FavoriteUser.objects.get(user=request.user, favorite_user=user).delete()
+            except FavoriteUser.DoesNotExist:
+                return Response({'success': False, 'error': 'User not found in your favorites list'}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Exception:
+                return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'success': True, 'message': 'User request removed from your favorites list 🙂'}, status=status.HTTP_204_NO_CONTENT)
  
     
 
@@ -89,7 +122,7 @@ class ProfileViewSet(ModelViewSet):
     def get_profile_details(self, request):
         try:
             profile = Profile.objects.get(user=request.user)
-            serializer = ProfileSerializer(profile)
+            serializer = self.get_serializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
             
         except Profile.DoesNotExist:
@@ -107,7 +140,7 @@ class ProfileViewSet(ModelViewSet):
 
         try:
             profile = Profile.objects.get(user__id=request.GET['user_id'])
-            serializer = ProfileSerializer(profile)
+            serializer = self.get_serializer(profile)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Profile.DoesNotExist:
             return Response({'status': False,  'error': 'Profile with this user does not exist', 'code': 'profile_not_found'}, status=status.HTTP_404_NOT_FOUND)

@@ -88,12 +88,7 @@ class DonorRequestReport(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     
         
-        
-class UserReport(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reported")
-    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_reporter")
-    description = models.TextField(max_length=500, blank=False, null=False)
-    timestamp = models.DateTimeField(auto_now_add=True)
+ 
     
 
 class FavoriteBloodRequest(models.Model):
@@ -105,9 +100,4 @@ class FavoriteBloodRequest(models.Model):
 class FavoriteDonorRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     donor_request = models.ForeignKey(DonorRequest, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-class FavoriteUser(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
-    favorite_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_user")
     timestamp = models.DateTimeField(auto_now_add=True)
