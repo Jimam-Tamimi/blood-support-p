@@ -275,6 +275,33 @@ export const filterMyBloodRequests = async (params, showAlert = true) =>
     store.dispatch(setProgress(100));
 
   });
+ 
+ 
+export const filterMyFavBloodRequests = async (params, showAlert = true) => 
+  new Promise(async (resolve, reject) => {
+    store.dispatch(setProgress(30));
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}api/blood/blood-request/filter-my-favorite-blood-requests/`, {params: {...params}}
+      ); 
+      console.log({res})
+      resolve(res);
+    } catch (error) {
+
+        reject(error)
+      if (showAlert) {
+        if(error?.response?.data?.success === false) {
+            store.dispatch(alert(error?.response?.data?.error, "danger"));
+        } else {
+            store.dispatch(alert("Failed to filter blood requests 😕", "danger"));
+        }
+      }
+    }
+    
+
+    store.dispatch(setProgress(100));
+
+  });
 
 
  
@@ -447,6 +474,61 @@ new Promise(async (resolve, reject) => {
   }
   
 
+  store.dispatch(setProgress(100));
+
+});
+
+  
+export const addUserToFavorites = async (user_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.post(
+      `${process.env.REACT_APP_API_URL}api/account/users/favorites/`,  {user_id: parseInt(user_id)}
+    );  
+    if(res.status === 201) {
+      store.dispatch(alert("User added to your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to add this user  to your favorites list 😕", "danger"));
+      }
+    }
+  }
+  
+
+  store.dispatch(setProgress(100));
+
+});
+  
+export const removeUserFromFavorites = async (user_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.delete(
+      `${process.env.REACT_APP_API_URL}api/account/users/favorites/`, {data: {user_id: parseInt(user_id)}}
+    );  
+    if(res.status === 204) {
+      store.dispatch(alert("User removed from your favorites list", "success"));
+    }
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to remove this user from your favorites list 😕", "danger"));
+      }
+    }
+  }
   store.dispatch(setProgress(100));
 
 });

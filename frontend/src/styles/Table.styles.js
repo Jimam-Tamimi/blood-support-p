@@ -57,6 +57,10 @@ export const Td = styled.td`
   color: var(--secendory-text-color);
   padding: 9px 0px;
   padding-left: 15px;
+  a {
+    width: fit-content;
+
+  }
 `;
 
 // struct of table

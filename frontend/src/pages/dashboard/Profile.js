@@ -61,7 +61,7 @@ import axios from "axios";
 import { getProfileDetails } from "../../redux/profile/actions";
 
 import { setProgress } from "../../redux/progress/actions";
-import { getProfileDetailsForUser } from "../../apiCalls";
+import { addProfileToFavorites, addUserToFavorites, getProfileDetailsForUser, removeUserFromFavorites } from "../../apiCalls";
 import useModal from "../../hooks/useModal";
 import ReportForm from "../../components/ReportForm";
 
@@ -153,7 +153,7 @@ export default function Profile({ match }) {
         </DetailsMap>
         <ProfileImgDiv>
           <ProfileImg
-            src={`${process.env.REACT_APP_MEDIA_URL}${profile?.profile_img}`}
+            src={`${profile?.profile_img}`}
             size="130px"
             style={{ position: "absolute", bottom: "15px", left: "15px" }}
           />
@@ -174,7 +174,7 @@ export default function Profile({ match }) {
         </NavWrap>
 
         <Route exact path="/profile/:id/details/">
-          <Details getProfile={getProfile} profile={profile} />
+          <Details getProfile={getProfile} profile={profile} setProfile={setProfile} />
         </Route>
 
         <Route path="/profile/:id/review/" component={Review} />
@@ -183,7 +183,7 @@ export default function Profile({ match }) {
   }
 }
 
-function Details({ profile, getProfile }) {
+function Details({ profile, getProfile, setProfile }) {
   const [showUpdateFormModal, setShowUpdateFormModal] = useState(false);
   const modalController = useModal();
 
@@ -192,18 +192,17 @@ function Details({ profile, getProfile }) {
   const { id } = useParams();
 
   const report = () => {
-    console.log(auth?.user_id);
-    console.log(id);
-    modalController.showModal(
-      "user-report",
-      { user_id: profile?.user?.id },
-      ReportForm
-    );
-  };
-  const dropDownOption = [
-     { name: requestData?.is_reported ? "Reported" : "Report", icon: <FaBan />, onClick: !requestData?.is_reported ? report : () => '', disabled: requestData?.is_reported },
+    // call api to report this request
+    console.log(profile)
+    modalController.showModal(<ReportForm formId='user-report' data={{user_id: profile?.user?.id}} onSuccess={ () => {
+      profile.user.is_reported = true
+      setProfile({...profile } ) }} />)
 
-    !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({ ...requestData, is_favorite: true })).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({ ...requestData, is_favorite: false })).catch() },
+  };
+  const dropDownOptions = [
+     { name: profile?.user?.is_reported ? "Reported" : "Report", icon: <FaBan />, onClick: !profile?.user?.is_reported ? report : () => '', disabled: profile?.user?.is_reported },
+
+    !profile?.user?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addUserToFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = true; setProfile({ ...profile})}).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeUserFromFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = false; setProfile({ ...profile})}).catch() },
 
   ]
 
@@ -248,7 +247,6 @@ function Details({ profile, getProfile }) {
                 type="button">
                 {profile.isCompleted ? "Update Profile" : "Complete Profile"}
               </Button>
-
               <Modal
                 btnText="Update Profile"
                 title="Update Profile"
@@ -273,7 +271,7 @@ function Details({ profile, getProfile }) {
             <Dropdown options={dropDownOptions} />
           </Action>
           <Action>
-            <Badge
+            {/* <Badge
               info
               style={{
                 position: "absolute",
@@ -282,7 +280,7 @@ function Details({ profile, getProfile }) {
                 top: "20px",
               }}>
               New Member
-            </Badge>
+            </Badge> */}
           </Action>
         </ActionDiv>
       </AllDetails>

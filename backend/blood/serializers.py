@@ -57,7 +57,7 @@ class DonorRequestSerializer(ModelSerializer):
         return super().create(validated_data)
 
     def get_profile(self, obj):
-        return ProfileSerializer(Profile.objects.get(user=obj.user)).data
+        return ProfileSerializer(Profile.objects.get(user=obj.user), context=self.context).data
     
     def get_is_favorite(self, obj):
         return FavoriteDonorRequest.objects.filter(user=self.context['request'].user, donor_request=obj).exists()

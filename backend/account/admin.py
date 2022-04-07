@@ -8,4 +8,4 @@ from .models import *
 User = get_user_model()
 
 
-admin.site.register((User, Profile, UserReport))
+admin.site.register((User, Profile, UserReport, FavoriteUser))

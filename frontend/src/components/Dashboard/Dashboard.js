@@ -40,7 +40,7 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
 
         {to:"/messages/", name: 'Messages', icon:BiMessageRoundedDetail,exact: false, count:44   },
         {to:"/notifications/", name: 'Notifications', icon:IoMdNotificationsOutline,exact: true, count:null },
-        {to:"/favorites/", name: 'Favorites', icon:MdFavoriteBorder,exact: true, count:null },
+        {to:"/favorites/requests/", name: 'Favorites', icon:MdFavoriteBorder,exact: false, count:null },
 
         {to:"/profile/", name: 'Profile', icon:CgProfile,exact: false, count:profile.isCompleted?null: '!' },
 

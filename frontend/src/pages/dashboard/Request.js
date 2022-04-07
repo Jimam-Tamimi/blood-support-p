@@ -279,43 +279,68 @@ const RequestDetails = ({
   checkHaveSentDonorRequest,
   getRequestStatusInfo,
 }) => {
-    // hooks
-    const location = useLocation();
-    const history = useHistory();
-    const dispatch = useDispatch();
-    const modalController = useModal();
-  
-    const auth = useSelector((state) => state.auth);
-  
-  
-  
+  // hooks
+  const location = useLocation();
+  const history = useHistory();
+  const dispatch = useDispatch();
+  const modalController = useModal();
+
+  const auth = useSelector((state) => state.auth);
+
   // states
 
   const { bloodRequestId } = useParams();
   const deleteThisBloodRequest = () => {
-    if(window.confirm('Are you sure you want to delete this request?')) {
-      deleteBloodRequest(bloodRequestId).then(() => {
-        history.push('/');
-        dispatch(alert('Request deleted successfully!', 'success'));
-      }).catch(() => {});
+    if (window.confirm("Are you sure you want to delete this request?")) {
+      deleteBloodRequest(bloodRequestId)
+        .then(() => {
+          history.push("/");
+          dispatch(alert("Request deleted successfully!", "success"));
+        })
+        .catch(() => {});
     }
   };
 
-
   const report = () => {
     // call api to report this request
- 
-    modalController.showModal(<ReportForm formId='blood-request-report' data={{blood_request_id: requestData?.id}} onSuccess={ () => {
-      setRequestData({...requestData, is_reported: true}) }} />)
+
+    modalController.showModal(
+      <ReportForm
+        formId="blood-request-report"
+        data={{ blood_request_id: requestData?.id }}
+        onSuccess={() => {
+          setRequestData({ ...requestData, is_reported: true });
+        }}
+      />
+    );
   };
 
-  
-  const dropDownOption =[
-    requestData?.user?.id == auth.user_id ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest } :     { name: "Report", icon: <FaBan />, onClick: report },
-    !requestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addBloodRequestToFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeBloodRequestFromFavorites(requestData?.id).then(res => setRequestData({...requestData, is_favorite: false})).catch() },
-
-  ]
-
+  const dropDownOption = [
+    requestData?.user?.id == auth.user_id
+      ? { name: "Delete", icon: <FaBan />, onClick: deleteThisBloodRequest }
+      : { name: "Report", icon: <FaBan />, onClick: report },
+    !requestData?.is_favorite
+      ? {
+          name: "Add To Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            addBloodRequestToFavorites(requestData?.id)
+              .then((res) =>
+                setRequestData({ ...requestData, is_favorite: true })
+              )
+              .catch(),
+        }
+      : {
+          name: "Remove From Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            removeBloodRequestFromFavorites(requestData?.id)
+              .then((res) =>
+                setRequestData({ ...requestData, is_favorite: false })
+              )
+              .catch(),
+        },
+  ];
 
   return (
     <>
@@ -1284,6 +1309,7 @@ const UpdateRequest = ({ requestData, setRequestData }) => {
 
 const DonorRequests = ({ match, requestData, setRequestData }) => {
   // hooks
+  const history = useHistory();
   const location = useLocation();
   const dispatch = useDispatch();
 
@@ -1334,6 +1360,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     );
   };
   const onCanvasExit = () => {
+    history.push(location.pathname);
     setTimeout(() => {
       setDonorRequestMoreDetails(null);
       setShowDonorRequest(false);
@@ -1361,12 +1388,40 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
     }
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if(params.get("donor-request-id")){
+      return
+    } else {
+      console.log(' in in in')
+      if(donorRequestMoreDetails) {
+        history.push(`${location.pathname}?donor-request-id=${donorRequestMoreDetails?.id}`);
+      }
+    }
+  }, [donorRequestMoreDetails])
+  
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("donor-request-id")) {
+      showMoreDetails(parseInt(params.get("donor-request-id")));
+    } else {
+        setDonorRequestMoreDetails(null);
+        setShowDonorRequest(false);
+    }
+  }, [location, donorRequestData]);
+  
+
   return (
     <>
       <Wrap>
         <TopSection>
           <SearchForm>
-            <SearchInp onChange={searchDonReq} onKeyDown={searchDonReq} placeholder="Search..." />
+            <SearchInp
+              onChange={searchDonReq}
+              onKeyDown={searchDonReq}
+              placeholder="Search..."
+            />
           </SearchForm>
           {/* <OrderedBySection>
             <div  className="filter-div">
@@ -1437,7 +1492,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
                       to={`/profile/${donorRequest?.user?.id}/`}>
                       <ProfileImg
                         size="45px"
-                        src={`${process.env.REACT_APP_MEDIA_URL}${donorRequest?.profile?.profile_img}`}
+                        src={`${donorRequest?.profile?.profile_img}`}
                       />{" "}
                       <p
                         className="profile-link-name"
@@ -1508,7 +1563,7 @@ const DonorRequestMoreDetails = ({
   setDonorRequestMoreDetails,
   requestData,
   setRequestData,
-  setShowDonorRequest, 
+  setShowDonorRequest,
 }) => {
   // hooks
 
@@ -1519,17 +1574,54 @@ const DonorRequestMoreDetails = ({
 
   const report = () => {
     // call api to report this request
- 
-    modalController.showModal(<ReportForm formId='donor-request-report' data={{donor_request_id: donorRequestMoreDetails?.id}} onSuccess={ () => {
-      setRequestData({...requestData, is_reported: true}) }} />)
+
+    modalController.showModal(
+      <ReportForm
+        formId="donor-request-report"
+        data={{ donor_request_id: donorRequestMoreDetails?.id }}
+        onSuccess={() => {
+          setRequestData({ ...requestData, is_reported: true });
+        }}
+      />
+    );
     setShowDonorRequest(false);
   };
 
   const dropDownOptions = [
-    { name:  donorRequestMoreDetails?.is_reported? "Reported" : "Report", icon: <FaBan />, onClick: !donorRequestMoreDetails?.is_reported? report : () => '' , disabled: donorRequestMoreDetails?.is_reported },
+    {
+      name: donorRequestMoreDetails?.is_reported ? "Reported" : "Report",
+      icon: <FaBan />,
+      onClick: !donorRequestMoreDetails?.is_reported ? report : () => "",
+      disabled: donorRequestMoreDetails?.is_reported,
+    },
 
-    !donorRequestMoreDetails?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addDonorRequestToFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({...donorRequestMoreDetails, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeDonorRequestFromFavorites(donorRequestMoreDetails?.id).then(res => setDonorRequestMoreDetails({...donorRequestMoreDetails, is_favorite: false})).catch() },
-
+    !donorRequestMoreDetails?.is_favorite
+      ? {
+          name: "Add To Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            addDonorRequestToFavorites(donorRequestMoreDetails?.id)
+              .then((res) =>
+                setDonorRequestMoreDetails({
+                  ...donorRequestMoreDetails,
+                  is_favorite: true,
+                })
+              )
+              .catch(),
+        }
+      : {
+          name: "Remove From Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            removeDonorRequestFromFavorites(donorRequestMoreDetails?.id)
+              .then((res) =>
+                setDonorRequestMoreDetails({
+                  ...donorRequestMoreDetails,
+                  is_favorite: false,
+                })
+              )
+              .catch(),
+        },
   ];
 
   useEffect(() => {
@@ -1815,16 +1907,41 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
     dispatch(setProgress(100));
   };
 
-    const dropDownOption = [
-      {
-        name: "Delete",
-        icon: <FaBan />,
-        onClick: deleteDonorRequest,
-        hidden: myDonorRequestData?.status !== "Pending",
-      },
-    !myDonorRequestData?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addDonorRequestToFavorites(myDonorRequestData?.id).then(res => setMyDonorRequestData({...myDonorRequestData, is_favorite: true})).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeDonorRequestFromFavorites(myDonorRequestData?.id).then(res => setMyDonorRequestData({...myDonorRequestData, is_favorite: false})).catch() },
-
-    ];
+  const dropDownOption = [
+    {
+      name: "Delete",
+      icon: <FaBan />,
+      onClick: deleteDonorRequest,
+      hidden: myDonorRequestData?.status !== "Pending",
+    },
+    !myDonorRequestData?.is_favorite
+      ? {
+          name: "Add To Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            addDonorRequestToFavorites(myDonorRequestData?.id)
+              .then((res) =>
+                setMyDonorRequestData({
+                  ...myDonorRequestData,
+                  is_favorite: true,
+                })
+              )
+              .catch(),
+        }
+      : {
+          name: "Remove From Favorites",
+          icon: <FaBan />,
+          onClick: () =>
+            removeDonorRequestFromFavorites(myDonorRequestData?.id)
+              .then((res) =>
+                setMyDonorRequestData({
+                  ...myDonorRequestData,
+                  is_favorite: false,
+                })
+              )
+              .catch(),
+        },
+  ];
 
   return (
     <>
@@ -1902,10 +2019,10 @@ const YourDonorRequest = ({ bloodRequestId, getRequestStatusInfo }) => {
                 </ButtonDiv>
               </DetailsDiv>
               <ActionDiv>
-                <Action style={{zIndex: 1}} >
+                <Action style={{ zIndex: 1 }}>
                   <Dropdown options={dropDownOption} />
                 </Action>
-                <Action style={{zIndex: 0}}>
+                <Action style={{ zIndex: 0 }}>
                   <Badge
                     danger={myDonorRequestData?.status === "Rejected"}
                     style={{

@@ -1,3 +1,4 @@
+import contextlib
 import profile
 from django.db import connections
 from django.shortcuts import render
@@ -9,12 +10,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes 
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.authentication import BasicAuthentication
 
-from account.models import * 
+from account.models import *
+from account.filters import ProfileFilter
 from .serializers import *
 from account.threads import SendEmail
 from account.helpers import sendVerificationEmail
@@ -72,19 +74,25 @@ class UserViewSets(ModelViewSet):
     def favorites(self, request):
         if (request.method == 'GET'):
             favUsers = FavoriteUser.objects.filter(user=request.user)
-            users = [fav.favorite_user for fav in favUsers]
-            return Response(self.get_serializer(users, many=True).data, status=status.HTTP_200_OK)
+            wanted_profiles = set()
+            for user in favUsers:
+                with contextlib.suppress(Profile.DoesNotExist):
+                    profile = Profile.objects.get(user=user.favorite_user)
+                wanted_profiles.add(profile.id) 
+            profiles = Profile.objects.filter(id__in=wanted_profiles)
+            profiles = ProfileFilter(request.GET, queryset=profiles).qs
+            return Response(ProfileSerializer(profiles, many=True, context={'request': request}).data, status=status.HTTP_200_OK)
 
         elif(request.method == 'POST'):
             try:
                 user = User.objects.get(id=request.data['user_id'])
-                
+
             except User.DoesNotExist:
                 return Response({'success': False, 'error': 'User request not found'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             if(FavoriteUser.objects.filter(user=request.user, favorite_user=user).exists()):
                 return Response({'success': False, 'error': 'You have already added this user to your favorites list'}, status=status.HTTP_400_BAD_REQUEST)
-                
+
             FavoriteUser.objects.create(user=request.user, favorite_user=user)
             return Response({'success': True, 'message': 'User added to your favorites list 🙂'}, status=status.HTTP_201_CREATED)
 
