@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-
+7
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)

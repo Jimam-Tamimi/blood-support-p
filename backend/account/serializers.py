@@ -39,9 +39,13 @@ class UserSerializer(ModelSerializer):
         return user
     
     def get_is_reported(self, obj):
-        return UserReport.objects.filter(user=obj, reported_by=self.context['request'].user).exists()
+        if(self.context['request'].user.is_authenticated):
+            return UserReport.objects.filter(user=obj, reported_by=self.context['request'].user).exists()
+        return False
     def get_is_favorite(self, obj):
-        return FavoriteUser.objects.filter(favorite_user=obj, user=self.context['request'].user).exists()
+        if(self.context['request'].user.is_authenticated):
+            return FavoriteUser.objects.filter(favorite_user=obj, user=self.context['request'].user).exists()
+        return False
 
         
 class ProfileSerializer(ModelSerializer):
