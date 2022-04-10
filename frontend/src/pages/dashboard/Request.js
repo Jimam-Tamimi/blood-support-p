@@ -432,6 +432,7 @@ const RequestDetails = ({
                         checkHaveSentDonorRequest={checkHaveSentDonorRequest}
                         bloodRequestId={requestData?.id}
                         getRequestStatusInfo={getRequestStatusInfo}
+                        requestData={requestData}
                       />
                       <ReviewForm
                         requestData={requestData}
@@ -478,6 +479,7 @@ const SendDonorRequestForm = ({
   bloodRequestId,
   checkHaveSentDonorRequest,
   getRequestStatusInfo,
+  requestData,
 }) => {
   const [autoComplete, setAutoComplete] = useState(null);
   const [coords, setCoords] = useState({});
@@ -590,14 +592,14 @@ const SendDonorRequestForm = ({
   return (
     <>
       <Button
-        disabled={!profile.isCompleted || haveSentDonorRequest}
+        disabled={!profile.isCompleted || haveSentDonorRequest || !['Open', 'Accepted'].includes(requestData?.status)}
         onClick={(e) => {
           setShowDonorReqModal(true);
         }}
         info>
         {haveSentDonorRequest ? "Donor Request Sent" : "Send Donor Request"}
       </Button>
-      {profile.isCompleted || !haveSentDonorRequest ? (
+      {profile.isCompleted || !haveSentDonorRequest || !['Open', 'Accepted'].includes(requestData?.status) ? (
         // <form onSubmit={sendDonorRequest}>
         <Modal
           actionText="Send Donor Request"

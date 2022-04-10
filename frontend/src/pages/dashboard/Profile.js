@@ -200,6 +200,7 @@ function Details({ profile, getProfile, setProfile }) {
 
   };
   const dropDownOptions = [
+    id != auth.user_id &&
      { name: profile?.user?.is_reported ? "Reported" : "Report", icon: <FaBan />, onClick: !profile?.user?.is_reported ? report : () => '', disabled: profile?.user?.is_reported },
 
     !profile?.user?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addUserToFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = true; setProfile({ ...profile})}).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeUserFromFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = false; setProfile({ ...profile})}).catch() },
@@ -240,7 +241,7 @@ function Details({ profile, getProfile, setProfile }) {
           <Detail>
             <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
-          {profile?.user?.id == auth?.user_id && (
+          {id == auth?.user_id && (
             <ButtonDiv style={{ marginTop: "20px" }}>
               <Button
                 onClick={(e) => setShowUpdateFormModal(true)}
