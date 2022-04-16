@@ -93,7 +93,6 @@ export const MessageHeaderTitle = styled.div`
   justify-content: space-between;
   background: var(--primary-color);
   padding: 0 10px;
-  z-index: 1;
 
 `;
 
@@ -156,7 +155,7 @@ export const EmojiMessageDiv = styled.div`
   &:active {
     transform: var(--for-active-click);
   }
-  z-index: 10;
+  z-index: 1;
 `;
 
 export const MessageInputBox = styled.input`
@@ -176,7 +175,7 @@ export const MessageInputBox = styled.input`
 
 export const EmojiWrap = styled.div`
   position: absolute;
-  z-index: 11;
+  z-index: 1;
   left: 39px;
   width: 320px;
   bottom: 46px;

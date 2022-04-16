@@ -16,12 +16,15 @@ import { ConfigContext } from "../context/DesignConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { hideModalAction } from "../redux/modal/actions";
 import ReportForm from "../components/ReportForm";
+import { useLocation } from "react-router-dom";
 
 export default function Layout({ children }) {
   const designConfig = useContext(ConfigContext);
   const { darkMode, setDarkMode, show, setShow, smallDevice, setSmallDevice } =
     designConfig;
 
+    const location = useLocation()
+    
   const toggleDash = () => {
     setShow(!show);
   };
@@ -79,7 +82,10 @@ export default function Layout({ children }) {
             />
             <Content>{children}</Content>
           </Container>
-          <MessagePopup />
+          {
+            !location.pathname.startsWith("/messages") ?  <MessagePopup /> : null
+          }
+         
         </Wrapper>
       </PrivateComponent>
       <GuestComponent>{children}</GuestComponent>

@@ -23,13 +23,14 @@ import {
     DashboardLogo,
 } from "./Dashboard.styles";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 
 export default function Dashboard({show, toggleDashOnSmallDevice}) {
     
     // hooks
     const profile = useSelector(state => state.profile)
-    
+    const location = useLocation()
     
     const dashLinks = [
         {to:"/", name: 'Dashboard', icon: AiFillDashboard,exact: true, count:null },
@@ -38,7 +39,7 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
         {to:"/your-blood-requests/", name: 'Your Blood Requests', icon:BiTimer,exact: false, count:null },
         {to:"/your-donor-requests/", name: 'Your Donor Requests', icon:GiPlayerPrevious,exact: false, count:null },
 
-        {to:"/messages/", name: 'Messages', icon:BiMessageRoundedDetail,exact: false, count:44   },
+       {to:"/messages/", name: 'Messages', icon:BiMessageRoundedDetail,exact: false, count:44   },
         {to:"/notifications/", name: 'Notifications', icon:IoMdNotificationsOutline,exact: true, count:null },
         {to:"/favorites/requests/", name: 'Favorites', icon:MdFavoriteBorder,exact: false, count:null },
 
@@ -65,6 +66,8 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
                 dashLinks.map((link, i) => {
                     return (
                         <>
+                        {
+                            link &&
                         <DashLink  key={i} on Click={() => toggleDashOnSmallDevice()} activeClassName="active"  to={link.to} exact={link.exact} count={link.count}>
                             <LinkIcon>
                                 <link.icon/>
@@ -73,6 +76,7 @@ export default function Dashboard({show, toggleDashOnSmallDevice}) {
                                 {link.name}
                             </LinkText>
                         </DashLink>
+                        }
                         </>
                     )
                 })

@@ -533,3 +533,28 @@ new Promise(async (resolve, reject) => {
 
 });
 
+  
+export const getMessagesForContact = async (contact_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  store.dispatch(setProgress(30));
+  try {
+    const res = await axios.get(
+      `${process.env.REACT_APP_API_URL}api/message/get-messages-for-contact/`, {params: {contact_id: parseInt(contact_id)}}
+    );  
+ 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to fetch message for this contact 😕", "danger"));
+      }
+    }
+  }
+  store.dispatch(setProgress(100));
+
+});
+

@@ -38,11 +38,15 @@ import { addMessage } from "../../redux";
 import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
 import { logOut } from "../../redux/auth/actions";
+import { useLocation } from "react-router-dom";
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
   // redux
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.message);
+  const location = useLocation()
+  
+  
 
   const msgRef = useRef(null);
   const notRef = useRef(null);
@@ -105,6 +109,8 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
             />
           </ModeWrap>
 
+{
+    !location.pathname.startsWith("/messages") &&
           <NavMessageWrap>
             <NavMessage
               onClick={() => {
@@ -189,6 +195,9 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               </NavMessageCont>
             </Transition>
           </NavMessageWrap>
+}
+
+
           <NavNotificationWrap>
             <NavNotification
               onClick={() => {

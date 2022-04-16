@@ -30,8 +30,15 @@ import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
+
+window.USER_WS = new WebSocket("ws://localhost:8000/ws/account/users/"); 
+window.MESSAGE_WS = new WebSocket("ws://localhost:8000/ws/message/"); 
+
 function App() {
- 
+  
+  window.USER_WS.onmessage = function(e) {
+    console.log(e)
+  }
   // hooks
   const dispatch = useDispatch();
   const progress = useSelector((state) => state.progress);

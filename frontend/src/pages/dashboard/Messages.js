@@ -36,38 +36,41 @@ import { Route } from "react-router";
 import profile from "../../assets/img/prof.jpg";
 // import prof from "../../assets/img/prof.jpg";
 import { FaBan } from "react-icons/fa";
+import axios from 'axios'
+import { useSelector } from "react-redux";
+import { getMessagesForContact, getProfileDetailsForUser } from "../../apiCalls";
 
 export default function Messages({ match }) {
+  const auth = useSelector(state => state.auth);
+  
+  
+  const [contacts, setContacts] = useState([])
+  const getMyContacts = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}api/message/get-my-contacts/`);
+      setContacts(res.data.contacts)
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
+
+  useEffect(() => {
+    getMyContacts()
+  }, [])
+  
+  
+  
   return (
     <>
       <Wrapper>
         <ContactsSection>
-          <Contact to="/messages/545456565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
+          {
+            contacts.map(contactProfile => (
 
-          <Contact to="/messages/545446565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
+          <Contact to={`/messages/${contactProfile?.contact_id}/`} activeClassName="active">
+            <ProfileImg size="60px" src={contactProfile?.profile_img} />
             <NameAndMsg>
               <h4
                 style={{
@@ -76,283 +79,23 @@ export default function Messages({ match }) {
                   color: "var(--secendory-text-color)",
                 }}
               >
-                Friend
+                {contactProfile?.name}
               </h4>
               <p
                 style={{
                   fontSize: "13px",
-                  fontWeight: "400",
+                  fontWeight: "300",
+                  letterSpacing: '.6px',
                   color: "var(--secendory-text-color)",
                 }}
               >
-                my name is jimam
+                {contactProfile?.last_message_from}: {contactProfile?.last_message}
               </p>
             </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/545346565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454654565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454436565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5452346565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5445546565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454546565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454665565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454645565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454634565656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454652365656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
-
-          <Contact to="/messages/5454652165656/" activeClassName="active">
-            <ProfileImg size="60px" src={profile} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                Friend
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "400",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                my name is jimam
-              </p>
-            </NameAndMsg>
-          </Contact>
+          </Contact>  
+               
+               ))
+              }
         </ContactsSection>
         <Route path="/messages/:id/" component={MessagesSection}></Route>
       </Wrapper>
@@ -393,36 +136,34 @@ function MessagesSection({ match }) {
       setTimeout(() => {
         messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
       }, 1);
-
       // call api to send message
     }
   };
 
   useEffect(() => {
-    setAllMessages([
-      { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
+    // setAllMessages([
+    //   { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
+    //   { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
 
-      {
-        id: 23,
-        type: "sent",
-        status: "delivered",
-        message: "My name is jimam",
-      },
-      {
-        id: 23,
-        type: "sent",
-        status: "delivered",
-        message: "My name is jimam",
-      },
-      { id: 23, type: "sent", status: "sent", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-      { id: 23, type: "sent", status: "sending", message: "My name is jimam" },
-    ]);
-    setTimeout(() => {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }, 1);
+    //   {
+    //     id: 23,
+    //     type: "sent",
+    //     status: "delivered",
+    //     message: "My name is jimam",
+    //   },
+    //   {
+    //     id: 23,
+    //     type: "sent",
+    //     status: "delivered",
+    //     message: "My name is jimam",
+    //   },
+    //   { id: 23, type: "sent", status: "sent", message: "My name is jimam" },
+    //   { id: 23, type: "received", status: "seen", message: "My name is jimam" },
+    //   { id: 23, type: "received", status: "seen", message: "My name is jimam" },
+    //   { id: 23, type: "sent", status: "sending", message: "My name is jimam" },
+    // ]);
+
+    getMsgsForContact(match.params.id)
   }, [match.params.id]);
 
   const chatDropdownOptions = [
@@ -433,6 +174,19 @@ function MessagesSection({ match }) {
     },
   ];
 
+  const getMsgsForContact = async (contact_id) => {
+    try {
+      const res = await getMessagesForContact(contact_id);
+      console.log(res)
+      setAllMessages(res.data)
+      setTimeout(() => {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      }, 1);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
   return (
     <>
       <MessageSection>
@@ -443,7 +197,7 @@ function MessagesSection({ match }) {
               <ProfName to={`/profile/34454/`}>Friend</ProfName>
             </MessageDetails>
             <ChatOptions>
-              <Dropdown options={chatDropdownOptions}></Dropdown>
+              {/* <Dropdown options={chatDropdownOptions}></Dropdown> */}
             </ChatOptions>
           </MessageHeaderTitle>
           <MessagesDiv ref={messagesRef}>
