@@ -39,6 +39,7 @@ import { FaBan } from "react-icons/fa";
 import axios from 'axios'
 import { useSelector } from "react-redux";
 import { getMessagesForContact, getProfileDetailsForUser } from "../../apiCalls";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Messages({ match }) {
   const auth = useSelector(state => state.auth);
@@ -128,40 +129,33 @@ function MessagesSection({ match }) {
   const sendMessage = (e) => {
     if (e.keyCode === 13) {
       if (message.trim() === "") return;
+      const message_id_client = uuidv4();
       setAllMessages([
         ...allMessages,
-        { id: 23, type: "sent", status: "sending", message: message },
+        {
+          "message_id_client":  message_id_client,
+          "message_from_me": true,
+          "status": "sending",
+          "message": message,
+          "contact": 1,
+          "from_user": 1
+      }
       ]);
       setMessage("");
       setTimeout(() => {
         messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
       }, 1);
       // call api to send message
+
+      window.MESSAGE_WS.send(JSON.stringify({event:'send_message', message: message, contact_id: match.params.id, message_id_client: message_id_client}))
+      
     }
   };
 
   useEffect(() => {
-    // setAllMessages([
-    //   { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-    //   { id: 23, type: "sent", status: "seen", message: "My name is jimam" },
-
-    //   {
-    //     id: 23,
-    //     type: "sent",
-    //     status: "delivered",
-    //     message: "My name is jimam",
-    //   },
-    //   {
-    //     id: 23,
-    //     type: "sent",
-    //     status: "delivered",
-    //     message: "My name is jimam",
-    //   },
-    //   { id: 23, type: "sent", status: "sent", message: "My name is jimam" },
-    //   { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-    //   { id: 23, type: "received", status: "seen", message: "My name is jimam" },
-    //   { id: 23, type: "sent", status: "sending", message: "My name is jimam" },
-    // ]);
+    window.MESSAGE_WS.onmessage = (e) => {
+      console.log(e)
+    }
 
     getMsgsForContact(match.params.id)
   }, [match.params.id]);
@@ -201,19 +195,19 @@ function MessagesSection({ match }) {
             </ChatOptions>
           </MessageHeaderTitle>
           <MessagesDiv ref={messagesRef}>
-            {allMessages?.map(({ id, type, message, status }) => (
-              <MessageDiv key={id} type={type}>
-                <Message type={type}>
-                  {message}
-                  {type === "sent" ? (
-                    <MessageStatus status={status}>
-                      {status === "seen" ? (
+            {allMessages?.map((message, i) => (
+              <MessageDiv key={i} type={message?.message_from_me? 'sent': 'received'}>
+                <Message type={message?.message_from_me? 'sent': 'received'}>
+                  {message?.message}
+                  {message?.message_from_me ? (
+                    <MessageStatus status={message?.status}>
+                      {message?.status === "seen" ? (
                         <ProfileImg src={profile} size="100%" />
-                      ) : status === "delivered" ? (
+                      ) : message?.status === "delivered" ? (
                         <IoCheckmarkCircleSharp size="100%" />
-                      ) : status === "sent" ? (
+                      ) : message?.status === "sent" ? (
                         <IoCheckmarkCircleOutline size="100%" />
-                      ) : status === "sending" ? (
+                      ) : message?.status === "sending" ? (
                         <IoEllipseOutline size="100%" />
                       ) : (
                         ""

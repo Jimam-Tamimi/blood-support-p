@@ -31,21 +31,24 @@ import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
 
-window.USER_WS = new WebSocket("ws://localhost:8000/ws/account/users/"); 
-window.MESSAGE_WS = new WebSocket("ws://localhost:8000/ws/message/"); 
+window.USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
+window.MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
+if(JSON.parse(localStorage.getItem('auth'))?.isAuthenticated){
+}
 
 function App() {
-  
-  window.USER_WS.onmessage = function(e) {
-    console.log(e)
-  }
+
+ 
   // hooks
   const dispatch = useDispatch();
   const progress = useSelector((state) => state.progress);
   const auth = useSelector((state) => state.auth);
   const profile = useSelector((state) => state.profile);
-  
-  
+  useEffect(() => {
+    
+    
+
+  }, [auth])
   
   axios.interceptors.request.use(
     function (config) {
@@ -81,7 +84,7 @@ function App() {
   }, []);
   useEffect(() => {
     if(auth?.isAuthenticated){
-      dispatch(getProfileDetails());
+      dispatch(getProfileDetails()); 
     }
   }, [auth]) 
  
