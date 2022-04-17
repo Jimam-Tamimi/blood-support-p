@@ -81,9 +81,6 @@ export const authenticate = () => async dispatch => {
 
 export const refreshToken = () => async dispatch => {
     const auth = JSON.parse(localStorage.getItem('auth'))
-    console.log("jimam")
-    console.log({refresh: auth.refresh })
-    console.log("jimam")
     if(auth?.refresh) {
         let data = { refresh: auth.refresh }
         try {

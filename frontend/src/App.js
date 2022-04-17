@@ -30,11 +30,9 @@ import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
+import { webSocketConnect } from "./helpers";
 
-window.USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
-window.MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
-if(JSON.parse(localStorage.getItem('auth'))?.isAuthenticated){
-}
+webSocketConnect();
 
 function App() {
 
@@ -45,8 +43,7 @@ function App() {
   const auth = useSelector((state) => state.auth);
   const profile = useSelector((state) => state.profile);
   useEffect(() => {
-    
-    
+   
 
   }, [auth])
   

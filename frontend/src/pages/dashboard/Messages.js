@@ -19,7 +19,7 @@ import {
   MessageStatus,
   ChatOptions,
 } from "../styles/dashboard/Messages.styles";
-import {  ProfileImg } from "../../styles/Essentials.styles";
+import { ProfileImg } from "../../styles/Essentials.styles";
 import Dropdown from "../../components/Dropdown/Dropdown";
 
 import { Picker } from "emoji-mart";
@@ -43,26 +43,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function Messages({ match }) {
   const auth = useSelector(state => state.auth);
-  
-  
+
+
   const [contacts, setContacts] = useState([])
   const getMyContacts = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}api/message/get-my-contacts/`);
       setContacts(res.data.contacts)
-      
+
     } catch (error) {
       console.log(error);
     }
   }
-  
+
 
   useEffect(() => {
     getMyContacts()
   }, [])
-  
-  
-  
+
+
+
   return (
     <>
       <Wrapper>
@@ -70,33 +70,33 @@ export default function Messages({ match }) {
           {
             contacts.map(contactProfile => (
 
-          <Contact to={`/messages/${contactProfile?.contact_id}/`} activeClassName="active">
-            <ProfileImg size="60px" src={contactProfile?.profile_img} />
-            <NameAndMsg>
-              <h4
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                {contactProfile?.name}
-              </h4>
-              <p
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "300",
-                  letterSpacing: '.6px',
-                  color: "var(--secendory-text-color)",
-                }}
-              >
-                {contactProfile?.last_message_from}: {contactProfile?.last_message}
-              </p>
-            </NameAndMsg>
-          </Contact>  
-               
-               ))
-              }
+              <Contact to={`/messages/${contactProfile?.contact_id}/`} activeClassName="active">
+                <ProfileImg size="60px" src={contactProfile?.profile_img} />
+                <NameAndMsg>
+                  <h4
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "600",
+                      color: "var(--secendory-text-color)",
+                    }}
+                  >
+                    {contactProfile?.name}
+                  </h4>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "300",
+                      letterSpacing: '.6px',
+                      color: "var(--secendory-text-color)",
+                    }}
+                  >
+                    {contactProfile?.last_message_from}: {contactProfile?.last_message}
+                  </p>
+                </NameAndMsg>
+              </Contact>
+
+            ))
+          }
         </ContactsSection>
         <Route path="/messages/:id/" component={MessagesSection}></Route>
       </Wrapper>
@@ -133,13 +133,13 @@ function MessagesSection({ match }) {
       setAllMessages([
         ...allMessages,
         {
-          "message_id_client":  message_id_client,
+          "message_id_client": message_id_client,
           "message_from_me": true,
           "status": "sending",
           "message": message,
           "contact": 1,
           "from_user": 1
-      }
+        }
       ]);
       setMessage("");
       setTimeout(() => {
@@ -147,15 +147,55 @@ function MessagesSection({ match }) {
       }, 1);
       // call api to send message
 
-      window.MESSAGE_WS.send(JSON.stringify({event:'send_message', message: message, contact_id: match.params.id, message_id_client: message_id_client}))
-      
+      window.MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: match.params.id, message_id_client: message_id_client }))
+
     }
   };
-
-  useEffect(() => {
-    window.MESSAGE_WS.onmessage = (e) => {
-      console.log(e)
+  window.MESSAGE_WS.onmessage = async (e) => {
+    const data = JSON.parse(e.data)
+    console.log(data)
+    if (data.event === 'message_send_success') {
+      if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
+        setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+          {
+            "id": data?.message_id_server,
+            "message_from_me": data?.message_from_user,
+            "status": data?.status,
+            "message": data?.message,
+            "timestamp": data?.timestamp,
+            "contact": 1,
+            "from_user": 1
+          } : message
+        ))
+      } else {
+        setAllMessages([...allMessages,
+        {
+          "id": data?.message_id_server,
+          "message_from_me": data?.message_from_user,
+          "status": data?.status,
+          "message": data?.message,
+          "timestamp": data?.timestamp,
+          "contact": data?.contact,
+          "from_user": data?.from_user
+        }
+        ])
+      }
+      setTimeout(() => {
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      }, 1);
+    } else if (data.event === "message_status_update") {
+      setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
+          {
+            ...message,
+            "status": data?.status,
+          } : message
+        ))
     }
+
+
+  }
+  useEffect(() => {
+
 
     getMsgsForContact(match.params.id)
   }, [match.params.id]);
@@ -180,7 +220,7 @@ function MessagesSection({ match }) {
       console.log(error);
     }
   }
-  
+
   return (
     <>
       <MessageSection>
@@ -196,8 +236,8 @@ function MessagesSection({ match }) {
           </MessageHeaderTitle>
           <MessagesDiv ref={messagesRef}>
             {allMessages?.map((message, i) => (
-              <MessageDiv key={i} type={message?.message_from_me? 'sent': 'received'}>
-                <Message type={message?.message_from_me? 'sent': 'received'}>
+              <MessageDiv key={i} type={message?.message_from_me ? 'sent' : 'received'}>
+                <Message type={message?.message_from_me ? 'sent' : 'received'}>
                   {message?.message}
                   {message?.message_from_me ? (
                     <MessageStatus status={message?.status}>

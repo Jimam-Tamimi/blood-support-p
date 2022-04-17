@@ -24,6 +24,7 @@ class MessageViewSet(ModelViewSet):
     def getMyContacts(self, request):
         # sourcery skip: remove-pass-body, use-contextlib-suppress
         contacts = Contact.objects.filter(users=request.user)
+        print(contacts)
         contacts_data = []
         for contact in contacts:
             if(len(contact.users.all()) > 2):
@@ -42,9 +43,10 @@ class MessageViewSet(ModelViewSet):
                                 "profile_img": profile["profile_img"],
                                 "name": profile['name'],
                                 "user_id": user.id,
-                                "last_message_from":  "You" if message.from_user == request.user else profile['name'].split()[0],
-                                "last_message": message.message,
                             }
+                            if(message):
+                                contact_profile_data["last_message_from"] =  "You" if message.from_user == request.user else profile['name'].split()[0],
+                                contact_profile_data["last_message"] = message.message
 
                             contacts_data.append(contact_profile_data)
                         except Profile.DoesNotExist:

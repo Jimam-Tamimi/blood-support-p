@@ -170,3 +170,21 @@ export const bloodFilterOption = [
 
 
  
+
+
+export const webSocketConnect = () => {
+  if(JSON.parse(localStorage.getItem('auth'))?.isAuthenticated){
+   
+    window.USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
+    window.MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
+      
+  }
+}
+
+
+export const webSocketDisconnect = () => {
+   
+    window.USER_WS.close()  
+    window.MESSAGE_WS.close() 
+      
+}

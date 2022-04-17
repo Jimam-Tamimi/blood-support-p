@@ -536,7 +536,6 @@ new Promise(async (resolve, reject) => {
   
 export const getMessagesForContact = async (contact_id, showAlert = true) => 
 new Promise(async (resolve, reject) => {
-  store.dispatch(setProgress(30));
   try {
     const res = await axios.get(
       `${process.env.REACT_APP_API_URL}api/message/get-messages-for-contact/`, {params: {contact_id: parseInt(contact_id)}}
@@ -554,7 +553,6 @@ new Promise(async (resolve, reject) => {
       }
     }
   }
-  store.dispatch(setProgress(100));
 
 });
 
