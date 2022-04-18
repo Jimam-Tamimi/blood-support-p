@@ -96,3 +96,25 @@ class MessageViewSet(ModelViewSet):
 
 
 
+
+
+    @action(detail=False, methods=['post'], url_path='getContactDetails')
+    def getContactDetails(self, request):
+        # sourcery skip: remove-pass-body, use-contextlib-suppress
+        try:
+            contact = Contact.objects.get(id=request.data['contact_id'])
+        except Contact.DoesNotExist:
+            return Response({'success': False, 'error': 'Contact does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data ={
+            'contact_id': contact.id,
+            'users': []
+        }
+        for user in contact.users.all():
+            data['users'].append(UserSerializer(user, context={'request': request}).data)
+        
+         
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
