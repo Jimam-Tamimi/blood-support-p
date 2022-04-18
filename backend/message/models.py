@@ -41,8 +41,8 @@ def send_message_update(sender, instance, created, **kwargs):
     # print(instance)
     # print(created)
     # print(kwargs)
-    print(instance.status)
-    print(instance.Message__original_status)
+    # print(instance.status)
+    # print(instance.Message__original_status)
     
     if not created:
         if(instance.status != instance.Message__original_status):
@@ -53,7 +53,7 @@ def send_message_update(sender, instance, created, **kwargs):
             channel_layer = get_channel_layer()
             
             for user in instance.contact.users.all():
-                print(user)
+                # print(user)
                 try:
                     user_channel_name = MessageClient.objects.get(user=user)
                     data["status"] = instance.status 
@@ -64,11 +64,24 @@ def send_message_update(sender, instance, created, **kwargs):
                 except MessageClient.DoesNotExist:
                     continue
 
-            oldMessages = Message.objects.filter(~Q(status=instance.status))
-            print(oldMessages)
-            for msg in oldMessages:
-                msg.status = instance.status
-                msg.save()
+            # oldMessages = Message.objects.filter(~Q(status=instance.status), contact=instance.contact)
+            # oldMessages = Message.objects.filter(~Q(status=instance.status))
+            # oldMessages = oldMessages.filter(contact=instance.contact)
+            # print(oldMessages)
+            # if(len(oldMessages) == 0):
+            #     return
+            # for msg in oldMessages:
+            #     # print(msg)
+            #     if(instance.status == "sent"):
+            #         break
+            #     elif(instance.status == "delivered"):
+            #         msg.status = "delevered"
+            #         msg.save()
+            #     elif(instance.status == "seen"):
+            #         msg.status = "seen"
+            #         msg.save()
+                # msg.status = instance.status
+                # msg.save()
 
     
     

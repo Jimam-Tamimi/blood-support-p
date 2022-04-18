@@ -70,3 +70,29 @@ class MessageViewSet(ModelViewSet):
 
 
 
+
+    @action(detail=False, methods=['post'], url_path='create-contact')
+    def createContact(self, request):
+        # sourcery skip: remove-pass-body, use-contextlib-suppress
+        try:
+            user2 = User.objects.get(id=request.data['user_id'])
+        except User.DoesNotExist:
+            return Response({'success': False, 'error': 'User does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        user1 = request.user
+        
+        try:
+            contact = Contact.objects.filter(users=user1).get(users=user2)
+        except Contact.DoesNotExist:
+            contact = Contact.objects.create()
+            contact.users.add(user1, user2)
+            contact.save()
+        # except Exception :
+        #     return Response({'success': False, 'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        data ={
+            'contact_id': contact.id,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
+

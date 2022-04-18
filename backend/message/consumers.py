@@ -48,12 +48,38 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                         })
                         message.status = "delivered"
                         await database_sync_to_async(message.save)()
+                        oldMessages = await database_sync_to_async(Message.objects.filter)(status="sent", contact=message.contact)
+                        for msg in await queryset_to_list(oldMessages): 
+                            msg.status = "delivered" 
+                            await database_sync_to_async(msg.save)()
                     except MessageClient.DoesNotExist:
                         continue
 
             data['message_from_user'] = True
             await self.send_json(data)
-            
+         
+        elif(content['event'] == 'update_message_status'):   
+            message = await database_sync_to_async(Message.objects.get)(id=content['message_id'])
+            # print("message.status")
+            # print(message.status)
+            # print(content['status'])
+            # print("content['status']")
+            if(message.status != content['status']):
+                message.status = content['status']
+                await database_sync_to_async(message.save)()
+
+            if(content['status'] == "delivered"):
+                messages = await database_sync_to_async(Message.objects.filter)(status="sent", contact=message.contact)            
+                for msg in await queryset_to_list(messages):
+                    msg.status = "delivered"
+                    await database_sync_to_async(msg.save)()
+                    
+            elif(content['status'] == "seen"):
+                messages = await database_sync_to_async(Message.objects.filter)(~Q(status="seen"), contact=message.contact)            
+                for msg in await queryset_to_list(messages):
+                    msg.status = "seen"
+                    await database_sync_to_async(msg.save)()
+
     async def disconnect(self, code):
         try:
             user_channel_names = await database_sync_to_async(MessageClient.objects.filter)(user=self.scope["user"])
@@ -78,3 +104,8 @@ def get_all_users(contact):
 @sync_to_async
 def get_all_user_channel_names(user_channel_names):
     return list(user_channel_names)
+
+
+@sync_to_async
+def queryset_to_list(queryset):
+    return list(queryset)
