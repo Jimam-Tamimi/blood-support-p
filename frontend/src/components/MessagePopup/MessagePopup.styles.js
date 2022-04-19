@@ -3,6 +3,7 @@ import styled, {css, keyframes} from "styled-components";
 import {Link} from 'react-router-dom'
 
 import {ProfImg} from '../Navbar/Navbar.styles'
+import { Message } from "../../pages/styles/dashboard/Messages.styles";
 
 const flex = css`
     display: flex;
@@ -125,6 +126,7 @@ export const CloseIconWrap = styled.div`
 export const MessagesDiv = styled.div`
     height: calc(100% - 110px);
     width: 100%;
+    
 
 `
 
@@ -182,3 +184,33 @@ export const EmojiWrap = styled.div`
     `}
 `
 
+
+
+export const PopUpMessage = styled(Message)`
+
+width: fit-content;
+font-size: .91rem;
+padding: 5px 10px;
+
+${({ type }) =>
+    type === "sent"
+      ? `
+            margin-left: auto;
+            background: #3e4042;
+            border-bottom-left-radius: 10px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 10px;
+
+        `
+      : type === "received"
+      ? `
+            border-top-left-radius: 10px;
+            border-top-right-radius: 5px;
+
+            background: #0084ff;
+            margin-right: auto;
+            border-bottom-right-radius: 10px;
+        `
+      : ""}
+
+`

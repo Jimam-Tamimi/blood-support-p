@@ -22,12 +22,15 @@ import {
     EmojiMessage,
     MessageInputBox,
     EmojiWrap,
+    PopUpMessage,
 } from './MessagePopup.styles'
 import Transition from '../Transition/Transition'
 import { getContactDetails, getMessagesForContact } from '../../apiCalls'
 import { MessageDiv, MessageStatus } from '../../pages/styles/dashboard/Messages.styles'
 import { ProfileImg } from '../../styles/Essentials.styles'
 import {Message} from '../../pages/styles/dashboard/Messages.styles'
+
+import { v4 as uuidv4 } from 'uuid';
 
 
 export default function MessageComponent({contactId}) {
@@ -97,7 +100,7 @@ export default function MessageComponent({contactId}) {
       console.log(res)
       setAllMessages(res.data)
       setTimeout(() => {
-        messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
         messagesRef.current.style.scrollBehavior = "smooth"; 
 
       }, 1);
@@ -109,7 +112,7 @@ export default function MessageComponent({contactId}) {
   useEffect(() => {
     // console.log({contacts})
     if (contactId) {
-    //   contacts.find(contact => contact.contact_id == params.id ? setContact({...contact}) : null)
+    //   contacts.find(contact => contact.contact_id == contactId ? setContact({...contact}) : null)
       getMsgsForContact(contactId)
     }
   }, [contactId]);
@@ -118,6 +121,79 @@ export default function MessageComponent({contactId}) {
         setLastSeenMessage(allMessages.findLast(msg => (msg.status=='seen')))
       }, [allMessages])
     
+
+    
+      const sendMessage = (e) => {
+        if (message.trim() === "") return;
+        const message_id_client = uuidv4();
+        setAllMessages([
+          ...allMessages,
+          {
+            "message_id_client": message_id_client,
+            "message_from_me": true,
+            "status": "sending",
+            "message": message,
+            "contact": 1,
+            "from_user": 1
+          }
+        ]);
+        setMessage("");
+        setTimeout(() => {
+          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+        }, 1);
+        // call api to send message
+  
+        window.MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: contactId, message_id_client: message_id_client }))
+  
+    };
+    window.MESSAGE_WS.onmessage = async (e) => {
+      const data = JSON.parse(e.data)
+      console.log(data)
+      if (data.event === 'message_send_success' && data.contact == contactId) {
+        if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
+          setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+            {
+              "id": data?.message_id_server,
+              "message_from_me": data?.message_from_user,
+              "status": data?.status,
+              "message": data?.message,
+              "timestamp": data?.timestamp,
+              "contact": 1,
+              "from_user": 1
+            } : message
+          ))
+        } else {
+          setAllMessages([...allMessages,
+          {
+            "id": data?.message_id_server,
+            "message_from_me": data?.message_from_user,
+            "status": data?.status,
+            "message": data?.message,
+            "timestamp": data?.timestamp,
+            "contact": data?.contact,
+            "from_user": data?.from_user
+          }
+          ])
+        }
+        if(data.status !== 'seen' && data.message_from_user === false) {
+  
+          window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+        }
+          setTimeout(() => {
+            messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+        }, 1);
+      } else if (data.event === "message_status_update") {
+        setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
+            {
+              ...message,
+              "status": data?.status,
+            } : message
+          ))
+      }
+  
+  
+    }
+      
     return (
         <>
         {
@@ -132,16 +208,16 @@ export default function MessageComponent({contactId}) {
                         <IoClose />
                     </CloseIconWrap>
                 </MessageHeaderTitle>
-                <MessagesDiv  ref={messagesRef}>
+                <MessagesDiv ref={messagesRef} style={{overflowY: "scroll", padding: '0 0 10px 0'}}  ref={messagesRef}>
                     {allMessages?.map((message, i) => (
                     // <MessageDiv key={i} type={message?.message_from_me ? 'sent' : 'received'}>
-                        <Message type={message?.message_from_me ? 'sent' : 'received'}>
+                        <PopUpMessage type={message?.message_from_me ? 'sent' : 'received'}>
                         {message?.message}
                         {message?.message_from_me ? (
                             <MessageStatus status={message?.status}>
                             {message?.status === "seen" ? (
                                 lastSeenMessage?.id == message?.id ?
-                                <ProfileImg src={'profile'} size="100%" /> : ''
+                                <ProfileImg src={contact?.profile?.profile_img} size="100%" /> : ''
                             ) : message.status === "delivered" ? (
                                 <IoCheckmarkCircleSharp size="100%" />
                             ) : message.status === "sent" ? (
@@ -155,7 +231,7 @@ export default function MessageComponent({contactId}) {
                         ) : (
                             ""
                         )}
-                        </Message>
+                        </PopUpMessage>
                     // </MessageDiv>
                     ))}
                 </MessagesDiv>
@@ -168,8 +244,9 @@ export default function MessageComponent({contactId}) {
                     <EmojiMessageDiv onClick={e => setShowEmojiOption(!showEmojiOption)}>
                         <HiEmojiHappy  />
                     </EmojiMessageDiv>
-                    <MessageInputBox value={message} onChange={e=> setMessage(e.target.value)} placeholder="Message" />
-                    <EmojiMessageDiv>
+              
+                    <MessageInputBox onKeyUp={ e => e.keyCode === 13 && sendMessage()}  value={message} onChange={e=> setMessage(e.target.value)} placeholder="Message" />
+                    <EmojiMessageDiv onClick={sendMessage} >
                         <IoSend />
                     </EmojiMessageDiv>
                 </SendMessageDiv>

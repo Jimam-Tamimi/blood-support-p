@@ -31,7 +31,7 @@ export default function MessagePopup() {
             <MessageCont >
                 {
 
-                    message.map((contactId, i) => (
+                    message?.map((contactId, i) => (
                         
                           <Message key={contactId} contactId={contactId} />
                         

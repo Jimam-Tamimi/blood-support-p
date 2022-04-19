@@ -2,7 +2,11 @@ import { ADD_MESSAGE, REMOVE_MESSAGE } from "./types"
 
 
  
-const initialState = JSON.parse(localStorage.getItem('messagesId'))
+let initialState = JSON.parse(localStorage.getItem('messagesId'))
+if(!initialState){
+    initialState = []
+}
+
 
 
 const messageReducer = (state=initialState, action) => {
@@ -27,7 +31,9 @@ const messageReducer = (state=initialState, action) => {
             localStorage.setItem('messagesId', JSON.stringify(msgIdRem))
             return msgIdRem
 
-        default: return state
+        default: 
+        localStorage.setItem('messagesId', JSON.stringify(state))
+        return state
     }
 } 
 

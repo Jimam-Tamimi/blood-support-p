@@ -211,13 +211,7 @@ function MessagesSection({ match, contacts }) {
     getMsgsForContact(params.id)
   }, [params]);
 
-  const chatDropdownOptions = [
-    {
-      name: "Report",
-      icon: FaBan,
-      onClick: () => console.log("need to create report function"),
-    },
-  ];
+
 
   const getMsgsForContact = async (contact_id) => {
     try {
@@ -237,6 +231,14 @@ function MessagesSection({ match, contacts }) {
   useEffect(() => {
     setLastSeenMessage(allMessages.findLast(msg => (msg.status=='seen')))
   }, [allMessages])
+  
+  const chatDropdownOptions = [
+    {
+      name: "Report",
+      icon: FaBan,
+      onClick: () => console.log("need to create report function"),
+    },
+  ];
   
   return (
     <>
@@ -260,7 +262,7 @@ function MessagesSection({ match, contacts }) {
                     <MessageStatus status={message?.status}>
                       {message?.status === "seen" ? (
                         lastSeenMessage?.id == message?.id ?
-                        <ProfileImg src={profile} size="100%" /> : ''
+                        <ProfileImg src={contact?.profile_img} size="100%" /> : ''
                       ) : message.status === "delivered" ? (
                         <IoCheckmarkCircleSharp size="100%" />
                       ) : message.status === "sent" ? (
@@ -299,8 +301,8 @@ function MessagesSection({ match, contacts }) {
             <MessageInputBox
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyUp={ e => e.keyCode === 13 && sendMessage()}
               placeholder="Message"
+              onKeyUp={ e => e.keyCode === 13 && sendMessage()}
             />
             <EmojiMessageDiv onClick={sendMessage} >
               <IoSend />

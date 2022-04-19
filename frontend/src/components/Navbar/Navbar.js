@@ -60,7 +60,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
     e.preventDefault();
     setMessage(false);
     let equal = false;
-    messages.forEach((val) => {
+    messages?.forEach((val) => {
       if (val === id) {
         equal = true;
       }
