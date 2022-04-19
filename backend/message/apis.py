@@ -67,6 +67,12 @@ class MessageViewSet(ModelViewSet):
         except Exception:
             return Response({'success': False, 'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
             
+        messages = Message.objects.filter(~Q(status='seen'), contact=contact).exclude(from_user=request.user)
+        print(messages)
+        for msg in messages:
+            msg.status= 'seen'
+            msg.save()
+
         messages = Message.objects.filter(contact=contact)
         serialized_messages = self.get_serializer(messages, many=True)
         return Response(serialized_messages.data, status=status.HTTP_200_OK)

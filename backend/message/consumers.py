@@ -75,7 +75,8 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                     await database_sync_to_async(msg.save)()
                     
             elif(content['status'] == "seen"):
-                messages = await database_sync_to_async(Message.objects.filter)(~Q(status="seen"), contact=message.contact)            
+                print("in seen")
+                messages = await get_not_seen_message_to_list(message)          
                 for msg in await queryset_to_list(messages):
                     msg.status = "seen"
                     await database_sync_to_async(msg.save)()
@@ -109,3 +110,7 @@ def get_all_user_channel_names(user_channel_names):
 @sync_to_async
 def queryset_to_list(queryset):
     return list(queryset)
+
+@sync_to_async
+def get_not_seen_message_to_list(message):
+    return list(Message.objects.filter(~Q(status="seen"), contact=message.contact))        

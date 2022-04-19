@@ -186,8 +186,12 @@ function MessagesSection({ match, contacts }) {
         ])
       }
       if(data.status !== 'seen' && data.message_from_user === false) {
-
-        window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+        window.onfocus = async () => {
+          if(messagesRef?.current){
+           await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+          }
+        }
+        
       }
         setTimeout(() => {
           messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
