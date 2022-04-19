@@ -1,6 +1,7 @@
 import axios from "axios";
 import { setProgress } from "./redux/progress/actions";
 import store from "./redux/store";
+import { useHistory } from 'react-router-dom';
 // import Geocode from "react-geocode";
 
 // Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
@@ -187,4 +188,18 @@ export const webSocketDisconnect = () => {
     window.USER_WS.close()  
     window.MESSAGE_WS.close() 
       
+}
+
+
+ 
+export const messageToUser = async (user_id, history) => {
+
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}api/message/create-contact/`, {user_id: user_id} )
+      if (res.status === 200) {
+        history.push(`/messages/${res.data.contact_id}/`)
+      }
+    } catch (error) {
+        console.log(error);
+    }
 }

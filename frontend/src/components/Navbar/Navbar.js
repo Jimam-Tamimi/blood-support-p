@@ -39,14 +39,16 @@ import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
 import { logOut } from "../../redux/auth/actions";
 import { useLocation } from "react-router-dom";
+import { getMyContacts } from "../../apiCalls";
+import {BeatLoader, PropagateLoader} from 'react-spinners'
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
   // redux
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.message);
   const location = useLocation()
-  
-  
+
+
 
   const msgRef = useRef(null);
   const notRef = useRef(null);
@@ -109,93 +111,35 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
             />
           </ModeWrap>
 
-{
-    !location.pathname.startsWith("/messages") &&
-          <NavMessageWrap>
-            <NavMessage
-              onClick={() => {
-                setMessage(!message);
-                setNotification(false);
-              }}
-            >
-              <BiMessageRoundedDots />
-            </NavMessage>
+          {
+            !location.pathname.startsWith("/messages") &&
+            <NavMessageWrap>
+              <NavMessage
+                onClick={() => {
+                  setMessage(!message);
+                  setNotification(false);
+                }}
+              >
+                <BiMessageRoundedDots />
+              </NavMessage>
 
-            <Transition
-              style={{ position: "absolute", top: "62px", right: "20px" }}
-              timeout={200}
-              show={message} 
-              fade
-              scale
-            >
-              <NavMessageCont ref={msgRef} message={true}>
-                <>
-                  <DropDownHeading>All Messages</DropDownHeading>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 1)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 1</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 2)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 2</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 3)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 3</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 4)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 4</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 5)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 5</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                  <Message
-                    onClick={(e) => handleNavMsgClick(e, 6)}
-                    to="/msg/rnghef"
-                  >
-                    <ProfImg src={prof} />
-                    <MsgInfo>
-                      <Name>Jimam Tamimi 6</Name>
-                      <Msg>Jimam Is A Very Good Boy</Msg>
-                    </MsgInfo>
-                  </Message>
-                </>
-              </NavMessageCont>
-            </Transition>
-          </NavMessageWrap>
-}
+              <Transition
+                style={{ position: "absolute", top: "62px", right: "20px" }}
+                timeout={200}
+                show={message}
+                fade
+                scale
+              >
+                <NavMessageCont ref={msgRef} message={true}>
+                {
+                  message &&
+                  <NavMessageSection showComponent={message} handleNavMsgClick={handleNavMsgClick} />
+                }
+                </NavMessageCont>
+
+              </Transition>
+            </NavMessageWrap>
+          }
 
 
           <NavNotificationWrap>
@@ -233,4 +177,54 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
       </NavbarWraper>
     </>
   );
+}
+
+
+
+
+function NavMessageSection({ handleNavMsgClick, showComponent }) {
+
+
+
+  const [contacts, setContacts] = useState(null)
+  const getMyContactsData = async () => {
+    try {
+      const res = await getMyContacts();
+      setContacts(res.data.contacts)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+  useEffect(() => {
+    getMyContactsData()
+  }, [])
+
+
+  return (
+    <>
+      <DropDownHeading> All Messages</DropDownHeading >
+      {
+
+      contacts? 
+        
+        contacts?.map(contact => (
+          <Message
+            onClick={(e) => handleNavMsgClick(e, contact.contact_id)}
+            to={`/message/${contact.contact_id}`}
+          >
+            <ProfImg src={contact.profile_img} />
+            <MsgInfo>
+              <Name>{contact.name}</Name>
+              <Msg>{contact?.last_message_from}: {contact?.last_message}</Msg>
+
+            </MsgInfo>
+          </Message>
+        )) :
+        <PropagateLoader  color="var(--loader-color)" css={{margin: "auto"}} /> 
+      }
+    </>
+  )
 }

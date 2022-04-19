@@ -32,13 +32,14 @@ import {
 } from "react-icons/io5";
 import Transition from "../../components/Transition/Transition";
 import { Route } from "react-router";
+import {useParams} from 'react-router-dom'
 
 import profile from "../../assets/img/prof.jpg";
 // import prof from "../../assets/img/prof.jpg";
 import { FaBan } from "react-icons/fa";
 import axios from 'axios'
 import { useSelector } from "react-redux";
-import { getMessagesForContact, getProfileDetailsForUser } from "../../apiCalls";
+import { getMessagesForContact, getMyContacts, getProfileDetailsForUser } from "../../apiCalls";
 import { v4 as uuidv4 } from 'uuid';
 
 export default function Messages({ match }) {
@@ -46,9 +47,9 @@ export default function Messages({ match }) {
 
 
   const [contacts, setContacts] = useState([])
-  const getMyContacts = async () => {
+  const getMyContactsData = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}api/message/get-my-contacts/`);
+      const res = await getMyContacts();
       setContacts(res.data.contacts)
 
     } catch (error) {
@@ -58,7 +59,7 @@ export default function Messages({ match }) {
 
 
   useEffect(() => {
-    getMyContacts()
+    getMyContactsData()
   }, [])
 
 
@@ -98,18 +99,24 @@ export default function Messages({ match }) {
             ))
           }
         </ContactsSection>
-        <Route path="/messages/:id/" component={MessagesSection}></Route>
+        <Route path="/messages/:id/" >
+          <MessagesSection contacts={contacts}/>
+        </Route>
       </Wrapper>
     </>
   );
 }
 
-function MessagesSection({ match }) {
+function MessagesSection({ match, contacts }) {
+  const params = useParams()
+  console.log(params)
   const messagesRef = useRef(null);
-
+  const [lastSeenMessage, setLastSeenMessage] = useState(null);
   const [message, setMessage] = useState("");
   const [allMessages, setAllMessages] = useState([]);
   const [showEmojiOption, setShowEmojiOption] = useState(false);
+  const [contact, setContact] = useState({})
+  
   const refCont = useRef(null);
   const listener = (e) => {
     if (refCont && !refCont?.current?.contains(e.target)) {
@@ -127,7 +134,6 @@ function MessagesSection({ match }) {
   }, [showEmojiOption]);
 
   const sendMessage = (e) => {
-    if (e.keyCode === 13) {
       if (message.trim() === "") return;
       const message_id_client = uuidv4();
       setAllMessages([
@@ -147,14 +153,13 @@ function MessagesSection({ match }) {
       }, 1);
       // call api to send message
 
-      window.MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: match.params.id, message_id_client: message_id_client }))
+      window.MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: params.id, message_id_client: message_id_client }))
 
-    }
   };
   window.MESSAGE_WS.onmessage = async (e) => {
     const data = JSON.parse(e.data)
     console.log(data)
-    if (data.event === 'message_send_success') {
+    if (data.event === 'message_send_success' && data.contact == params.id) {
       if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
         setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
           {
@@ -180,8 +185,12 @@ function MessagesSection({ match }) {
         }
         ])
       }
-      setTimeout(() => {
-        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      if(data.status !== 'seen' && data.message_from_user === false) {
+
+        window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+      }
+        setTimeout(() => {
+          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
       }, 1);
     } else if (data.event === "message_status_update") {
       setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
@@ -195,10 +204,12 @@ function MessagesSection({ match }) {
 
   }
   useEffect(() => {
-
-
-    getMsgsForContact(match.params.id)
-  }, [match.params.id]);
+    console.log({contacts})
+    if (params.id) {
+      contacts.find(contact => contact.contact_id == params.id ? setContact({...contact}) : null)
+    }
+    getMsgsForContact(params.id)
+  }, [params]);
 
   const chatDropdownOptions = [
     {
@@ -214,27 +225,33 @@ function MessagesSection({ match }) {
       console.log(res)
       setAllMessages(res.data)
       setTimeout(() => {
-        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+        messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+        messagesRef.current.style.scrollBehavior = "smooth"; 
+
       }, 1);
     } catch (error) {
       console.log(error);
     }
   }
-
+ 
+  useEffect(() => {
+    setLastSeenMessage(allMessages.findLast(msg => (msg.status=='seen')))
+  }, [allMessages])
+  
   return (
     <>
       <MessageSection>
         <MessageWrapper msgId={33}>
           <MessageHeaderTitle>
             <MessageDetails>
-              <ProfileImg src={profile} size="45px" />
-              <ProfName to={`/profile/34454/`}>Friend</ProfName>
+              <ProfileImg src={contact?.profile_img} size="45px" />
+              <ProfName to={`/profile/${contact.user_id}/`}>{contact?.name}</ProfName>
             </MessageDetails>
             <ChatOptions>
               {/* <Dropdown options={chatDropdownOptions}></Dropdown> */}
             </ChatOptions>
           </MessageHeaderTitle>
-          <MessagesDiv ref={messagesRef}>
+          <MessagesDiv    ref={messagesRef}>
             {allMessages?.map((message, i) => (
               <MessageDiv key={i} type={message?.message_from_me ? 'sent' : 'received'}>
                 <Message type={message?.message_from_me ? 'sent' : 'received'}>
@@ -242,15 +259,16 @@ function MessagesSection({ match }) {
                   {message?.message_from_me ? (
                     <MessageStatus status={message?.status}>
                       {message?.status === "seen" ? (
-                        <ProfileImg src={profile} size="100%" />
-                      ) : message?.status === "delivered" ? (
+                        lastSeenMessage?.id == message?.id ?
+                        <ProfileImg src={profile} size="100%" /> : ''
+                      ) : message.status === "delivered" ? (
                         <IoCheckmarkCircleSharp size="100%" />
-                      ) : message?.status === "sent" ? (
+                      ) : message.status === "sent" ? (
                         <IoCheckmarkCircleOutline size="100%" />
-                      ) : message?.status === "sending" ? (
+                      ) : message.status === "sending" ? (
                         <IoEllipseOutline size="100%" />
                       ) : (
-                        ""
+                        message?.status
                       )}
                     </MessageStatus>
                   ) : (
@@ -281,10 +299,10 @@ function MessagesSection({ match }) {
             <MessageInputBox
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyUp={sendMessage}
+              onKeyUp={ e => e.keyCode === 13 && sendMessage()}
               placeholder="Message"
             />
-            <EmojiMessageDiv>
+            <EmojiMessageDiv onClick={sendMessage} >
               <IoSend />
             </EmojiMessageDiv>
           </SendMessageDiv>

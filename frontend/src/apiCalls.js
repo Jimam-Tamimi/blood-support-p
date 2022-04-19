@@ -555,4 +555,46 @@ new Promise(async (resolve, reject) => {
   }
 
 });
+  
+export const getMyContacts = async (showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/message/get-my-contacts/`);
 
+ 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to fetch your contacts 😕", "danger"));
+      }
+    }
+  }
+
+});
+
+export const getContactDetails = async (contact_id, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/message/get-contact-details/`, {params: {contact_id: parseInt(contact_id)}}); 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to fetch your contact details 😕", "danger"));
+      }
+    }
+  }
+
+});
+
+
+ 

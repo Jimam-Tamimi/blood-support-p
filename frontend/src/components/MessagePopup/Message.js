@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {useSelector, useDispatch} from 'react-redux'
 
-import {IoSend, IoClose} from 'react-icons/io5'
+import {IoSend, IoClose, IoCheckmarkCircleSharp, IoCheckmarkCircleOutline, IoEllipseOutline} from 'react-icons/io5'
 import {HiEmojiHappy} from 'react-icons/hi'
 import prof from '../../assets/img/prof.jpg'
 
@@ -24,12 +24,19 @@ import {
     EmojiWrap,
 } from './MessagePopup.styles'
 import Transition from '../Transition/Transition'
-export default function Message({id, name, image, profileId}) {
- 
+import { getContactDetails, getMessagesForContact } from '../../apiCalls'
+import { MessageDiv, MessageStatus } from '../../pages/styles/dashboard/Messages.styles'
+import { ProfileImg } from '../../styles/Essentials.styles'
+import {Message} from '../../pages/styles/dashboard/Messages.styles'
+
+
+export default function MessageComponent({contactId}) {
+    const [contact, setContact] = useState(null)
     const [closeMessageId, setCloseMessageId] = useState(null)
     const [showEmojiOption, setShowEmojiOption] = useState(false)
     const dispatch = useDispatch()
     const handleCloseMessage = id => {
+        console.log(id, '34')
         setCloseMessageId(id)
         setTimeout(() => {
             setCloseMessageId(null)
@@ -37,8 +44,6 @@ export default function Message({id, name, image, profileId}) {
 
         }, 400);        
     }
-
-
     // code for hiding emoji selector on outside click 
     const refCont = useRef(null)
     const listener = e => {
@@ -60,22 +65,99 @@ export default function Message({id, name, image, profileId}) {
     // code for sending message
     const [message, setMessage] = useState('')
     
+    useEffect( async () => {
+        if(contactId){
+            console.log({contactId}) 
+            try{
+                const res = await getContactDetails(contactId)
+                console.log(res)
+                if(res.status === 200){
+                    setContact({...res.data})
+                }
+            } catch(err){
+            } 
+        } 
+    }, [contactId])
+    
+    useEffect( async () => { 
+    }, [contact])
+    
 
+
+
+    // for message 
+
+  const [allMessages, setAllMessages] = useState([]);
+  const messagesRef = useRef(null);
+  const [lastSeenMessage, setLastSeenMessage] = useState(null);
+    
+  const getMsgsForContact = async (contact_id) => {
+    try {
+      const res = await getMessagesForContact(contact_id);
+      console.log(res)
+      setAllMessages(res.data)
+      setTimeout(() => {
+        messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+        messagesRef.current.style.scrollBehavior = "smooth"; 
+
+      }, 1);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+ 
+  useEffect(() => {
+    // console.log({contacts})
+    if (contactId) {
+    //   contacts.find(contact => contact.contact_id == params.id ? setContact({...contact}) : null)
+      getMsgsForContact(contactId)
+    }
+  }, [contactId]);
+
+    useEffect(() => {
+        setLastSeenMessage(allMessages.findLast(msg => (msg.status=='seen')))
+      }, [allMessages])
+    
     return (
         <>
-
-            <MessageWrapper  closeMessageId={closeMessageId} msgId={id} >
+        {
+            // contact &&
+            <MessageWrapper  closeMessageId={closeMessageId} msgId={contact?.contact_id} >
                 <MessageHeaderTitle>
                     <MessageDetails>
-                        <MsgProfImg src={image} />
-                        <ProfName to={`/message/${profileId}/`}>{name} {id}</ProfName>
+                        <MsgProfImg src={contact?.profile?.profile_img} />
+                        <ProfName to={`/messages/${contact?.contact_id}/`}>{contact?.profile?.name} {contact?.contact_id}</ProfName>
                     </MessageDetails>
-                    <CloseIconWrap onClick={() => handleCloseMessage(id)}>
+                    <CloseIconWrap onClick={() => handleCloseMessage(contact?.contact_id)}>
                         <IoClose />
                     </CloseIconWrap>
                 </MessageHeaderTitle>
-                <MessagesDiv>
-
+                <MessagesDiv  ref={messagesRef}>
+                    {allMessages?.map((message, i) => (
+                    // <MessageDiv key={i} type={message?.message_from_me ? 'sent' : 'received'}>
+                        <Message type={message?.message_from_me ? 'sent' : 'received'}>
+                        {message?.message}
+                        {message?.message_from_me ? (
+                            <MessageStatus status={message?.status}>
+                            {message?.status === "seen" ? (
+                                lastSeenMessage?.id == message?.id ?
+                                <ProfileImg src={'profile'} size="100%" /> : ''
+                            ) : message.status === "delivered" ? (
+                                <IoCheckmarkCircleSharp size="100%" />
+                            ) : message.status === "sent" ? (
+                                <IoCheckmarkCircleOutline size="100%" />
+                            ) : message.status === "sending" ? (
+                                <IoEllipseOutline size="100%" />
+                            ) : (
+                                message?.status
+                            )}
+                            </MessageStatus>
+                        ) : (
+                            ""
+                        )}
+                        </Message>
+                    // </MessageDiv>
+                    ))}
                 </MessagesDiv>
                 <SendMessageDiv>
                     <EmojiWrap ref={refCont} show={showEmojiOption}>
@@ -92,6 +174,8 @@ export default function Message({id, name, image, profileId}) {
                     </EmojiMessageDiv>
                 </SendMessageDiv>
             </MessageWrapper>  
+        }
+
         </>
     )
 }

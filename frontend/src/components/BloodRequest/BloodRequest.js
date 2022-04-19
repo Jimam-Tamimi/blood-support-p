@@ -104,7 +104,7 @@ export default function BloodRequest({
           </Map>
         </RequestAddress>
         <RequestDetails>
-          <NumOfReq style={{ width: "100%", zIndex: 1  }}>
+          <NumOfReq style={{ width: "100%", }}>
             <Dropdown  options={dropDownOption} absolute />
             {/* <IconDiv onClick={e => setShowDropdown(!showDropdown)} style={{margin: "unset", position: "absolute", top: "-4px", right: "-16px"}} scaleOnHover  width="30px" fontSize="20px" height="30px">
                             <BsThreeDotsVertical/>

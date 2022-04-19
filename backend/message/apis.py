@@ -1,4 +1,5 @@
 import json
+from time import sleep
 from account.models import Profile
 from account.serializers import UserSerializer
 from message.serializers import *
@@ -51,6 +52,8 @@ class MessageViewSet(ModelViewSet):
                             contacts_data.append(contact_profile_data)
                         except Profile.DoesNotExist:
                             pass
+        # sleep(4)
+
         return Response({'contacts': contacts_data})
 
 
@@ -92,28 +95,34 @@ class MessageViewSet(ModelViewSet):
         data ={
             'contact_id': contact.id,
         }
+        
         return Response(data, status=status.HTTP_200_OK)
 
 
 
 
 
-    @action(detail=False, methods=['post'], url_path='getContactDetails')
+    @action(detail=False, methods=['get'], url_path='get-contact-details')
     def getContactDetails(self, request):
-        # sourcery skip: remove-pass-body, use-contextlib-suppress
         try:
-            contact = Contact.objects.get(id=request.data['contact_id'])
+            contact = Contact.objects.get(id=request.GET['contact_id'])
         except Contact.DoesNotExist:
             return Response({'success': False, 'error': 'Contact does not exist'}, status=status.HTTP_404_NOT_FOUND)
         
         data ={
             'contact_id': contact.id,
-            'users': []
         }
-        for user in contact.users.all():
-            data['users'].append(UserSerializer(user, context={'request': request}).data)
-        
-         
+        if(len(contact.users.all()) > 2):
+            # for groups
+            pass
+        else:
+            for user in contact.users.all():
+                if(user != request.user): 
+                    try:
+                        profile = Profile.objects.get(user=user)
+                    except Profile.DoesNotExist:
+                        return Response({'success': False, 'error': 'This user has not completed his profile'}, status=status.HTTP_404_NOT_FOUND)
+                    data['profile'] = ProfileSerializer(profile, context={'request': request}).data        
         return Response(data, status=status.HTTP_200_OK)
 
 

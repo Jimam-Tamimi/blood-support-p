@@ -11,6 +11,7 @@ import {
   ButtonDiv,
   Badge,
   Button,
+  ButtonLink,
 } from "../../styles/Essentials.styles";
 
 import {
@@ -51,7 +52,7 @@ import {
   Label,
   TextArea,
 } from "../../styles/Form.styles";
-import { getCurrentLocation } from "../../helpers";
+import { getCurrentLocation, messageToUser } from "../../helpers";
 import Select from "react-select";
 import ImageUpload from "../../components/ImageUpload/ImageUpload";
 
@@ -190,6 +191,7 @@ function Details({ profile, getProfile, setProfile }) {
   // hooks
   const auth = useSelector((state) => state.auth);
   const { id } = useParams();
+  const history = useHistory();
 
   const report = () => {
     // call api to report this request
@@ -206,6 +208,8 @@ function Details({ profile, getProfile, setProfile }) {
     !profile?.user?.is_favorite ? { name: "Add To Favorites", icon: <FaBan />, onClick: () => addUserToFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = true; setProfile({ ...profile})}).catch() } : { name: "Remove From Favorites", icon: <FaBan />, onClick: () => removeUserFromFavorites(profile?.user?.id).then(res => {profile.user.is_favorite = false; setProfile({ ...profile})}).catch() },
 
   ]
+
+  
 
   return (
     <>
@@ -241,7 +245,7 @@ function Details({ profile, getProfile, setProfile }) {
           <Detail>
             <DetailFieldValue>{profile?.description}</DetailFieldValue>
           </Detail>
-          {id == auth?.user_id && (
+          {id == auth?.user_id ? (
             <ButtonDiv style={{ marginTop: "20px" }}>
               <Button
                 onClick={(e) => setShowUpdateFormModal(true)}
@@ -265,7 +269,10 @@ function Details({ profile, getProfile, setProfile }) {
                 />
               </Modal>
             </ButtonDiv>
-          )}
+          ) :
+          <Button onClick={e => messageToUser(profile.user.id, history)} info>Message</Button>
+
+          }
         </DetailsDiv>
         <ActionDiv>
           <Action>

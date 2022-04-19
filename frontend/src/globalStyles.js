@@ -10,7 +10,7 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     box-sizing: border-box;
     font-family: 'Source Sans Pro', sans-serif;
-    scroll-behavior: smooth;
+    /* scroll-behavior:  ; */
 
   }
   
@@ -27,6 +27,7 @@ const GlobalStyle = createGlobalStyle`
     --info-color: #0d6efd;
     --info-hover-color: #0c5bce;
     --main-box-shadow-color:  #00000061;
+    --loader-color:  #dc3545;
  
     ${({ darkMode }) => {
       if (darkMode) {
