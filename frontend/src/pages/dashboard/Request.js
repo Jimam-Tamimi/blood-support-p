@@ -842,7 +842,7 @@ const ReviewDonor = ({ requestData, setRequestData }) => {
       <Button
         disabled={!profile.isCompleted || requestData.status !== "Accepted"}
         onClick={(e) => setShowReviewDonorModal(true)}>
-        Complete
+        Review Donor
       </Button>
       {profile.isCompleted && requestData.status === "Accepted" && (
         <Modal
@@ -1411,7 +1411,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
         setDonorRequestMoreDetails(null);
         setShowDonorRequest(false);
     }
-  }, [location, donorRequestData]);
+  }, [location.pathname, donorRequestData]);
   
 
   return (
@@ -1641,9 +1641,11 @@ const DonorRequestMoreDetails = ({
         );
         console.log(res);
         if (res.status === 200) {
-          setRequestData({ ...requestData, status: "Accepted" });
+          await  setRequestData({ ...requestData, status: "Accepted" });
           dispatch(alert("Donor request accepted", "success"));
-          setShowDonorRequest(false);
+          setTimeout( async () => {
+            await setShowDonorRequest(false);
+          }, 200);
         }
       } catch (error) {
         if (error?.response?.data?.success === false) {
@@ -1665,10 +1667,11 @@ const DonorRequestMoreDetails = ({
       );
       console.log(res);
       if (res.status === 200) {
-        setRequestData({ ...requestData, status: "Open" });
+        await setRequestData({ ...requestData, status: "Open" });
         dispatch(alert("Donor request rejected", "success"));
-        setShowDonorRequest(false);
-      }
+        setTimeout( async () => {
+          await setShowDonorRequest(false);
+        }, 200);      }
     } catch (error) {
       if (error?.response?.data?.success === false) {
         dispatch(alert(error?.response?.data?.error, "danger"));
@@ -1691,8 +1694,9 @@ const DonorRequestMoreDetails = ({
         dispatch(
           alert("Accepted donor request was canceled successfully", "success")
         );
-        setShowDonorRequest(false);
-      }
+        setTimeout( async () => {
+          await setShowDonorRequest(false);
+        }, 200);      }
     } catch (error) {
       if (error?.response?.data?.success === false) {
         dispatch(alert(error?.response?.data?.error, "danger"));

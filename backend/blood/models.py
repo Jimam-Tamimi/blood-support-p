@@ -54,9 +54,7 @@ class DonorRequest(models.Model):
     location = models.JSONField(blank=False, null=False)
     status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Reviewed", "Reviewed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
-    
      
-    
 
 class DonorRequestReview(models.Model):
     donor_request = models.OneToOneField(DonorRequest, on_delete=models.CASCADE, unique=True)
@@ -101,3 +99,35 @@ class FavoriteDonorRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     donor_request = models.ForeignKey(DonorRequest, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+NOTIFICATION_TYPE_CHOICES = (
+    ("NEW_BLOOD_REQUEST", "NEW_BLOOD_REQUEST"), 
+    ("DONOR_REQUEST_GOT", "DONOR_REQUEST_GOT"), 
+    ("BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_UPDATED"), 
+    ("BLOOD_REQUEST_DELETED", "BLOOD_REQUEST_DELETED"), 
+    ("DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_ACCEPTED"), 
+    ("DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED"), 
+    ("DONOR_REQUEST_REJECTED", "DONOR_REQUEST_REJECTED"), 
+    ("DONOR_REQUEST_RESTORED", "DONOR_REQUEST_RESTORED"), 
+    ("DONOR_REQUEST_DELETED", "DONOR_REQUEST_DELETED"), 
+    ("DONOR_REQUEST_UPDATED", "DONOR_REQUEST_UPDATED"), 
+    ("DONOR_REQUEST_REVIEWED", "DONOR_REQUEST_REVIEWED"), 
+    ("BLOOD_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED"), 
+)
+
+
+class NotificationData(models.Model):
+    type = models.CharField(max_length=300, blank=False, null=False, choices=NOTIFICATION_TYPE_CHOICES)
+    data = models.JSONField(blank=False, null=False) 
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+
+
+class Notification(models.Model):
+    notification_data = models.ForeignKey(NotificationData, on_delete=models.CASCADE, blank=False, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
+

@@ -3,6 +3,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 import uuid
+import geopy.distance
 
 
 # Create your models here.
@@ -61,6 +62,15 @@ class Profile(models.Model):
 
         super(Profile, self).save(*args, **kwargs)
     
+    def distance_from_user(self, user):
+        try:
+            userProfile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            return None
+        
+        coords_1 = (userProfile.location['lat'], userProfile.location['lng'])
+        coords_2 = (self.location['lat'], self.location['lng'])
+        return geopy.distance.distance(coords_1, coords_2).km
     
 class Verification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)

@@ -213,7 +213,7 @@ function NavMessageSection({ handleNavMsgClick, showComponent }) {
         contacts?.map(contact => (
           <Message
             onClick={(e) => handleNavMsgClick(e, contact.contact_id)}
-            to={`/message/${contact.contact_id}`}
+            to={`/messages/${contact.contact_id}`}
           >
             <ProfImg src={contact.profile_img} />
             <MsgInfo>

@@ -15,6 +15,7 @@ import time
 
 from account.models import Profile as UserProfile
 from account.serializers import ProfileSerializer
+from blood.helpers import get_users_within_my_area
 from .serializers import *
 from .models import *
 
@@ -31,6 +32,21 @@ class BloodRequestViewSet(ModelViewSet):
     filterset_fields = ['status']
     # ordering_fields = ['date_time', 'timestamp', 'location']
     search_fields = ["name", "email", "date_time", "number", "add_number", "blood_group", "location", "status", "description", "timestamp"]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        print(serializer.data)
+        notData = {
+            "blood_request_id": serializer.data['id'],
+        }
+        notificationData = NotificationData.objects.create(type="NEW_BLOOD_REQUEST", data=notData)
+        notification_users = set(get_users_within_my_area(request.user))
+        print(notification_users)
+        # Notification.objects.create(user=user, notification_data=notificationData)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
