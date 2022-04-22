@@ -4,9 +4,6 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from blood.helpers import generate_slug
-
-from blood.helpers import random_string_generator
 
 User = get_user_model()
 
@@ -37,7 +34,7 @@ class BloodRequest(models.Model):
     status = models.CharField(max_length=30, blank=False, null=False, default="Open", choices=(("Open", "Open"), ("Accepted", "Accepted"), ("Reviewed By Requestor", "Reviewed By Requestor"),  ("Completed", "Completed"), ("Expired", "Expired") ))
     description = models.TextField(max_length=500, blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
-     
+    
     
      
      
@@ -54,6 +51,10 @@ class DonorRequest(models.Model):
     location = models.JSONField(blank=False, null=False)
     status = models.CharField(max_length=30, blank=False, null=False, default="Pending", choices=(("Pending", "Pending"), ("Accepted", "Accepted"), ("Reviewed", "Reviewed"), ("Rejected", "Rejected") ))
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def get_donor_request_users_for_blood_request(self, bloodRequest):
+        for donorRequest in self.objects.filter(blood_request=bloodRequest):
+            yield donorRequest.user
      
 
 class DonorRequestReview(models.Model):
@@ -102,16 +103,16 @@ class FavoriteDonorRequest(models.Model):
 
 
 NOTIFICATION_TYPE_CHOICES = (
-    ("NEW_BLOOD_REQUEST", "NEW_BLOOD_REQUEST"), 
-    ("DONOR_REQUEST_GOT", "DONOR_REQUEST_GOT"), 
-    ("BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_UPDATED"), 
-    ("BLOOD_REQUEST_DELETED", "BLOOD_REQUEST_DELETED"), 
+    ("NEW_BLOOD_REQUEST", "NEW_BLOOD_REQUEST"),  #done
+    ("DONOR_REQUEST_GOT", "DONOR_REQUEST_GOT"), #done
+    ("BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_UPDATED"),  #done 
+    ("BLOOD_REQUEST_DELETED", "BLOOD_REQUEST_DELETED"), #done
     ("DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_ACCEPTED"), 
     ("DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED"), 
     ("DONOR_REQUEST_REJECTED", "DONOR_REQUEST_REJECTED"), 
     ("DONOR_REQUEST_RESTORED", "DONOR_REQUEST_RESTORED"), 
-    ("DONOR_REQUEST_DELETED", "DONOR_REQUEST_DELETED"), 
-    ("DONOR_REQUEST_UPDATED", "DONOR_REQUEST_UPDATED"), 
+    ("DONOR_REQUEST_DELETED", "DONOR_REQUEST_DELETED"), #done
+    ("DONOR_REQUEST_UPDATED", "DONOR_REQUEST_UPDATED"), #done
     ("DONOR_REQUEST_REVIEWED", "DONOR_REQUEST_REVIEWED"), 
     ("BLOOD_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED"), 
 )
@@ -129,5 +130,7 @@ class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-
+    def create_for_users(self, users, notification_data):
+        for user in users:
+            self.objects.create(user=user, notification_data=notification_data)
 

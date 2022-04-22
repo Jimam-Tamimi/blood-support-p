@@ -72,6 +72,12 @@ class Profile(models.Model):
         coords_2 = (self.location['lat'], self.location['lng'])
         return geopy.distance.distance(coords_1, coords_2).km
     
+    def distance_from(self, location):
+        
+        coords_1 = (location['lat'], location['lng'])
+        coords_2 = (self.location['lat'], self.location['lng'])
+        return geopy.distance.distance(coords_1, coords_2).km
+    
 class Verification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
     code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)

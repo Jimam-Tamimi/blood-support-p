@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.filters import OrderingFilter, SearchFilter
-from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.filters import OrderingFilter, SearchFilter 
 
 from django.db.models import Q
 import time
@@ -15,11 +14,11 @@ import time
 
 from account.models import Profile as UserProfile
 from account.serializers import ProfileSerializer
-from blood.helpers import get_users_within_my_area
+from blood.helpers import get_users_within_an_area, get_users_from_blood_request_for_donor_request, get_users_from_accepted_or_reviewed_donor_request
 from .serializers import *
 from .models import *
 
-
+import threading
 # Create your views here.
 
 User = get_user_model()
@@ -37,15 +36,21 @@ class BloodRequestViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        print(serializer.data)
-        notData = {
-            "blood_request_id": serializer.data['id'],
-        }
-        notificationData = NotificationData.objects.create(type="NEW_BLOOD_REQUEST", data=notData)
-        notification_users = set(get_users_within_my_area(request.user))
-        print(notification_users)
-        # Notification.objects.create(user=user, notification_data=notificationData)
+        headers = self.get_success_headers(serializer.data) 
+
+        def send_notification():
+            notData = {
+                "blood_request_id": serializer.data['id'],
+            }
+            notificationData = NotificationData.objects.create(type="NEW_BLOOD_REQUEST", data=notData)
+            notification_users = set(get_users_within_an_area(serializer.data['location']))
+            for user in get_users_from_blood_request_for_donor_request(request.user):
+                notification_users.add(user)
+            for user in get_users_from_accepted_or_reviewed_donor_request(request.user):
+                notification_users.add(user) 
+            Notification.create_for_users(Notification, users=notification_users, notification_data=notificationData)
+        threading.Thread(target=send_notification).start()
+
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
@@ -55,12 +60,73 @@ class BloodRequestViewSet(ModelViewSet):
 
         if(instance.user == request.user):
             if(instance.status == "Open"):
-
-                return super().destroy(request, *args, **kwargs)
+                instance = self.get_object()
+                self.perform_destroy(instance)
+                def send_notification():
+                    notData = {
+                        "blood_request_user": instance.user.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_DELETED", data=notData)
+ 
+                    Notification.create_for_users(Notification, users=DonorRequest.get_donor_request_users_for_blood_request(instance), notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(status=status.HTTP_204_NO_CONTENT)
             else:
                 return Response({'success': False,  "error": "You can't delete this request now "}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'success': False, "error": "You are not authorized to delete this request"}, status=status.HTTP_403_FORBIDDEN)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if(request.user.is_staff or request.user.is_superuser):
+            return super().update(request, *args, **kwargs)
+
+        if(instance.user == request.user):
+            if(instance.status == "Open"):
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                def send_notification():
+                    notData = {
+                        "blood_request_id": instance.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_UPDATED", data=notData)
+ 
+                    Notification.create_for_users(Notification, users=DonorRequest.get_donor_request_users_for_blood_request(DonorRequest, instance), notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(serializer.data)
+            else:
+                return Response({'success': False,  "error": "You can't update this request now "}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'success': False, "error": "You are not authorized to update this request"}, status=status.HTTP_403_FORBIDDEN)
+ 
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if(request.user.is_staff or request.user.is_superuser):
+            return super().partial_update(request, *args, **kwargs)
+
+        if(instance.user == request.user):
+            if(instance.status == "Open"):
+                partial = kwargs.pop('partial', True)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                def send_notification():
+                    notData = {
+                        "blood_request_id": instance.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_UPDATED", data=notData)
+ 
+                    Notification.create_for_users(Notification, users=DonorRequest.get_donor_request_users_for_blood_request(instance), notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(serializer.data)
+            else:
+                return Response({'success': False,  "error": "You can't update this request now "}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'success': False, "error": "You are not authorized to update this request"}, status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=True, methods=['get'], url_path='have-sent-donor-request')
     def haveSentDonorRequest(self, request, pk=None):
@@ -361,6 +427,12 @@ class DonorRequestViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
+            bloodRequest = BloodRequest.objects.get(id=request.data['blood_request'])
+        except BloodRequest.DoesNotExist:
+            return Response({'success': False, 'error': 'Blood request not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+        try:
 
             if(not UserProfile.objects.get(user=request.user).isCompleted):
                 return Response({'success': False, 'message': 'You must complete your profile before sending a donor request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -372,7 +444,23 @@ class DonorRequestViewSet(ModelViewSet):
 
         if(BloodRequest.objects.filter(id=request.data['blood_request'], user=request.user).exists()):
             return Response({'success': False, 'error': 'You can\'t send a donor request to your own blood request'}, status=status.HTTP_400_BAD_REQUEST)
-        return super().create(request, *args, **kwargs)
+
+   
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        def send_notification():
+            notData = {
+                "donor_request_id": serializer.data['id'],
+            }
+            notificationData = NotificationData.objects.create(type="DONOR_REQUEST_GOT", data=notData)
+            Notification.objects.create(user=bloodRequest.user, notification_data=notificationData)
+        threading.Thread(target=send_notification).start()
+
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
     def update(self, request, *args, **kwargs):
         if(request.user.is_staff):
@@ -380,12 +468,26 @@ class DonorRequestViewSet(ModelViewSet):
         donorRequest = self.get_object()
         if(donorRequest.user == request.user):
             if(donorRequest.status == 'Pending'):
-                return super().update(request, *args, **kwargs)
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                def send_notification():
+                    notData = {
+                        "donor_request_id": instance.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_UPDATED", data=notData)
+                    Notification.objects.create(user=instance.blood_request.user, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                 
             else:
                 return Response({'success': False, 'error': 'You can not update this request right now'}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response({'success': False, 'error': 'You are not authorized to update this donor request 😒'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
     def partial_update(self, request, *args, **kwargs):
         if(request.user.is_staff):
@@ -393,7 +495,19 @@ class DonorRequestViewSet(ModelViewSet):
         donorRequest = self.get_object()
         if(donorRequest.user == request.user):
             if(donorRequest.status == 'Pending'):
-                return super().partial_update(request, *args, **kwargs)
+                partial = kwargs.pop('partial', True)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                def send_notification():
+                    notData = {
+                        "donor_request_id": instance.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_UPDATED", data=notData)
+                    Notification.objects.create(user=instance.blood_request__user, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response({'success': False, 'error': 'You can not update this request right now'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -406,7 +520,16 @@ class DonorRequestViewSet(ModelViewSet):
         donorRequest = self.get_object()
         if(donorRequest.user == request.user):
             if(donorRequest.status == 'Pending'):
-                return super().destroy(request, *args, **kwargs)
+                instance = self.get_object()
+                self.perform_destroy(instance)
+                def send_notification():
+                    notData = {
+                        "donor_request_id": instance.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_DELETED", data=notData)
+                    Notification.objects.create(user=instance.blood_request.user, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
+                return Response(status=status.HTTP_204_NO_CONTENT)
             else:
                 return Response({'success': False, 'error': 'You can not delete this request right now'}, status=status.HTTP_400_BAD_REQUEST)
 
