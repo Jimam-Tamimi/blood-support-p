@@ -2,9 +2,9 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from account.serializers import ProfileSerializer
-from .models import *
 from account.models import Profile
 from account.serializers import UserSerializer
+from blood.models import *
 
 class BloodRequestSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -78,6 +78,9 @@ class BloodRequestReviewSerializer(ModelSerializer):
     class Meta:
         model = BloodRequestReview
         fields = "__all__" 
+ 
+    
+    
  
     
     

@@ -596,5 +596,25 @@ new Promise(async (resolve, reject) => {
 
 });
 
+export const getNotifications = async (requestUrl=null, showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+
+    const res = await axios.get(requestUrl ? requestUrl : `${process.env.REACT_APP_API_URL}api/account/notifications/`); 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to fetch your contact details 😕", "danger"));
+      }
+    }
+  }
+
+});
+
 
  

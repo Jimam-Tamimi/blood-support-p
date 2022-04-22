@@ -15,6 +15,7 @@ from account.apis import *
 # 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSets) 
+router.register(r'notifications', NotificationsSets) 
 router.register(r'profile', ProfileViewSet) 
 
 urlpatterns = [

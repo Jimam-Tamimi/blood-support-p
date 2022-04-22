@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db.models import Q
+from account.models import Client
 
 
 
@@ -18,6 +19,8 @@ MESSAGE_STATUS = (
     ("seen", "seen"),
     ("removed", "removed"),
 )
+ 
+
  
 
 class Contact(models.Model):
@@ -43,49 +46,26 @@ def send_message_update(sender, instance, created, **kwargs):
     # print(kwargs)
     # print(instance.status)
     # print(instance.Message__original_status)
-    
-    if not created:
-        if(instance.status != instance.Message__original_status):
-            data = {
-                "event": "message_status_update",
-                "message_id_server": instance.id,
-            }
-            channel_layer = get_channel_layer()
-            
-            for user in instance.contact.users.all():
-                # print(user)
-                try:
-                    user_channel_name = MessageClient.objects.get(user=user)
-                    data["status"] = instance.status 
-                    async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
-                        "type": 'message.status.update',
-                        'payload': data
-                    })
-                except MessageClient.DoesNotExist:
-                    continue
 
-            # oldMessages = Message.objects.filter(~Q(status=instance.status), contact=instance.contact)
-            # oldMessages = Message.objects.filter(~Q(status=instance.status))
-            # oldMessages = oldMessages.filter(contact=instance.contact)
-            # print(oldMessages)
-            # if(len(oldMessages) == 0):
-            #     return
-            # for msg in oldMessages:
-            #     # print(msg)
-            #     if(instance.status == "sent"):
-            #         break
-            #     elif(instance.status == "delivered"):
-            #         msg.status = "delevered"
-            #         msg.save()
-            #     elif(instance.status == "seen"):
-            #         msg.status = "seen"
-            #         msg.save()
-                # msg.status = instance.status
-                # msg.save()
+    if created:
+        return
+    if(instance.status != instance.Message__original_status):
+        data = {
+            "event": "message_status_update",
+            "message_id_server": instance.id,
+        }
+        channel_layer = get_channel_layer()
 
-    
-    
-class MessageClient(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
-    channel_name = models.CharField(max_length=256, blank=False, null=False)
-    
+        for user in instance.contact.users.all():
+            # print(user)
+            try:
+                user_channel_name = Client.objects.get(user=user, type='MESSAGE')
+                data["status"] = instance.status 
+                async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
+                    "type": 'message.status.update',
+                    'payload': data
+                })
+            except Client.DoesNotExist:
+                continue
+
+ 

@@ -15,7 +15,9 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from django_channels_jwt_auth_middleware.auth import JWTAuthMiddlewareStack
 
-from django.urls import path
+from django.urls import URLPattern, path
+
+from blood.consumers import NotificationConsumer
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
@@ -27,6 +29,7 @@ from random import choice
  
 from account.routing import ws_pattern as account_ws_pattern
 from message.routing import ws_pattern as message_ws_pattern
+from blood.routing import ws_pattern as blood_ws_pattern
  
  
  
@@ -36,8 +39,9 @@ from message.routing import ws_pattern as message_ws_pattern
 ws_pattern = [
     path('ws/account/', URLRouter(account_ws_pattern)),
     path('ws/message/', URLRouter(message_ws_pattern)),
+    path('ws/notification/', NotificationConsumer.as_asgi()),
 ]
-
+# print(URLPattern(message_ws_pattern))
 
 application = ProtocolTypeRouter({
     'http': get_asgi_application(),

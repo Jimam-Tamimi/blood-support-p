@@ -48,6 +48,8 @@ class BloodRequestViewSet(ModelViewSet):
                 notification_users.add(user)
             for user in get_users_from_accepted_or_reviewed_donor_request(request.user):
                 notification_users.add(user) 
+            notification_users.remove(request.user) 
+            
             Notification.create_for_users(Notification, users=notification_users, notification_data=notificationData)
         threading.Thread(target=send_notification).start()
 
@@ -175,12 +177,20 @@ class BloodRequestViewSet(ModelViewSet):
                         dReq.status = 'Reviewed'
                         dReq.save()
                         try:
-                            DonorRequestReview.objects.create(
+                            reviewed_donor_request = DonorRequestReview.objects.create(
                                 donor_request=dReq, rating=rating, description=description)
                         except Exception as e:
                             pass
                 bloodRequest.status = 'Reviewed By Requestor'
                 bloodRequest.save()
+                
+                def send_notification():
+                    notData = {
+                        "reviewed_donor_request_id": reviewed_donor_request.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_REVIEWED", data=notData)
+                    Notification.objects.create(user=reviewed_donor_request.donor_request.user, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
 
                 return Response({'success': True, 'message': 'You have submitted your feedback. Please wait for the donor to give his feedback. 😀'}, status=status.HTTP_200_OK)
             else:
@@ -210,10 +220,16 @@ class BloodRequestViewSet(ModelViewSet):
             return Response({'success': False, 'error': 'You haven\'t sent any donor request to this blood request'}, status=status.HTTP_401_UNAUTHORIZED)
         if(donorRequest.user == request.user):
             if(bloodRequest.status == 'Reviewed By Requestor'):
-                BloodRequestReview.objects.create(
-                    blood_request=bloodRequest, rating=rating, description=description)
+                reviewed_blood_request = BloodRequestReview.objects.create(blood_request=bloodRequest, rating=rating, description=description)
                 bloodRequest.status = 'Completed'
                 bloodRequest.save()
+                def send_notification():
+                    notData = {
+                        "reviewed_blood_request_id": reviewed_blood_request.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_REVIEWED", data=notData)
+                    Notification.objects.create(user=reviewed_blood_request.blood_request.user, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
                 return Response({'success': True, 'message': 'Your review was submitted successfully 😀'}, status=status.HTTP_200_OK)
             else:
                 return Response({'success': False, 'error': 'Please wait until the blood requestor submits his review.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -586,6 +602,19 @@ class DonorRequestViewSet(ModelViewSet):
                 donorRequest.save()
                 donorRequest.blood_request.status = 'Accepted'
                 donorRequest.blood_request.save()
+                def send_notification():
+                    notData = {
+                        "donor_request_id": donorRequest.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_ACCEPTED", data=notData)
+                    Notification.objects.create(user=donorRequest.user, notification_data=notificationData)
+                    notData = {
+                        "blood_request_id": donorRequest.blood_request.id,
+                    }
+                    notificationData = NotificationData.objects.create(type="DONOR_REQUEST_NOT_ACCEPTED", data=notData)
+                    notificationUsers = [donorRequest.user for donorRequest in DonorRequest.objects.filter(blood_request=donorRequest.blood_request).filter(~Q(status='Accepted'))]
+                    Notification.create_for_users(Notification, users=notificationUsers, notification_data=notificationData)
+                threading.Thread(target=send_notification).start()
                 return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
 
         except DonorRequest.DoesNotExist:
@@ -613,6 +642,13 @@ class DonorRequestViewSet(ModelViewSet):
 
             donorRequest.status = 'Rejected'
             donorRequest.save()
+            def send_notification():
+                notData = {
+                    "donor_request_id": donorRequest.id,
+                }
+                notificationData = NotificationData.objects.create(type="DONOR_REQUEST_REJECTED", data=notData)
+                Notification.objects.create(user=donorRequest.user, notification_data=notificationData)
+            threading.Thread(target=send_notification).start()
             return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
@@ -638,6 +674,13 @@ class DonorRequestViewSet(ModelViewSet):
             donorRequest.save()
             donorRequest.blood_request.status = 'Open'
             donorRequest.blood_request.save()
+            def send_notification():
+                notData = {
+                    "donor_request_id": donorRequest.id,
+                }
+                notificationData = NotificationData.objects.create(type="DONOR_REQUEST_CANCELED", data=notData)
+                Notification.objects.create(user=donorRequest.user, notification_data=notificationData)
+            threading.Thread(target=send_notification).start()
             return Response(self.get_serializer(donorRequest).data, status=status.HTTP_200_OK)
         except DonorRequest.DoesNotExist:
             return Response({'success': False, 'error': 'Donor request does not exist 😒'}, status=status.HTTP_404_NOT_FOUND)
@@ -735,3 +778,5 @@ class DonorRequestViewSet(ModelViewSet):
             # except Exception:
             #     return Response({'success': False, 'error': 'Something went wrong. Please try again'}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'success': True, 'message': 'Donor request removed from your favorites list 🙂'}, status=status.HTTP_204_NO_CONTENT)
+
+ 

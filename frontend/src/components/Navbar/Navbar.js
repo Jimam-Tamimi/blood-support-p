@@ -39,8 +39,11 @@ import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
 import { logOut } from "../../redux/auth/actions";
 import { useLocation } from "react-router-dom";
-import { getMyContacts } from "../../apiCalls";
-import {BeatLoader, PropagateLoader} from 'react-spinners'
+import { getMyContacts, getNotifications } from "../../apiCalls";
+import { BeatLoader, PropagateLoader } from 'react-spinners'
+import InfiniteScroll from 'react-infinite-scroller';
+import { getNotificationJSX } from "../../helpers";
+
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
   // redux
@@ -131,10 +134,10 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
                 scale
               >
                 <NavMessageCont ref={msgRef} message={true}>
-                {
-                  message &&
-                  <NavMessageSection showComponent={message} handleNavMsgClick={handleNavMsgClick} />
-                }
+                  {
+                    message &&
+                    <NavMessageSection showComponent={message} handleNavMsgClick={handleNavMsgClick} />
+                  }
                 </NavMessageCont>
 
               </Transition>
@@ -159,14 +162,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               scale
             >
               <NavNotificationCont ref={notRef}>
-                <DropDownHeading>All Notification</DropDownHeading>
-
-                <Notification to="/msg/rnghef">
-                  <NotImg src={prof} />
-                  <MsgInfo>
-                    <NotMsg>Jimam Is A Very Good Boy</NotMsg>
-                  </MsgInfo>
-                </Notification>
+                <NavNotificationSection notRef={notRef} />
               </NavNotificationCont>
             </Transition>
           </NavNotificationWrap>
@@ -208,23 +204,96 @@ function NavMessageSection({ handleNavMsgClick, showComponent }) {
       <DropDownHeading> All Messages</DropDownHeading >
       {
 
-      contacts? 
-        
-        contacts?.map(contact => (
-          <Message
-            onClick={(e) => handleNavMsgClick(e, contact.contact_id)}
-            to={`/messages/${contact.contact_id}`}
-          >
-            <ProfImg src={contact.profile_img} />
-            <MsgInfo>
-              <Name>{contact.name}</Name>
-              <Msg>{contact?.last_message_from}: {contact?.last_message}</Msg>
+        contacts ?
 
-            </MsgInfo>
-          </Message>
-        )) :
-        <PropagateLoader  color="var(--loader-color)" css={{margin: "auto"}} /> 
+          contacts?.map(contact => (
+            <Message
+              onClick={(e) => handleNavMsgClick(e, contact.contact_id)}
+              to={`/messages/${contact.contact_id}`}
+            >
+              <ProfImg src={contact.profile_img} />
+              <MsgInfo>
+                <Name>{contact.name}</Name>
+                <Msg>{contact?.last_message_from}: {contact?.last_message}</Msg>
+
+              </MsgInfo>
+            </Message>
+          )) :
+          <PropagateLoader color="var(--loader-color)" css={{ margin: "auto" }} />
       }
+    </>
+  )
+}
+
+
+function NavNotificationSection({ notRef }) {
+
+  const [notification, setNotification] = useState(null)
+
+  const getNotificationsData = async () => {
+    try {
+      const res = await getNotifications();
+      console.log(res)
+      setNotification({ ...res.data })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  const loadMoreNotifications = async () => {
+    console.log("first")
+    try {
+      const res = await getNotifications(notification.next);
+      console.log(res)
+      setNotification({...notification, results: [...notification.results, ...res.data.results], next: res.data.next })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    getNotificationsData()
+  }, [])
+
+  useEffect(() => {
+    console.log(notification)
+  }, [notification])
+
+
+
+  return (
+    <>
+      <DropDownHeading>All Notification</DropDownHeading>
+      {
+        notification ?
+
+          <InfiniteScroll
+          pageStart={0}
+          loadMore={loadMoreNotifications}
+          hasMore={notification.next}
+          loader={<BeatLoader key={0} color="var(--loader-color)" margin="10px auto" />} 
+          useWindow={false}
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+
+          >
+            {
+              notification?.results.map(notf =>  <GetNotificationJSX />(notf))
+            }
+          </InfiniteScroll>
+
+          :
+          <BeatLoader color="var(--loader-color)" />
+      }
+
+
+      
+
     </>
   )
 }

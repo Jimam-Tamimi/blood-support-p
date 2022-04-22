@@ -2,6 +2,8 @@ import axios from "axios";
 import { setProgress } from "./redux/progress/actions";
 import store from "./redux/store";
 import { useHistory } from 'react-router-dom';
+import { MsgInfo, Notification, NotImg, NotMsg } from "./components/Navbar/Navbar.styles";
+import blankProfileImage from "./assets/img/blank-profile-pic.png";
 // import Geocode from "react-geocode";
 
 // Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
@@ -178,6 +180,7 @@ export const webSocketConnect = () => {
    
     window.USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
     window.MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
+    window.NOTIFICATION_WS = new WebSocket(`ws://localhost:8000/ws/notification/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`); 
       
   }
 }
@@ -187,6 +190,7 @@ export const webSocketDisconnect = () => {
    
     window.USER_WS.close()  
     window.MESSAGE_WS.close() 
+    window.NOTIFICATION_WS.close() 
       
 }
 
@@ -202,4 +206,34 @@ export const messageToUser = async (user_id, history) => {
     } catch (error) {
         console.log(error);
     }
+}
+
+ 
+export const GetNotificationJSX =   ({notification}) => {
+  console.log(notification)
+  notification = notification.notification_data
+  if( notification.type === "NEW_BLOOD_REQUEST"){
+    let data = {}
+     
+      axios.get(`${process.env.REACT_APP_API_URL}api/blood/blood-request/${notification.data.blood_request_id}/`).then(res => {
+
+        console.log(res)
+        data = res.data 
+      }).catch(error => {
+        if(error.response.status === 404){
+          data = "404_not_found"
+        }
+
+      })
+    
+    console.log(data)
+    return (
+      <Notification to="/msg/rnghef">
+        <NotImg src={blankProfileImage} />
+        <MsgInfo>
+          <NotMsg>{data?.name} has posted a blood request</NotMsg>
+        </MsgInfo>
+      </Notification>
+    )
+  }
 }

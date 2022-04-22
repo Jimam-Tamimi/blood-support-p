@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.template.defaultfilters import slugify
-
+from account.models import Client
+from rest_framework.serializers import ModelSerializer
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 User = get_user_model()
 
 # Create your models here.
@@ -110,7 +111,8 @@ NOTIFICATION_TYPE_CHOICES = (
     ("DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_ACCEPTED"), 
     ("DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED"), 
     ("DONOR_REQUEST_REJECTED", "DONOR_REQUEST_REJECTED"), 
-    ("DONOR_REQUEST_RESTORED", "DONOR_REQUEST_RESTORED"), 
+    ("DONOR_REQUEST_CANCELED", "DONOR_REQUEST_CANCELED"), 
+    ("DONOR_REQUEST_RESTORED", "DONOR_REQUEST_RESTORED"), # WILL DO
     ("DONOR_REQUEST_DELETED", "DONOR_REQUEST_DELETED"), #done
     ("DONOR_REQUEST_UPDATED", "DONOR_REQUEST_UPDATED"), #done
     ("DONOR_REQUEST_REVIEWED", "DONOR_REQUEST_REVIEWED"), 
@@ -134,3 +136,50 @@ class Notification(models.Model):
         for user in users:
             self.objects.create(user=user, notification_data=notification_data)
 
+            
+@receiver(post_save, sender=Notification)
+def send_notification(sender, instance, created, **kwargs):
+    if created:
+        data = NotificationDataSerializer(instance.notification_data).data
+        data["event"] = "send_notification"
+        channel_layer = get_channel_layer()
+        
+        try:
+            user_channel_name = Client.objects.get(user=instance.user, type="NOTIFICATION")
+            async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
+                "type": 'notification.send',
+                'payload': data
+            })
+        except Client.DoesNotExist:
+            pass
+        
+        
+        
+        
+        
+        # if(instance.status != instance.Message__original_status):
+        #     data = {
+        #         "event": "message_status_update",
+        #         "message_id_server": instance.id,
+        #     }
+        #     channel_layer = get_channel_layer()
+            
+        #     for user in instance.contact.users.all():
+        #         # print(user)
+        #         try:
+        #             user_channel_name = MessageClient.objects.get(user=user)
+        #             data["status"] = instance.status 
+        #             async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
+        #                 "type": 'message.status.update',
+        #                 'payload': data
+        #             })
+        #         except MessageClient.DoesNotExist:
+        #             continue
+        
+
+class NotificationDataSerializer(ModelSerializer):   
+    class Meta:
+        model = NotificationData
+        fields = [ "id", "type", "data"] 
+ 
+  

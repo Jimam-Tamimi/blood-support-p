@@ -97,3 +97,17 @@ class FavoriteUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     favorite_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorite_user")
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+
+    
+Client_TYPES = (
+    ("MESSAGE", "MESSAGE"),
+    ("NOTIFICATION", "NOTIFICATION"),
+    ("USER", "USER"), 
+)
+class Client(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
+    type = models.CharField(max_length=200, blank=False, null=False ,choices=Client_TYPES)
+    channel_name = models.CharField(max_length=256, blank=False, null=False)
+    

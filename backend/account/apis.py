@@ -1,5 +1,6 @@
 import contextlib
 import profile
+import time
 from django.db import connections
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
@@ -13,13 +14,15 @@ from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.pagination import PageNumberPagination
 
 from account.models import *
 from account.filters import ProfileFilter
+from blood.models import Notification
 from .serializers import *
-from account.threads import SendEmail
 from account.helpers import sendVerificationEmail
+
 
 # Create your views here.
 
@@ -156,7 +159,28 @@ class ProfileViewSet(ModelViewSet):
         except Exception:
             return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
     
+    
 
+class NotificationPagination(PageNumberPagination):       
+       page_size = 15
+class NotificationsSets(ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    authorization_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = NotificationPagination 
+    
+    def create(self, request, *args, **kwargs):
+        return Response({'success': False, 'error': 'Not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
+    def list(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            return super().list(request, *args, **kwargs)
+        # notifications = Notification.objects.filter(user=request.user)
+        notifications = Notification.objects.all()
+        paginated_notifications = self.paginate_queryset(notifications)
+        serialized_data = self.get_serializer(paginated_notifications, many=True).data
+        # time.sleep(   5)
+        return self.get_paginated_response(serialized_data, )
             
     
 @api_view(['GET'])

@@ -67,7 +67,7 @@ export default function HelpPeople() {
       <Wrap>
 
         {
-          allRequests.map((requestData, i) => (
+          allRequests?.map((requestData, i) => (
             <BloodRequest
             key={i}
               setShowRequestDetails={setShowRequestDetails}

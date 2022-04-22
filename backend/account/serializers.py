@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 
 
 from account.models import *
+from blood.models import Notification, NotificationDataSerializer
 
 User = get_user_model()
 
@@ -53,6 +54,22 @@ class ProfileSerializer(ModelSerializer):
     class Meta:
         model = Profile
         fields = "__all__"
+    
+    
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user'] = user
+        return super().create(validated_data)
+    
+    
+ 
+        
+class NotificationSerializer(ModelSerializer):
+    notification_data = NotificationDataSerializer(read_only=True)
+    class Meta:
+        model = Notification
+        fields = ["notification_data", "timestamp"]
     
     
 

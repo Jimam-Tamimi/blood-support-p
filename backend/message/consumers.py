@@ -1,6 +1,8 @@
+import contextlib
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
+from account.models import Client
 from message.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -9,16 +11,15 @@ User = get_user_model()
 class MessageConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
-        user_channel_names = await database_sync_to_async(MessageClient.objects.filter)(user=self.scope["user"])
+        user_channel_names = await database_sync_to_async(Client.objects.filter)(user=self.scope["user"],  type='MESSAGE')
         user_channel_names = await get_all_user_channel_names(user_channel_names)
         for c in user_channel_names:
             await database_sync_to_async(c.delete)()
-        await database_sync_to_async(MessageClient.objects.create)(channel_name=self.channel_name, user=self.scope["user"])
+        await database_sync_to_async(Client.objects.create)(channel_name=self.channel_name, user=self.scope["user"],  type='MESSAGE')
         await self.accept()
 
     async def receive_json(self, content, **kwargs):
-
-        if(content['event'] == 'send_message'):
+        if (content['event'] == 'send_message'):
             try:
                 contact = await database_sync_to_async(Contact.objects.get)(id=content['contact_id'])
             except Contact.DoesNotExist:
@@ -26,22 +27,12 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
 
             message = await database_sync_to_async(Message.objects.create)(contact=contact, from_user=self.scope["user"], message=content['message'])
             contact_users = await database_sync_to_async(contact.users.all)()
-            data = {
-                'event': 'message_send_success',
-                'success': 'true',
-                'message': message.message,
-                "status": message.status,
-                'message_id_server': message.timestamp,
-                'message_id_server': message.id,
-                'contact': message.contact.id,
-                'from_user': message.from_user.id,
-                'message_id_client': content["message_id_client"],
-                "message_from_user": False,
-            }
+            data = {'event': 'message_send_success', 'success': 'true', 'message': message.message, "status": message.status, 'message_id_server': message.id, 'contact': message.contact.id, 'from_user': message.from_user.id, 'message_id_client': content["message_id_client"], "message_from_user": False}
+
             for user in await (get_all_users)(contact):
                 if(user != self.scope["user"]):
                     try:
-                        user_channel_name = await database_sync_to_async(MessageClient.objects.get)(user=user)  
+                        user_channel_name = await database_sync_to_async(Client.objects.get)(user=user, type='MESSAGE')  
                         await self.channel_layer.send(user_channel_name.channel_name, {
                             "type": 'message.send',
                             'payload': data
@@ -52,18 +43,15 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                         for msg in await queryset_to_list(oldMessages): 
                             msg.status = "delivered" 
                             await database_sync_to_async(msg.save)()
-                    except MessageClient.DoesNotExist:
+                    except Client.DoesNotExist:
                         continue
 
             data['message_from_user'] = True
             await self.send_json(data)
-         
+
         elif(content['event'] == 'update_message_status'):   
             message = await database_sync_to_async(Message.objects.get)(id=content['message_id'])
-            # print("message.status")
-            # print(message.status)
-            # print(content['status'])
-            # print("content['status']")
+
             if(message.status != content['status']):
                 message.status = content['status']
                 await database_sync_to_async(message.save)()
@@ -73,22 +61,19 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                 for msg in await queryset_to_list(messages):
                     msg.status = "delivered"
                     await database_sync_to_async(msg.save)()
-                    
+
             elif(content['status'] == "seen"):
-                print("in seen")
                 messages = await get_not_seen_message_to_list(message)          
                 for msg in await queryset_to_list(messages):
                     msg.status = "seen"
                     await database_sync_to_async(msg.save)()
 
     async def disconnect(self, code):
-        try:
-            user_channel_names = await database_sync_to_async(MessageClient.objects.filter)(user=self.scope["user"])
+        with contextlib.suppress(Client.DoesNotExist):
+            user_channel_names = await database_sync_to_async(Client.objects.filter)(user=self.scope["user"], type='MESSAGE')
             user_channel_names = await get_all_user_channel_names(user_channel_names)
             for c in user_channel_names:
                 await database_sync_to_async(c.delete)()
-        except MessageClient.DoesNotExist:
-            pass
         return await super().disconnect(code)
 
     async def message_send(self, event):
