@@ -175,8 +175,8 @@ class NotificationsSets(ModelViewSet):
     def list(self, request, *args, **kwargs):
         if request.user.is_staff:
             return super().list(request, *args, **kwargs)
-        # notifications = Notification.objects.filter(user=request.user)
-        notifications = Notification.objects.all()
+        notifications = Notification.objects.filter(user=request.user).order_by('-id')
+        # notifications = Notification.objects.all()        
         paginated_notifications = self.paginate_queryset(notifications)
         serialized_data = self.get_serializer(paginated_notifications, many=True).data
         # time.sleep(   5)

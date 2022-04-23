@@ -134,7 +134,7 @@ export const Message = styled(DashLink)`
     }
 `
 export const Notification = styled(Message)`
-
+ 
 `
 
 
@@ -158,10 +158,10 @@ export const MsgElm = styled.div`
 `
 
 export const ProfImg = styled.img`
-    width: 55px;
+    min-width: 55px;
     border-radius: 100%;
     object-fit: cover;
-    height: 55px;
+    max-height: 55px;
     margin-right: 12px;
 `
 
@@ -173,6 +173,10 @@ export const NotMsg = styled(Msg)`
     font-size: 15px;
     margin-top: 0px;
     font-weight: 500;
+    b {
+    font-weight: 600;
+
+    }
 `
 
 export const NavLogout = styled(NavMessage)``

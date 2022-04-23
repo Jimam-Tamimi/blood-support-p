@@ -150,7 +150,8 @@ export default function Request({ match }) {
     dispatch(setProgress(30));
     await getRequestData();
     dispatch(setProgress(100));
-  }, []);
+    console.log("getreq")
+  }, [match?.params?.bloodRequestId]);
 
   const getRequestStatusInfo = async () => {
     if (requestData?.id) {
@@ -1411,7 +1412,7 @@ const DonorRequests = ({ match, requestData, setRequestData }) => {
         setDonorRequestMoreDetails(null);
         setShowDonorRequest(false);
     }
-  }, [location.pathname, donorRequestData]);
+  }, [location.search, donorRequestData]);
   
 
   return (

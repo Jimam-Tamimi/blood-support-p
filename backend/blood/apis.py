@@ -41,6 +41,7 @@ class BloodRequestViewSet(ModelViewSet):
         def send_notification():
             notData = {
                 "blood_request_id": serializer.data['id'],
+                "user_id": request.user.id,
             }
             notificationData = NotificationData.objects.create(type="NEW_BLOOD_REQUEST", data=notData)
             notification_users = set(get_users_within_an_area(serializer.data['location']))
@@ -67,6 +68,7 @@ class BloodRequestViewSet(ModelViewSet):
                 def send_notification():
                     notData = {
                         "blood_request_user": instance.user.id,
+                        "user_id": instance.user.id,
                     }
                     notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_DELETED", data=notData)
  
@@ -93,6 +95,7 @@ class BloodRequestViewSet(ModelViewSet):
                 def send_notification():
                     notData = {
                         "blood_request_id": instance.id,
+                        "user_id": instance.user.id,
                     }
                     notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_UPDATED", data=notData)
  
@@ -119,6 +122,7 @@ class BloodRequestViewSet(ModelViewSet):
                 def send_notification():
                     notData = {
                         "blood_request_id": instance.id,
+                        "user_id": instance.user.id,
                     }
                     notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_UPDATED", data=notData)
  
@@ -186,7 +190,10 @@ class BloodRequestViewSet(ModelViewSet):
                 
                 def send_notification():
                     notData = {
+                        "reviewed_blood_request_id": bloodRequest.id,
+                        
                         "reviewed_donor_request_id": reviewed_donor_request.id,
+                        "user_id": bloodRequest.user.id,
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_REVIEWED", data=notData)
                     Notification.objects.create(user=reviewed_donor_request.donor_request.user, notification_data=notificationData)
@@ -225,7 +232,9 @@ class BloodRequestViewSet(ModelViewSet):
                 bloodRequest.save()
                 def send_notification():
                     notData = {
-                        "reviewed_blood_request_id": reviewed_blood_request.id,
+                        "reviewed_blood_request_id": bloodRequest.id,
+                        "user_id": donorRequest.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="BLOOD_REQUEST_REVIEWED", data=notData)
                     Notification.objects.create(user=reviewed_blood_request.blood_request.user, notification_data=notificationData)
@@ -276,6 +285,9 @@ class BloodRequestViewSet(ModelViewSet):
                 print(donorRequest.date_time)
                 if (donorRequest.status == 'Pending' and donorRequest.blood_request.status == 'Open'):
                     return Response({'success': True, 'message': 'You have sent a donor request. Please wait for the blood requestor to check your donor request and respond to it 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
+
+                if (donorRequest.status == 'Rejected' and donorRequest.blood_request.status == 'Open'):
+                    return Response({'success': True, 'message': 'The blood requestor has rejected your donor request.', 'type': 'danger'}, status=status.HTTP_200_OK)
 
                 if(donorRequest.status == 'Accepted' and donorRequest.blood_request.status == 'Accepted'):
                     return Response({'success': True, 'message': f'Your donor request was accepted by the blood requestor. You have to donate blood at {donorRequest.date_time.strftime("%I:%M %p on %d %B %Y")} 🙂', 'type': 'info'}, status=status.HTTP_200_OK)
@@ -414,16 +426,20 @@ class BloodRequestViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='filter-my-favorite-blood-requests')
     def filterMyFavoriteBloodRequests(self, request):
-        wanted_items  = set()
         favBloodRequests = FavoriteBloodRequest.objects.filter(user=request.user)
-        for fav in favBloodRequests:
-            wanted_items.add(fav.blood_request.id)
-        
+        wanted_items = {fav.blood_request.id for fav in favBloodRequests}
         favBloodRequests = BloodRequest.objects.filter(id__in=wanted_items)
-            
-        favBloodRequests = self.filter_queryset(favBloodRequests) 
+
+        favBloodRequests = self.filter_queryset(favBloodRequests)
         return Response(self.get_serializer(favBloodRequests, many=True).data, status=status.HTTP_200_OK)
 
+
+    @action(detail=True, methods=['get'], url_path='blood-request-exist')
+    def bloodRequestExist(self, request, pk=None):
+        if(self.get_object()):
+            return Response({'success': True, 'message': 'Blood request exist'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False, 'error': 'Blood request does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
 class DonorRequestViewSet(ModelViewSet):
     queryset = DonorRequest.objects.all().order_by('-timestamp')
@@ -468,7 +484,9 @@ class DonorRequestViewSet(ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         def send_notification():
             notData = {
+                "blood_request_id": bloodRequest.id,
                 "donor_request_id": serializer.data['id'],
+                "user_id": request.user.id,
             }
             notificationData = NotificationData.objects.create(type="DONOR_REQUEST_GOT", data=notData)
             Notification.objects.create(user=bloodRequest.user, notification_data=notificationData)
@@ -491,7 +509,10 @@ class DonorRequestViewSet(ModelViewSet):
                 self.perform_update(serializer)
                 def send_notification():
                     notData = {
+                        "blood_request_id": instance.blood_request.id,
                         "donor_request_id": instance.id,
+                        "user_id": instance.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_UPDATED", data=notData)
                     Notification.objects.create(user=instance.blood_request.user, notification_data=notificationData)
@@ -518,7 +539,10 @@ class DonorRequestViewSet(ModelViewSet):
                 self.perform_update(serializer)
                 def send_notification():
                     notData = {
+                        "blood_request_id": instance.blood_request.id,
                         "donor_request_id": instance.id,
+                        "user_id": instance.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_UPDATED", data=notData)
                     Notification.objects.create(user=instance.blood_request__user, notification_data=notificationData)
@@ -540,7 +564,10 @@ class DonorRequestViewSet(ModelViewSet):
                 self.perform_destroy(instance)
                 def send_notification():
                     notData = {
+                        "blood_request_id": instance.blood_request.id,
                         "donor_request_id": instance.id,
+                        "user_id": instance.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_DELETED", data=notData)
                     Notification.objects.create(user=instance.blood_request.user, notification_data=notificationData)
@@ -604,12 +631,17 @@ class DonorRequestViewSet(ModelViewSet):
                 donorRequest.blood_request.save()
                 def send_notification():
                     notData = {
+                        "blood_request_id": donorRequest.blood_request.id,
                         "donor_request_id": donorRequest.id,
+                        "user_id": donorRequest.blood_request.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_ACCEPTED", data=notData)
                     Notification.objects.create(user=donorRequest.user, notification_data=notificationData)
                     notData = {
                         "blood_request_id": donorRequest.blood_request.id,
+                        "user_id": donorRequest.blood_request.user.id,
+
                     }
                     notificationData = NotificationData.objects.create(type="DONOR_REQUEST_NOT_ACCEPTED", data=notData)
                     notificationUsers = [donorRequest.user for donorRequest in DonorRequest.objects.filter(blood_request=donorRequest.blood_request).filter(~Q(status='Accepted'))]
@@ -644,7 +676,10 @@ class DonorRequestViewSet(ModelViewSet):
             donorRequest.save()
             def send_notification():
                 notData = {
+                    "blood_request_id": donorRequest.blood_request.id,
                     "donor_request_id": donorRequest.id,
+                    "user_id": donorRequest.blood_request.user.id,
+
                 }
                 notificationData = NotificationData.objects.create(type="DONOR_REQUEST_REJECTED", data=notData)
                 Notification.objects.create(user=donorRequest.user, notification_data=notificationData)
@@ -676,7 +711,9 @@ class DonorRequestViewSet(ModelViewSet):
             donorRequest.blood_request.save()
             def send_notification():
                 notData = {
+                    "blood_request_id": donorRequest.blood_request.id,
                     "donor_request_id": donorRequest.id,
+                    "user_id": donorRequest.blood_request.user.id,
                 }
                 notificationData = NotificationData.objects.create(type="DONOR_REQUEST_CANCELED", data=notData)
                 Notification.objects.create(user=donorRequest.user, notification_data=notificationData)

@@ -42,7 +42,7 @@ import { useLocation } from "react-router-dom";
 import { getMyContacts, getNotifications } from "../../apiCalls";
 import { BeatLoader, PropagateLoader } from 'react-spinners'
 import InfiniteScroll from 'react-infinite-scroller';
-import { getNotificationJSX } from "../../helpers";
+import { GetNotificationJSX } from "../../helpers";
 
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
@@ -283,7 +283,7 @@ function NavNotificationSection({ notRef }) {
 
           >
             {
-              notification?.results.map(notf =>  <GetNotificationJSX />(notf))
+              notification?.results.map(notf =>  <GetNotificationJSX notification={notf} />)
             }
           </InfiniteScroll>
 
