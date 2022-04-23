@@ -212,9 +212,7 @@ export const messageToUser = async (user_id, history) => {
 
 
 export const GetNotificationJSX = ({ notification }) => {
-  const [data, setData] = useState(null)
-  notification = notification.notification_data
-
+  const [data, setData] = useState(null) 
 
   useEffect(async () => {
     if (["NEW_BLOOD_REQUEST", "DONOR_REQUEST_GOT", "BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_DELETED", "DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_REJECTED", "DONOR_REQUEST_CANCELED", "DONOR_REQUEST_RESTORED", "DONOR_REQUEST_DELETED", "DONOR_REQUEST_UPDATED", "DONOR_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED",].includes(notification.type)) {
@@ -233,10 +231,9 @@ export const GetNotificationJSX = ({ notification }) => {
    
 
   }, [])
-  const location = useLocation() 
 
   return (
-    notification.type === "NEW_BLOOD_REQUEST" ?
+    notification?.type === "NEW_BLOOD_REQUEST" ?
     <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/`} >
       <NotImg src={data?.profile_img || blankProfileImage} />
       <MsgInfo>
@@ -244,7 +241,7 @@ export const GetNotificationJSX = ({ notification }) => {
       </MsgInfo>
     </Notification> 
 
-    : notification.type === "DONOR_REQUEST_GOT" ?
+    : notification?.type === "DONOR_REQUEST_GOT" ?
     <Notification activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
       <NotImg src={data?.profile_img || blankProfileImage} />
       <MsgInfo>
@@ -252,7 +249,7 @@ export const GetNotificationJSX = ({ notification }) => {
       </MsgInfo>
     </Notification> 
 
-    : notification.type === "BLOOD_REQUEST_UPDATED" ?
+    : notification?.type === "BLOOD_REQUEST_UPDATED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -260,7 +257,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "BLOOD_REQUEST_DELETED" ?
+    : notification?.type === "BLOOD_REQUEST_DELETED" ?
       <Notification  activeClassName=""  to={`#`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -268,7 +265,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_ACCEPTED" ?
+    : notification?.type === "DONOR_REQUEST_ACCEPTED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -276,7 +273,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_NOT_ACCEPTED" ?
+    : notification?.type === "DONOR_REQUEST_NOT_ACCEPTED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -284,7 +281,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_REJECTED" ?
+    : notification?.type === "DONOR_REQUEST_REJECTED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -292,7 +289,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_CANCELED" ?
+    : notification?.type === "DONOR_REQUEST_CANCELED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -300,7 +297,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_RESTORED" ?
+    : notification?.type === "DONOR_REQUEST_RESTORED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -308,7 +305,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_DELETED" ?
+    : notification?.type === "DONOR_REQUEST_DELETED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -316,7 +313,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_UPDATED" ?
+    : notification?.type === "DONOR_REQUEST_UPDATED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -324,7 +321,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "DONOR_REQUEST_REVIEWED" ?
+    : notification?.type === "DONOR_REQUEST_REVIEWED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
@@ -332,7 +329,7 @@ export const GetNotificationJSX = ({ notification }) => {
         </MsgInfo>
       </Notification> 
 
-    : notification.type === "BLOOD_REQUEST_REVIEWED" ?
+    : notification?.type === "BLOOD_REQUEST_REVIEWED" ?
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/review/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>

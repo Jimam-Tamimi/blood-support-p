@@ -257,8 +257,13 @@ function NavNotificationSection({ notRef }) {
   }, [])
 
   useEffect(() => {
-    console.log(notification)
-  }, [notification])
+    window.NOTIFICATION_WS.onmessage = (e) => {
+      const data = JSON.parse(e.data)
+      if(data.event === "send_notification"){
+        setNotification({...notification, results: [{notification_data: data.notification_data, timestamp: data.timestamp}, ...notification.results]})
+      }
+    }
+  })
 
 
 
@@ -283,7 +288,7 @@ function NavNotificationSection({ notRef }) {
 
           >
             {
-              notification?.results.map(notf =>  <GetNotificationJSX notification={notf} />)
+              notification?.results.map(notf =>  <GetNotificationJSX notification={notf.notification_data} />)
             }
           </InfiniteScroll>
 

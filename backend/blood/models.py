@@ -1,3 +1,4 @@
+import contextlib
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
@@ -139,19 +140,19 @@ class Notification(models.Model):
             
 @receiver(post_save, sender=Notification)
 def send_notification(sender, instance, created, **kwargs):
-    if created:
-        data = NotificationDataSerializer(instance.notification_data).data
-        data["event"] = "send_notification"
-        channel_layer = get_channel_layer()
-        
-        try:
-            user_channel_name = Client.objects.get(user=instance.user, type="NOTIFICATION")
-            async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
-                "type": 'notification.send',
-                'payload': data
-            })
-        except Client.DoesNotExist:
-            pass
+    if not created:
+        return
+    data = {"notification_data": NotificationDataSerializer(instance.notification_data).data, "event": "send_notification"}
+
+    data["timestamp"] = str(instance.timestamp)
+    channel_layer = get_channel_layer()
+
+    with contextlib.suppress(Client.DoesNotExist):
+        user_channel_name = Client.objects.get(user=instance.user, type="NOTIFICATION")
+        async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
+            "type": 'notification.send',
+            'payload': data
+        })
         
         
         
