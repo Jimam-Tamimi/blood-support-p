@@ -240,7 +240,7 @@ export const GetNotificationJSX = ({ notification }) => {
     <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/`} >
       <NotImg src={data?.profile_img || blankProfileImage} />
       <MsgInfo>
-        <NotMsg><b>{data?.name || "A User"}</b> has posted a blood request.</NotMsg>
+        <NotMsg><b>{data?.name || "A User"}</b> has posted a blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
       </MsgInfo>
     </Notification> 
 
@@ -248,7 +248,7 @@ export const GetNotificationJSX = ({ notification }) => {
     <Notification activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
       <NotImg src={data?.profile_img || blankProfileImage} />
       <MsgInfo>
-        <NotMsg><b>{data?.name || "A User"}</b> has sent you a donor request.</NotMsg>
+        <NotMsg><b>{data?.name || "A User"}</b> has sent a donor request <b>#{notification?.data?.donor_request_id}</b> on your blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
       </MsgInfo>
     </Notification> 
 
@@ -264,7 +264,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`#`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has deleted his blood request where you have sent donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has deleted his blood request where you have sent a donor request.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -272,7 +272,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has accepted your donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has accepted your donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -280,7 +280,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has accepted someone else's donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has accepted someone else's donor request for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -288,7 +288,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has rejected your donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has rejected your donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -296,7 +296,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has canceled your accepted donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has canceled your accepted donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -304,7 +304,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has restored your canceled donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has restored your canceled donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -312,7 +312,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has deleted his donor request from your blood request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has deleted his donor request from your blood request <b>#{notification?.data?.blood_request_id}</b> .</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -320,7 +320,7 @@ export const GetNotificationJSX = ({ notification }) => {
       <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has updated his donor request.</NotMsg>
+          <NotMsg><b>{data?.name || "A User"}</b> has updated his donor request <b>#{notification?.data?.donor_request_id}</b> for your blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
         </MsgInfo>
       </Notification> 
 
@@ -333,10 +333,10 @@ export const GetNotificationJSX = ({ notification }) => {
       </Notification> 
 
     : notification.type === "BLOOD_REQUEST_REVIEWED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/`}>
+      <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/review/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
         <MsgInfo>
-          <NotMsg><b>Your blood request #{notification?.data?.reviewed_blood_request_id} is completed. {data?.name || "A User"}</b> gave you a review as a donor requestor.</NotMsg>
+          <NotMsg>Your blood request <b>#{notification?.data?.reviewed_blood_request_id}</b> is completed. <b>{data?.name || "A User"}</b> has submitted his review as a donor.</NotMsg>
         </MsgInfo>
       </Notification> 
 

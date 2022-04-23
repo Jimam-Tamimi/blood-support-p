@@ -170,9 +170,9 @@ export const NavNotificationCont = styled(NavMessageCont)`
 `
 export const NotImg = styled(ProfImg)``
 export const NotMsg = styled(Msg)`
-    font-size: 15px;
+    font-size: 14px;
     margin-top: 0px;
-    font-weight: 500;
+    font-weight: 300;
     b {
     font-weight: 600;
 
