@@ -6,6 +6,8 @@ import { MsgInfo, Notification, NotImg, NotMsg } from "./components/Navbar/Navba
 import blankProfileImage from "./assets/img/blank-profile-pic.png";
 import { useEffect, useState } from "react";
 import { getProfileDetailsForUser } from "./apiCalls";
+import Moment from "react-moment";
+import updateInitialFrontendData from './redux/initialFrontendData/actions';
 // import Geocode from "react-geocode";
 
 // Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
@@ -213,12 +215,13 @@ export const messageToUser = async (user_id, history) => {
 
 export const GetNotificationJSX = ({ notification }) => {
   const [data, setData] = useState(null) 
-
+  let notification_data = notification.notification_data
+  console.log(notification)
   useEffect(async () => {
-    if (["NEW_BLOOD_REQUEST", "DONOR_REQUEST_GOT", "BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_DELETED", "DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_REJECTED", "DONOR_REQUEST_CANCELED", "DONOR_REQUEST_RESTORED", "DONOR_REQUEST_DELETED", "DONOR_REQUEST_UPDATED", "DONOR_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED",].includes(notification.type)) {
+    if (["NEW_BLOOD_REQUEST", "DONOR_REQUEST_GOT", "BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_DELETED", "DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_REJECTED", "DONOR_REQUEST_CANCELED", "DONOR_REQUEST_RESTORED", "DONOR_REQUEST_DELETED", "DONOR_REQUEST_UPDATED", "DONOR_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED",].includes(notification_data.type)) {
       try {
-          if(notification.data.user_id){
-            const res = await getProfileDetailsForUser(notification.data.user_id, false) 
+          if(notification_data.data.user_id){
+            const res = await getProfileDetailsForUser(notification_data.data.user_id, false) 
             setData({ ...res.data })
           } else {
             throw new Error('Exception');
@@ -233,111 +236,139 @@ export const GetNotificationJSX = ({ notification }) => {
   }, [])
 
   return (
-    notification?.type === "NEW_BLOOD_REQUEST" ?
-    <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/`} >
+    notification_data?.type === "NEW_BLOOD_REQUEST" ?
+    <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/`} >
       <NotImg src={data?.profile_img || blankProfileImage} />
-      <MsgInfo>
-        <NotMsg><b>{data?.name || "A User"}</b> has posted a blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+      <MsgInfo  is_read={notification?.is_read}  >
+        <NotMsg><b>{data?.name || "A User"}</b> has posted a blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"  is_read={notification?.is_read}  ><Moment fromNow>{notification?.timestamp}</Moment> </p>
       </MsgInfo>
     </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_GOT" ?
-    <Notification activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
+    : notification_data?.type === "DONOR_REQUEST_GOT" ?
+    <Notification activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donors/?donor-request-id=${notification_data?.data?.donor_request_id}`}>
       <NotImg src={data?.profile_img || blankProfileImage} />
-      <MsgInfo>
-        <NotMsg><b>{data?.name || "A User"}</b> has sent a donor request <b>#{notification?.data?.donor_request_id}</b> on your blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+      <MsgInfo is_read={notification?.is_read} >
+        <NotMsg><b>{data?.name || "A User"}</b> has sent a donor request <b>#{notification_data?.data?.donor_request_id}</b> on your blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+                
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
       </MsgInfo>
     </Notification> 
 
-    : notification?.type === "BLOOD_REQUEST_UPDATED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/`}>
+    : notification_data?.type === "BLOOD_REQUEST_UPDATED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
+        <MsgInfo is_read={notification?.is_read} >
           <NotMsg><b>{data?.name || "A User"}</b> has updated his blood request where you have sent donor request.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "BLOOD_REQUEST_DELETED" ?
+    : notification_data?.type === "BLOOD_REQUEST_DELETED" ?
       <Notification  activeClassName=""  to={`#`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
+        <MsgInfo is_read={notification?.is_read} >
           <NotMsg><b>{data?.name || "A User"}</b> has deleted his blood request where you have sent a donor request.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_ACCEPTED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
+    : notification_data?.type === "DONOR_REQUEST_ACCEPTED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has accepted your donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has accepted your donor request <b>#{notification_data?.data?.donor_request_id}</b> for blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_NOT_ACCEPTED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
+    : notification_data?.type === "DONOR_REQUEST_NOT_ACCEPTED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has accepted someone else's donor request for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has accepted someone else's donor request for blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_REJECTED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
+    : notification_data?.type === "DONOR_REQUEST_REJECTED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has rejected your donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has rejected your donor request <b>#{notification_data?.data?.donor_request_id}</b> for blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_CANCELED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
+    : notification_data?.type === "DONOR_REQUEST_CANCELED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has canceled your accepted donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has canceled your accepted donor request <b>#{notification_data?.data?.donor_request_id}</b> for blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_RESTORED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donor-request/`}>
+    : notification_data?.type === "DONOR_REQUEST_RESTORED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donor-request/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has restored your canceled donor request <b>#{notification?.data?.donor_request_id}</b> for blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has restored your canceled donor request <b>#{notification_data?.data?.donor_request_id}</b> for blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_DELETED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/`}>
+    : notification_data?.type === "DONOR_REQUEST_DELETED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donors/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has deleted his donor request from your blood request <b>#{notification?.data?.blood_request_id}</b> .</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has deleted his donor request from your blood request <b>#{notification_data?.data?.blood_request_id}</b> .</NotMsg>
+        <p className="timestamp" ><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_UPDATED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.blood_request_id}/donors/?donor-request-id=${notification?.data?.donor_request_id}`}>
+    : notification_data?.type === "DONOR_REQUEST_UPDATED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.blood_request_id}/donors/?donor-request-id=${notification_data?.data?.donor_request_id}`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg><b>{data?.name || "A User"}</b> has updated his donor request <b>#{notification?.data?.donor_request_id}</b> for your blood request <b>#{notification?.data?.blood_request_id}</b>.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg><b>{data?.name || "A User"}</b> has updated his donor request <b>#{notification_data?.data?.donor_request_id}</b> for your blood request <b>#{notification_data?.data?.blood_request_id}</b>.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "DONOR_REQUEST_REVIEWED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/`}>
+    : notification_data?.type === "DONOR_REQUEST_REVIEWED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.reviewed_blood_request_id}/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
+        <MsgInfo is_read={notification?.is_read} >
           <NotMsg><b>{data?.name || "A User"}</b> gave you a review as a blood requestor. Please review him to see your review</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
-    : notification?.type === "BLOOD_REQUEST_REVIEWED" ?
-      <Notification  activeClassName=""  to={`/requests/${notification?.data?.reviewed_blood_request_id}/review/`}>
+    : notification_data?.type === "BLOOD_REQUEST_REVIEWED" ?
+      <Notification  activeClassName=""  to={`/requests/${notification_data?.data?.reviewed_blood_request_id}/review/`}>
         <NotImg src={data?.profile_img || blankProfileImage} />
-        <MsgInfo>
-          <NotMsg>Your blood request <b>#{notification?.data?.reviewed_blood_request_id}</b> is completed. <b>{data?.name || "A User"}</b> has submitted his review as a donor.</NotMsg>
+        <MsgInfo is_read={notification?.is_read} >
+          <NotMsg>Your blood request <b>#{notification_data?.data?.reviewed_blood_request_id}</b> is completed. <b>{data?.name || "A User"}</b> has submitted his review as a donor.</NotMsg>
+        <p className="timestamp"><Moment fromNow>{notification?.timestamp}</Moment> </p>
         </MsgInfo>
       </Notification> 
 
     : ''
   )
 
+}
+
+
+
+export const initializeFrontendData = async () => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/get-initial-frontend-data/`)
+    console.log(res)
+    if(res.status === 200){
+      store.dispatch(updateInitialFrontendData({...res.data}))
+    }
+  } catch (error) {
+    console.log(error)
+  }
 }

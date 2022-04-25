@@ -618,3 +618,49 @@ new Promise(async (resolve, reject) => {
 
 
  
+export const readAllNotifications = async (showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+
+    const res = await axios.post(`${process.env.REACT_APP_API_URL}api/account/notifications/read-all-notifications/`); 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to read your notifications 😕", "danger"));
+      }
+    }
+  }
+
+});
+
+
+ 
+
+ 
+export const unReadNotificationsCount = async (showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}api/account/notifications/unread-notifications-count/`); 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to read your notifications 😕", "danger"));
+      }
+    }
+  }
+
+});
+
+
+ 

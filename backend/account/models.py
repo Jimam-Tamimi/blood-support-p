@@ -111,3 +111,9 @@ class Client(models.Model):
     type = models.CharField(max_length=200, blank=False, null=False ,choices=Client_TYPES)
     channel_name = models.CharField(max_length=256, blank=False, null=False)
     
+
+class UserData(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False, unique=True)
+    new_messages_count = models.IntegerField(default=0)
+        
+    

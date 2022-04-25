@@ -69,7 +69,7 @@ class NotificationSerializer(ModelSerializer):
     notification_data = NotificationDataSerializer(read_only=True)
     class Meta:
         model = Notification
-        fields = ["notification_data", "timestamp"]
+        fields = ["notification_data", "timestamp", "is_read", "id"]
     
     
 

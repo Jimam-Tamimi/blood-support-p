@@ -131,6 +131,7 @@ class NotificationData(models.Model):
 class Notification(models.Model):
     notification_data = models.ForeignKey(NotificationData, on_delete=models.CASCADE, blank=False, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=False, null=False)
+    is_read = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def create_for_users(self, users, notification_data):
@@ -145,6 +146,7 @@ def send_notification(sender, instance, created, **kwargs):
     data = {"notification_data": NotificationDataSerializer(instance.notification_data).data, "event": "send_notification"}
 
     data["timestamp"] = str(instance.timestamp)
+    data["is_read"] = instance.is_read
     channel_layer = get_channel_layer()
 
     with contextlib.suppress(Client.DoesNotExist):

@@ -1,4 +1,5 @@
 import contextlib
+from itertools import count
 import profile
 import time
 from django.db import connections
@@ -19,6 +20,7 @@ from rest_framework.pagination import PageNumberPagination
 
 from account.models import *
 from account.filters import ProfileFilter
+from message.models import Contact
 from blood.models import Notification
 from .serializers import *
 from account.helpers import sendVerificationEmail
@@ -180,8 +182,25 @@ class NotificationsSets(ModelViewSet):
         paginated_notifications = self.paginate_queryset(notifications)
         serialized_data = self.get_serializer(paginated_notifications, many=True).data
         # time.sleep(   5)
-        return self.get_paginated_response(serialized_data, )
-            
+        # print(self.get_paginated_response(serialized_data, ))
+        return self.get_paginated_response(serialized_data )
+
+
+    @action(detail=False, methods=['get'], url_path='unread-notifications-count')
+    def unReadNotificationsCount(self, request):
+        notificationCount =  Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({'count': notificationCount}, status=status.HTTP_200_OK)
+
+        
+        
+    @action(detail=False, methods=['post'], url_path='read-all-notifications')
+    def readAllNotifications(self, request):
+        try:
+            Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+            return Response({'success': True, 'message': 'All notifications have been marked as read'}, status=status.HTTP_200_OK)
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -222,3 +241,14 @@ def resend_verification_code(request):
 
 def vallidateToken(request):
     return Response({"vallied": True, 'message': 'Token is vallied', }, status=status.HTTP_200_OK)
+
+    
+@api_view(['GET'])
+def get_initial_frontend_data(request):
+    if (request.method == "GET"):
+        print(request.user.is_authenticated)
+        data = {"new_message_count": Contact.objects.filter(users=request.user, new_message=True).count()}
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

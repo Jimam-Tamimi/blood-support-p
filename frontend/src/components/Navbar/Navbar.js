@@ -39,10 +39,11 @@ import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
 import { logOut } from "../../redux/auth/actions";
 import { useLocation } from "react-router-dom";
-import { getMyContacts, getNotifications } from "../../apiCalls";
+import { getMyContacts, getNotifications, readAllNotifications, unReadNotificationsCount } from "../../apiCalls";
 import { BeatLoader, PropagateLoader } from 'react-spinners'
 import InfiniteScroll from 'react-infinite-scroller';
 import { GetNotificationJSX } from "../../helpers";
+import updateInitialFrontendData from "../../redux/initialFrontendData/actions";
 
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
@@ -52,10 +53,15 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
   const location = useLocation()
 
 
+  const auth = useSelector((state) => state.auth);
+  const initialData = useSelector((state) => state.initialData);
+
 
   const msgRef = useRef(null);
   const notRef = useRef(null);
 
+  const [unreadNotCount, setUnreadNotCount] = useState(null)
+  const [unreadMsgCount, setUnreadMsgCount] = useState(null)
   const [message, setMessage] = useState(false);
   const [notification, setNotification] = useState(false);
 
@@ -85,6 +91,35 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
       window.removeEventListener("click", toggleOpen);
     };
   }, [notification, message]);
+
+  useEffect(async () => {
+    if (notification) {
+      const res = await readAllNotifications()
+      setUnreadNotCount(0)
+    }
+  }, [notification])
+
+  useEffect(() => {
+    unReadNotificationsCount().then(res => {
+      setUnreadNotCount(res?.data?.count)
+    })
+  }, [])
+
+  
+  window.MESSAGE_WS.onmessage = async (e) => {
+    const data = JSON.parse(e.data)
+    console.log(data)
+    if (data.event === 'message_send_success') {
+      if(data?.message_from_user != auth.user_id){
+        console.log(initialData.new_message_count)
+        dispatch(updateInitialFrontendData({ new_message_count: initialData.new_message_count + 1 }))
+      }
+    }  
+
+
+  }
+  // useEffect(() => {
+  // }, [initialData])
 
   return (
     <>
@@ -122,6 +157,8 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
                   setMessage(!message);
                   setNotification(false);
                 }}
+                count={initialData?.new_message_count}
+
               >
                 <BiMessageRoundedDots />
               </NavMessage>
@@ -151,6 +188,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
                 setNotification(!notification);
                 setMessage(false);
               }}
+              count={unreadNotCount}
             >
               <IoNotificationsOutline />
             </NavNotification>
@@ -162,7 +200,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               scale
             >
               <NavNotificationCont ref={notRef}>
-                <NavNotificationSection notRef={notRef} />
+                <NavNotificationSection setUnreadNotCount={setUnreadNotCount} notRef={notRef} />
               </NavNotificationCont>
             </Transition>
           </NavNotificationWrap>
@@ -180,8 +218,6 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
 
 function NavMessageSection({ handleNavMsgClick, showComponent }) {
 
-
-
   const [contacts, setContacts] = useState(null)
   const getMyContactsData = async () => {
     try {
@@ -197,6 +233,9 @@ function NavMessageSection({ handleNavMsgClick, showComponent }) {
   useEffect(() => {
     getMyContactsData()
   }, [])
+
+
+
 
 
   return (
@@ -226,8 +265,7 @@ function NavMessageSection({ handleNavMsgClick, showComponent }) {
 }
 
 
-function NavNotificationSection({ notRef }) {
-
+function NavNotificationSection({ notRef, setUnreadNotCount }) {
   const [notification, setNotification] = useState(null)
 
   const getNotificationsData = async () => {
@@ -245,7 +283,7 @@ function NavNotificationSection({ notRef }) {
     try {
       const res = await getNotifications(notification.next);
       console.log(res)
-      setNotification({...notification, results: [...notification.results, ...res.data.results], next: res.data.next })
+      setNotification({ ...notification, results: [...notification.results, ...res.data.results], next: res.data.next })
 
     } catch (error) {
       console.log(error);
@@ -259,8 +297,9 @@ function NavNotificationSection({ notRef }) {
   useEffect(() => {
     window.NOTIFICATION_WS.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      if(data.event === "send_notification"){
-        setNotification({...notification, results: [{notification_data: data.notification_data, timestamp: data.timestamp}, ...notification.results]})
+      if (data.event === "send_notification") {
+        setNotification({ ...notification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...notification.results] })
+        setUnreadNotCount(prev => prev + 1)
       }
     }
   })
@@ -274,21 +313,21 @@ function NavNotificationSection({ notRef }) {
         notification ?
 
           <InfiniteScroll
-          pageStart={0}
-          loadMore={loadMoreNotifications}
-          hasMore={notification.next}
-          loader={<BeatLoader key={0} color="var(--loader-color)" margin="10px auto" />} 
-          useWindow={false}
-          style={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
+            pageStart={0}
+            loadMore={loadMoreNotifications}
+            hasMore={notification.next}
+            loader={<BeatLoader key={0} color="var(--loader-color)" margin="10px auto" />}
+            useWindow={false}
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
 
           >
             {
-              notification?.results.map(notf =>  <GetNotificationJSX notification={notf.notification_data} />)
+              notification?.results.map((notf, i) => <GetNotificationJSX key={i} notification={notf} />)
             }
           </InfiniteScroll>
 
@@ -297,7 +336,7 @@ function NavNotificationSection({ notRef }) {
       }
 
 
-      
+
 
     </>
   )

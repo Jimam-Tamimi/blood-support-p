@@ -66,12 +66,39 @@ export const NavMessage = styled.div`
     align-items: center;
     transition: all .4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     color: var(--secendory-text-color);
+    position: relative;
+
     &:hover{
         background: var(--secendory-hover-color);
     }
     &:active{
         transform: var(--for-active-click);
     }
+
+    ${({ count }) =>
+    count
+      ? `
+            &::after{
+        content: "${count > 9 ? "9+" : count}";
+    background: var(--primary-color);
+    position: absolute;
+    /* right: 14px; */
+    padding: 2px 4px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 52px;
+    color: var(--primary-text-color);
+    right: -5px;
+    top: -5px;
+    }
+    &.active::after{
+        background: var(--secendory-color);
+        color: var(--primary-text-color);
+    }
+            `
+      : ""}
+    
+    
 `
 
 export const NavMessageWrap = styled.div`
@@ -139,7 +166,14 @@ export const Notification = styled(Message)`
 
 
 export const MsgInfo = styled.div`
-    
+ 
+.timestamp {
+    /* ${({is_read}) => is_read ? `` : ` color: #0084ff;`} */
+        text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+   
+    }
 `
 export const Name = styled.h4`
     font-size: 20px;

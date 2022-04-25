@@ -6,6 +6,7 @@ import loaderReducer from './loader/reducre'
 import progressReducer from './progress/reducer'
 import profileReducer from './profile/reducers'
 import modalReducer from './modal/reducer'
+import initialDataReducer from './initialFrontendData/reducer'
 
 
 const rootReducer = combineReducers({
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     progress: progressReducer,
     profile: profileReducer,
     modal: modalReducer,
+    initialData: initialDataReducer,
 })
 
 export default rootReducer

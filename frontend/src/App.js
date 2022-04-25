@@ -30,7 +30,7 @@ import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
-import { webSocketConnect } from "./helpers";
+import { initializeFrontendData, webSocketConnect } from "./helpers";
 
 webSocketConnect();
 
@@ -82,6 +82,7 @@ function App() {
   useEffect(() => {
     if(auth?.isAuthenticated){
       dispatch(getProfileDetails()); 
+    initializeFrontendData();
     }
   }, [auth]) 
  
