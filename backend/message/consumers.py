@@ -32,7 +32,10 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
             for user in await (get_all_users)(contact):
                 if(user != self.scope["user"]):
                     try:
-                        user_channel_name = await database_sync_to_async(Client.objects.get)(user=user, type='MESSAGE')  
+                        
+                        user_channel_name = await database_sync_to_async(Client.objects.get)(user=user, type='MESSAGE')
+                        new_messages = await database_sync_to_async(Contact.objects.filter)(users=user, new_message_for=user)
+                        data['new_message_count']  =  len(await queryset_to_list(new_messages))
                         await self.channel_layer.send(user_channel_name.channel_name, {
                             "type": 'message.send',
                             'payload': data
@@ -40,8 +43,8 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                         message.status = "delivered"
                         await database_sync_to_async(message.save)()
                         oldMessages = await database_sync_to_async(Message.objects.filter)(status="sent", contact=message.contact)
-                        for msg in await queryset_to_list(oldMessages): 
-                            msg.status = "delivered" 
+                        for msg in await queryset_to_list(oldMessages):
+                            msg.status = "delivered"
                             await database_sync_to_async(msg.save)()
                     except Client.DoesNotExist:
                         continue
@@ -49,7 +52,7 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
             data['message_from_user'] = True
             await self.send_json(data)
 
-        elif(content['event'] == 'update_message_status'):   
+        elif(content['event'] == 'update_message_status'):
             message = await database_sync_to_async(Message.objects.get)(id=content['message_id'])
 
             if(message.status != content['status']):
@@ -57,13 +60,13 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                 await database_sync_to_async(message.save)()
 
             if(content['status'] == "delivered"):
-                messages = await database_sync_to_async(Message.objects.filter)(status="sent", contact=message.contact)            
+                messages = await database_sync_to_async(Message.objects.filter)(status="sent", contact=message.contact)
                 for msg in await queryset_to_list(messages):
                     msg.status = "delivered"
                     await database_sync_to_async(msg.save)()
 
             elif(content['status'] == "seen"):
-                messages = await get_not_seen_message_to_list(message)          
+                messages = await get_not_seen_message_to_list(message)
                 for msg in await queryset_to_list(messages):
                     msg.status = "seen"
                     await database_sync_to_async(msg.save)()
@@ -87,6 +90,7 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
 def get_all_users(contact):
     return list(contact.users.all())
 
+
 @sync_to_async
 def get_all_user_channel_names(user_channel_names):
     return list(user_channel_names)
@@ -96,6 +100,7 @@ def get_all_user_channel_names(user_channel_names):
 def queryset_to_list(queryset):
     return list(queryset)
 
+
 @sync_to_async
 def get_not_seen_message_to_list(message):
-    return list(Message.objects.filter(~Q(status="seen"), contact=message.contact))        
+    return list(Message.objects.filter(~Q(status="seen"), contact=message.contact))

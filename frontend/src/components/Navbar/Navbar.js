@@ -39,7 +39,7 @@ import { CSSTransition } from "react-transition-group";
 import Transition from "../Transition/Transition";
 import { logOut } from "../../redux/auth/actions";
 import { useLocation } from "react-router-dom";
-import { getMyContacts, getNotifications, readAllNotifications, unReadNotificationsCount } from "../../apiCalls";
+import { getMyContacts, getNotifications, readAllNewMessages, readAllNotifications, unReadNotificationsCount } from "../../apiCalls";
 import { BeatLoader, PropagateLoader } from 'react-spinners'
 import InfiniteScroll from 'react-infinite-scroller';
 import { GetNotificationJSX } from "../../helpers";
@@ -98,6 +98,14 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
       setUnreadNotCount(0)
     }
   }, [notification])
+  useEffect(async () => {
+    if (message) {
+      const res = await readAllNewMessages()
+      if(res.status === 200){
+        dispatch(updateInitialFrontendData({ new_message_count: 0}))
+      }
+    }
+  }, [message])
 
   useEffect(() => {
     unReadNotificationsCount().then(res => {
@@ -105,19 +113,17 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
     })
   }, [])
 
-  
-  window.MESSAGE_WS.onmessage = async (e) => {
-    const data = JSON.parse(e.data)
-    console.log(data)
-    if (data.event === 'message_send_success') {
-      if(data?.message_from_user != auth.user_id){
-        console.log(initialData.new_message_count)
-        dispatch(updateInitialFrontendData({ new_message_count: initialData.new_message_count + 1 }))
-      }
-    }  
 
-
-  }
+    // window.MESSAGE_WS.onmessage = async (e) => {
+    //   const data = JSON.parse(e.data) 
+    //   if (data.event === 'message_send_success') {
+    //     if(data?.message_from_user != auth.user_id){
+    //       dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count}))
+    //     }
+    //   }  
+      
+      
+    // }
   // useEffect(() => {
   // }, [initialData])
 
@@ -295,13 +301,13 @@ function NavNotificationSection({ notRef, setUnreadNotCount }) {
   }, [])
 
   useEffect(() => {
-    window.NOTIFICATION_WS.onmessage = (e) => {
-      const data = JSON.parse(e.data)
-      if (data.event === "send_notification") {
-        setNotification({ ...notification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...notification.results] })
-        setUnreadNotCount(prev => prev + 1)
-      }
-    }
+    // window.NOTIFICATION_WS.onmessage = (e) => {
+    //   const data = JSON.parse(e.data)
+    //   if (data.event === "send_notification") {
+    //     setNotification({ ...notification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...notification.results] })
+    //     setUnreadNotCount(prev => prev + 1)
+    //   }
+    // }
   })
 
 

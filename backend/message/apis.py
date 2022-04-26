@@ -108,6 +108,21 @@ class MessageViewSet(ModelViewSet):
 
 
 
+    @action(detail=False, methods=['patch'], url_path='read-all-new-messages')
+    def readAllNewMessages(self, request):
+        try:
+            for contact in Contact.objects.filter(new_message_for=request.user):
+                contact.new_message_for.remove(request.user)
+                contact.save()
+            return Response({'success': True}, status=status.HTTP_200_OK)
+        except Exception:
+            return Response({'success': False, 'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+
+
+
+
     @action(detail=False, methods=['get'], url_path='get-contact-details')
     def getContactDetails(self, request):
         try:

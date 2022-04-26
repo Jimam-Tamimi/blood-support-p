@@ -177,26 +177,42 @@ export const bloodFilterOption = [
 
 
 
+  
+// export const webSocketConnect = () => {
+//   if (JSON.parse(localStorage.getItem('auth'))?.isAuthenticated) {
 
 
-export const webSocketConnect = () => {
-  if (JSON.parse(localStorage.getItem('auth'))?.isAuthenticated) {
+//   }
+// }
 
-    window.USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
-    window.MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
-    window.NOTIFICATION_WS = new WebSocket(`ws://localhost:8000/ws/notification/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
 
-  }
+const messageHandlers = new Set()
+
+export const addMessageHandler = (handler) => {
+  messageHandlers.add(handler)
 }
 
-
-export const webSocketDisconnect = () => {
-
-  window.USER_WS.close()
-  window.MESSAGE_WS.close()
-  window.NOTIFICATION_WS.close()
-
+export const removeMessageHandler = (handler) => {
+  messageHandlers.delete(handler)
 }
+
+export const USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
+export const MESSAGE_WS = new WebSocket(`ws://localhost:8000/ws/message/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
+export const NOTIFICATION_WS = new WebSocket(`ws://localhost:8000/ws/notification/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
+
+
+MESSAGE_WS.onmessage = async (e) => { 
+  console.log(messageHandlers)
+    messageHandlers.forEach( async (handler) => await handler(e))
+} 
+
+// export const webSocketDisconnect = () => {
+
+//   window.USER_WS.close()
+//   window.MESSAGE_WS.close()
+//   window.NOTIFICATION_WS.close()
+
+// }
 
 
 

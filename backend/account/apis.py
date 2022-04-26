@@ -247,7 +247,7 @@ def vallidateToken(request):
 def get_initial_frontend_data(request):
     if (request.method == "GET"):
         print(request.user.is_authenticated)
-        data = {"new_message_count": Contact.objects.filter(users=request.user, new_message=True).count()}
+        data = {"new_message_count": Contact.objects.filter(users=request.user, new_message_for=request.user).count()}
 
         return Response(data, status=status.HTTP_200_OK)
 

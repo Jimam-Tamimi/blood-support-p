@@ -25,7 +25,7 @@ MESSAGE_STATUS = (
 
 class Contact(models.Model):
     users = models.ManyToManyField(User, blank=False, null=False)
-    new_message = models.BooleanField(default=False)
+    new_message_for = models.ManyToManyField(User, blank=True, null=True, related_name="new_message_for")
     last_messaged = models.DateTimeField(auto_now_add=True)
  
 
@@ -42,7 +42,9 @@ class Message(models.Model):
 @receiver(post_save, sender=Message)
 def send_message_update(sender, instance, created, **kwargs): 
     if created:
-        instance.contact.new_message = True
+        for user in instance.contact.users.all():
+            if(user != instance.from_user):
+                instance.contact.new_message_for.add(user)
         instance.contact.timestamp = instance.timestamp
         instance.contact.save()
 

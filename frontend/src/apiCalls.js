@@ -664,3 +664,27 @@ new Promise(async (resolve, reject) => {
 
 
  
+
+ 
+export const readAllNewMessages = async (showAlert = true) => 
+new Promise(async (resolve, reject) => {
+  try {
+
+    const res = await axios.patch(`${process.env.REACT_APP_API_URL}api/message/read-all-new-messages/`,); 
+    resolve(res);
+  } catch (error) {
+
+      reject(error)
+    if (showAlert) {
+      if(error?.response?.data?.success === false) {
+          store.dispatch(alert(error?.response?.data?.error, "danger"));
+      } else {
+        store.dispatch(alert("Failed to read your new messages 😕", "danger"));
+      }
+    }
+  }
+
+});
+
+
+ 

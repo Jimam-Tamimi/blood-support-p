@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Contact,
   ContactsSection,
@@ -32,7 +32,7 @@ import {
 } from "react-icons/io5";
 import Transition from "../../components/Transition/Transition";
 import { Route } from "react-router";
-import {useParams} from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 
 import profile from "../../assets/img/prof.jpg";
 // import prof from "../../assets/img/prof.jpg";
@@ -41,6 +41,7 @@ import axios from 'axios'
 import { useSelector } from "react-redux";
 import { getMessagesForContact, getMyContacts, getProfileDetailsForUser } from "../../apiCalls";
 import { v4 as uuidv4 } from 'uuid';
+import { addMessageHandler, MESSAGE_WS, removeMessageHandler } from "../../helpers";
 
 export default function Messages({ match }) {
   const auth = useSelector(state => state.auth);
@@ -100,7 +101,7 @@ export default function Messages({ match }) {
           }
         </ContactsSection>
         <Route path="/messages/:id/" >
-          <MessagesSection contacts={contacts}/>
+          <MessagesSection contacts={contacts} />
         </Route>
       </Wrapper>
     </>
@@ -116,7 +117,7 @@ function MessagesSection({ match, contacts }) {
   const [allMessages, setAllMessages] = useState([]);
   const [showEmojiOption, setShowEmojiOption] = useState(false);
   const [contact, setContact] = useState({})
-  
+
   const refCont = useRef(null);
   const listener = (e) => {
     if (refCont && !refCont?.current?.contains(e.target)) {
@@ -134,88 +135,36 @@ function MessagesSection({ match, contacts }) {
   }, [showEmojiOption]);
 
   const sendMessage = (e) => {
-      if (message.trim() === "") return;
-      const message_id_client = uuidv4();
-      setAllMessages([
-        ...allMessages,
-        {
-          "message_id_client": message_id_client,
-          "message_from_me": true,
-          "status": "sending",
-          "message": message,
-          "contact": 1,
-          "from_user": 1
-        }
-      ]);
-      setMessage("");
-      setTimeout(() => {
-        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-      }, 1);
-      // call api to send message
+    if (message.trim() === "") return;
+    const message_id_client = uuidv4();
+    setAllMessages([
+      ...allMessages,
+      {
+        "message_id_client": message_id_client,
+        "message_from_me": true,
+        "status": "sending",
+        "message": message,
+        "contact": 1,
+        "from_user": 1
+      }
+    ]);
+    setMessage("");
+    setTimeout(() => {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }, 1);
+    // call api to send message
 
-      window.MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: params.id, message_id_client: message_id_client }))
+    MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: params.id, message_id_client: message_id_client }))
 
   };
-  window.MESSAGE_WS.onmessage = async (e) => {
-    const data = JSON.parse(e.data)
-    console.log(data)
-    if (data.event === 'message_send_success' && data.contact == params.id) {
-      if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
-        setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
-          {
-            "id": data?.message_id_server,
-            "message_from_me": data?.message_from_user,
-            "status": data?.status,
-            "message": data?.message,
-            "timestamp": data?.timestamp,
-            "contact": 1,
-            "from_user": 1
-          } : message
-        ))
-      } else {
-        setAllMessages([...allMessages,
-        {
-          "id": data?.message_id_server,
-          "message_from_me": data?.message_from_user,
-          "status": data?.status,
-          "message": data?.message,
-          "timestamp": data?.timestamp,
-          "contact": data?.contact,
-          "from_user": data?.from_user
-        }
-        ])
-      }
-      if(data.status !== 'seen' && data.message_from_user === false) {
-        window.onfocus = async () => {
-          if(messagesRef?.current){
-           await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
-          }
-        }
-        
-      }
-        setTimeout(() => {
-          messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-      }, 1);
-    } else if (data.event === "message_status_update") {
-      setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
-          {
-            ...message,
-            "status": data?.status,
-          } : message
-        ))
-    }
 
-
-  }
   useEffect(() => {
-    console.log({contacts})
+    console.log({ contacts })
     if (params.id) {
-      contacts.find(contact => contact.contact_id == params.id ? setContact({...contact}) : null)
+      contacts.find(contact => contact.contact_id == params.id ? setContact({ ...contact }) : null)
     }
     getMsgsForContact(params.id)
   }, [params]);
-
-
 
   const getMsgsForContact = async (contact_id) => {
     try {
@@ -224,18 +173,18 @@ function MessagesSection({ match, contacts }) {
       setAllMessages(res.data)
       setTimeout(() => {
         messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
-        messagesRef.current.style.scrollBehavior = "smooth"; 
+        messagesRef.current.style.scrollBehavior = "smooth";
 
       }, 1);
     } catch (error) {
       console.log(error);
     }
   }
- 
+
   useEffect(() => {
-    setLastSeenMessage(allMessages.findLast(msg => (msg.status=='seen')))
+    setLastSeenMessage(allMessages.findLast(msg => (msg.status == 'seen')))
   }, [allMessages])
-  
+
   const chatDropdownOptions = [
     {
       name: "Report",
@@ -243,7 +192,74 @@ function MessagesSection({ match, contacts }) {
       onClick: () => console.log("need to create report function"),
     },
   ];
-  
+
+  // useCallback(() => {
+  //   const handler = (event) => { /* do something with event */ }
+      
+  //   addMessageHandler(handler)
+  //   return () => removeMessageHandler(handler)
+  // }, [])
+  // useCallback(() => {
+
+  //   const handler = async e => {
+  //     const data = JSON.parse(e.data)
+  //     console.log(data)
+  //     if (data.event === 'message_send_success' && data.contact == params.id) {
+  //       if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
+  //         setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+  //           {
+  //             "id": data?.message_id_server,
+  //             "message_from_me": data?.message_from_user,
+  //             "status": data?.status,
+  //             "message": data?.message,
+  //             "timestamp": data?.timestamp,
+  //             "contact": 1,
+  //             "from_user": 1
+  //           } : message
+  //         ))
+  //       } else {
+
+  //         setAllMessages([...allMessages,
+  //         {
+  //           "id": data?.message_id_server,
+  //           "message_from_me": data?.message_from_user,
+  //           "status": data?.status,
+  //           "message": data?.message,
+  //           "timestamp": data?.timestamp,
+  //           "contact": data?.contact,
+  //           "from_user": data?.from_user
+  //         }
+  //         ])
+  //       }
+  //       if (data.status !== 'seen' && data.message_from_user === false) {
+  //         window.onfocus = async () => {
+  //           if (messagesRef?.current) {
+  //             await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+  //           }
+  //         }
+
+  //       }
+  //       setTimeout(() => {
+  //         messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  //       }, 1);
+  //     } else if (data.event === "message_status_update") {
+  //       setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
+  //         {
+  //           ...message,
+  //           "status": data?.status,
+  //         } : message
+  //       ))
+  //     }
+  //   }
+  //   addMessageHandler(handler)
+
+  //   return () => {
+  //     removeMessageHandler(handler)
+  //   }
+
+  // }, [])
+
+
   return (
     <>
       <MessageSection>
@@ -257,7 +273,7 @@ function MessagesSection({ match, contacts }) {
               {/* <Dropdown options={chatDropdownOptions}></Dropdown> */}
             </ChatOptions>
           </MessageHeaderTitle>
-          <MessagesDiv    ref={messagesRef}>
+          <MessagesDiv ref={messagesRef}>
             {allMessages?.map((message, i) => (
               <MessageDiv key={i} type={message?.message_from_me ? 'sent' : 'received'}>
                 <Message type={message?.message_from_me ? 'sent' : 'received'}>
@@ -266,7 +282,7 @@ function MessagesSection({ match, contacts }) {
                     <MessageStatus status={message?.status}>
                       {message?.status === "seen" ? (
                         lastSeenMessage?.id == message?.id ?
-                        <ProfileImg src={contact?.profile_img} size="100%" /> : ''
+                          <ProfileImg src={contact?.profile_img} size="100%" /> : ''
                       ) : message.status === "delivered" ? (
                         <IoCheckmarkCircleSharp size="100%" />
                       ) : message.status === "sent" ? (
@@ -306,7 +322,7 @@ function MessagesSection({ match, contacts }) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Message"
-              onKeyUp={ e => e.keyCode === 13 && sendMessage()}
+              onKeyUp={e => e.keyCode === 13 && sendMessage()}
             />
             <EmojiMessageDiv onClick={sendMessage} >
               <IoSend />

@@ -30,9 +30,8 @@ import LoadingBar from "react-top-loading-bar";
 import styled from "styled-components";
 import { getProfileDetails } from "./redux/profile/actions";
 import alert from "./redux/alert/actions"; 
-import { initializeFrontendData, webSocketConnect } from "./helpers";
+import { initializeFrontendData } from "./helpers";
 
-webSocketConnect();
 
 function App() {
 

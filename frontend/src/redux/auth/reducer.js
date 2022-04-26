@@ -1,6 +1,5 @@
  
  import jwt_decode from "jwt-decode"; 
-import { webSocketConnect, webSocketDisconnect } from "../../helpers";
  
 const auth = JSON.parse(localStorage.getItem('auth'))
 const getUserId = (authObj) => {
@@ -31,7 +30,6 @@ const authReducer = (state=initialState, action) => {
         }
         localStorage.setItem('auth', JSON.stringify(state))
         console.log(state)
-        webSocketConnect();
         return state
     }
     else if (action.type === "LOGOUT") { 
@@ -44,7 +42,6 @@ const authReducer = (state=initialState, action) => {
         }
         localStorage.setItem('auth', JSON.stringify(state))
         console.log(state)
-        webSocketDisconnect();
         return state
     }
     else if (action.type === "REFRESH_TOKEN_SUCCESS") { 

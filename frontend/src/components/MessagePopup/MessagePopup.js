@@ -17,7 +17,6 @@ export default function MessagePopup() {
     const [msgFullScreen, setMsgFullScreen] = useState(null)
 
 
-
     const message = useSelector(state => state.message)
     const dispatch = useDispatch()
 
@@ -33,7 +32,7 @@ export default function MessagePopup() {
 
                     message?.map((contactId, i) => (
                         
-                          <Message key={contactId} contactId={contactId} />
+                          <Message  key={contactId} contactId={contactId} />
                         
                     ))
                 }
@@ -44,3 +43,5 @@ export default function MessagePopup() {
         </>
     )
 }
+
+
