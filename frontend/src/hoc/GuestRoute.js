@@ -19,6 +19,7 @@ export default function GuestRoute({children}) {
                         <div>
                            <Route exact path={child.props.path}>
                                <Redirect to="/" />
+                               
                            </Route>
                         </div>
                      ))

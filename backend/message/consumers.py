@@ -70,6 +70,10 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                 for msg in await queryset_to_list(messages):
                     msg.status = "seen"
                     await database_sync_to_async(msg.save)()
+                
+                await database_sync_to_async(message.contact.new_message_for.remove)(self.scope["user"])
+                await database_sync_to_async(message.contact.save)()
+                
 
     async def disconnect(self, code):
         with contextlib.suppress(Client.DoesNotExist):

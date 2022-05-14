@@ -43,7 +43,8 @@ export default function Login() {
                 const queryString = location.search;
                 const urlParams = new URLSearchParams(queryString);
                 const redirect_url = urlParams.get('redirect_url')
-                history.push(redirect_url.replaceAll('[1234]', '/'))
+                // history.push()
+                window.location = redirect_url.replaceAll('[1234]', '/')
             })) 
     }
 

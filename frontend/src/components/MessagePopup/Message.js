@@ -32,8 +32,7 @@ import { Message } from '../../pages/styles/dashboard/Messages.styles'
 
 import { v4 as uuidv4 } from 'uuid';
 import updateInitialFrontendData from '../../redux/initialFrontendData/actions'
-import { MESSAGE_WS, removeMessageHandler } from '../../helpers'
-import {addMessageHandler} from '../../helpers'
+import { MESSAGE_WS, removeMessageHandler, addMessageHandler } from '../../sockets'
 
 
 export default function MessageComponent({ contactId }) {
@@ -44,7 +43,7 @@ export default function MessageComponent({ contactId }) {
 
   const contact_ids = useSelector(state => state.message)
 
-  
+
   const handleCloseMessage = id => {
     console.log(id, '34')
     setCloseMessageId(id)
@@ -151,137 +150,78 @@ export default function MessageComponent({ contactId }) {
     }, 1);
     // call api to send message
 
-    await  MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: contactId, message_id_client: message_id_client }))
+    await MESSAGE_WS.send(JSON.stringify({ event: 'send_message', message: message, contact_id: contactId, message_id_client: message_id_client }))
 
   };
 
 
-  // window.MESSAGE_WS.onmessage = async (e) => { 
-  //   const data = JSON.parse(e.data) 
+  useEffect(() => {
 
-  //   if (data.event === 'message_send_success' && data.contact == contactId) {
-  //     if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
-  //       await setAllMessages( await allMessages.map(message => (message.message_id_client === data.message_id_client) ?
-  //         {
-  //           "id": data?.message_id_server,
-  //           "message_from_me": data?.message_from_user,
-  //           "status": data?.status,
-  //           "message": data?.message,
-  //           "timestamp": data?.timestamp,
-  //           "contact": 1,
-  //           "from_user": 1
-  //         } : message
-  //       ))
-  //     } else {
+    const handler = async e => {
 
-  //       console.log({contact_ids})
-  //       if(!contact_ids.includes(data.contact)){
-  //         dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count}))
-  //       }
-  //       await setAllMessages([...allMessages,
-  //       {
-  //         "id": data?.message_id_server,
-  //         "message_from_me": data?.message_from_user,
-  //         "status": data?.status,
-  //         "message": data?.message,
-  //         "timestamp": data?.timestamp,
-  //         "contact": data?.contact,
-  //         "from_user": data?.from_user
-  //       }
-  //       ])
-  //     } 
-      
-  //     if (data.status !== 'seen' && data.message_from_user === false) { 
-  //       window.onfocus = async () => {
-  //         if(messagesRef?.current){
-  //          await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
-  //         }
-  //       }
-  //     }
-  //     setTimeout(() => {
-  //       if (messagesRef.current) {
+      const data = JSON.parse(e.data)
+      console.log(data)
+      if (data.event === 'message_send_success' && data.contact == contactId) {
+        if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
+          await setAllMessages(await allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+            {
+              "id": data?.message_id_server,
+              "message_from_me": data?.message_from_user,
+              "status": data?.status,
+              "message": data?.message,
+              "timestamp": data?.timestamp,
+              "contact": 1,
+              "from_user": 1
+            } : message
+          ))
+        } else {
 
-  //         messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
-  //       }
-  //     }, 1);
-  //   } else if (data.event === "message_status_update") {
-  //     await setAllMessages( await allMessages.map(message => (message.id === data.message_id_server) ?
-  //       {
-  //         ...message,
-  //         "status": data?.status,
-  //       } : message
-  //     ))
-  // } 
-  // } 
- 
- 
-useEffect(() => {
-
-  const handler = async e => {
- 
-    const data = JSON.parse(e.data) 
-console.log(data)
-    if (data.event === 'message_send_success' && data.contact == contactId) {
-      if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
-        await setAllMessages( await allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+          console.log({ contact_ids })
+          if (!contact_ids.includes(data.contact)) {
+            dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count }))
+          }
+          await setAllMessages([...allMessages,
           {
             "id": data?.message_id_server,
             "message_from_me": data?.message_from_user,
             "status": data?.status,
             "message": data?.message,
             "timestamp": data?.timestamp,
-            "contact": 1,
-            "from_user": 1
-          } : message
-        ))
-      } else {
+            "contact": data?.contact,
+            "from_user": data?.from_user
+          }
+          ])
+        }
 
-        console.log({contact_ids})
-        if(!contact_ids.includes(data.contact)){
-          dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count}))
-        }
-        await setAllMessages([...allMessages,
-        {
-          "id": data?.message_id_server,
-          "message_from_me": data?.message_from_user,
-          "status": data?.status,
-          "message": data?.message,
-          "timestamp": data?.timestamp,
-          "contact": data?.contact,
-          "from_user": data?.from_user
-        }
-        ])
-      } 
-      
-      if (data.status !== 'seen' && data.message_from_user === false) { 
-        window.onfocus = async () => {
-          if(messagesRef?.current){
-           await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+        if (data.status !== 'seen' && data.message_from_user === false) {
+          window.onfocus = async () => {
+            if (messagesRef?.current) {
+              await MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+            }
           }
         }
+        setTimeout(() => {
+          if (messagesRef.current) {
+
+            messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+          }
+        }, 1);
+      } else if (data.event === "message_status_update") {
+        await setAllMessages(await allMessages.map(message => (message.id === data.message_id_server) ?
+          {
+            ...message,
+            "status": data?.status,
+          } : message
+        ))
       }
-      setTimeout(() => {
-        if (messagesRef.current) {
+    }
+    addMessageHandler(handler)
 
-          messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
-        }
-      }, 1);
-    } else if (data.event === "message_status_update") {
-      await setAllMessages( await allMessages.map(message => (message.id === data.message_id_server) ?
-        {
-          ...message,
-          "status": data?.status,
-        } : message
-      ))
-  } 
-  }
-  addMessageHandler(handler)
+    return () => {
+      removeMessageHandler(handler)
+    }
 
-  return () => {
-    removeMessageHandler(handler)
-  }
-
-} )
+  })
 
 
   return (
@@ -300,7 +240,7 @@ console.log(data)
           </MessageHeaderTitle>
           <MessagesDiv ref={messagesRef} style={{ overflowY: "scroll", padding: '0 0 10px 0' }}  >
             {allMessages?.map((message, i) => (
-              <PopUpMessage key={message.id} type={message?.message_from_me ? 'sent' : 'received'}>
+              <PopUpMessage key={i} type={message?.message_from_me ? 'sent' : 'received'}>
                 {message?.message}
                 {message?.message_from_me ? (
                   <MessageStatus status={message?.status}>

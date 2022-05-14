@@ -41,7 +41,7 @@ import axios from 'axios'
 import { useSelector } from "react-redux";
 import { getMessagesForContact, getMyContacts, getProfileDetailsForUser } from "../../apiCalls";
 import { v4 as uuidv4 } from 'uuid';
-import { addMessageHandler, MESSAGE_WS, removeMessageHandler } from "../../helpers";
+import { addMessageHandler, MESSAGE_WS, removeMessageHandler } from "../../sockets";
 
 export default function Messages({ match }) {
   const auth = useSelector(state => state.auth);
@@ -199,66 +199,72 @@ function MessagesSection({ match, contacts }) {
   //   addMessageHandler(handler)
   //   return () => removeMessageHandler(handler)
   // }, [])
-  // useCallback(() => {
 
-  //   const handler = async e => {
-  //     const data = JSON.parse(e.data)
-  //     console.log(data)
-  //     if (data.event === 'message_send_success' && data.contact == params.id) {
-  //       if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
-  //         setAllMessages(allMessages.map(message => (message.message_id_client === data.message_id_client) ?
-  //           {
-  //             "id": data?.message_id_server,
-  //             "message_from_me": data?.message_from_user,
-  //             "status": data?.status,
-  //             "message": data?.message,
-  //             "timestamp": data?.timestamp,
-  //             "contact": 1,
-  //             "from_user": 1
-  //           } : message
-  //         ))
-  //       } else {
 
-  //         setAllMessages([...allMessages,
-  //         {
-  //           "id": data?.message_id_server,
-  //           "message_from_me": data?.message_from_user,
-  //           "status": data?.status,
-  //           "message": data?.message,
-  //           "timestamp": data?.timestamp,
-  //           "contact": data?.contact,
-  //           "from_user": data?.from_user
-  //         }
-  //         ])
-  //       }
-  //       if (data.status !== 'seen' && data.message_from_user === false) {
-  //         window.onfocus = async () => {
-  //           if (messagesRef?.current) {
-  //             await window.MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
-  //           }
-  //         }
 
-  //       }
-  //       setTimeout(() => {
-  //         messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-  //       }, 1);
-  //     } else if (data.event === "message_status_update") {
-  //       setAllMessages(allMessages.map(message => (message.id === data.message_id_server) ?
-  //         {
-  //           ...message,
-  //           "status": data?.status,
-  //         } : message
-  //       ))
-  //     }
-  //   }
-  //   addMessageHandler(handler)
+  useEffect(() => {
 
-  //   return () => {
-  //     removeMessageHandler(handler)
-  //   }
+    const handler = async e => {
 
-  // }, [])
+      const data = JSON.parse(e.data)
+      console.log(data)
+      if (data.event === 'message_send_success' && data.contact == params.id) {
+        if (allMessages.findIndex(message => message.message_id_client === data.message_id_client) !== -1) {
+          await setAllMessages(await allMessages.map(message => (message.message_id_client === data.message_id_client) ?
+            {
+              "id": data?.message_id_server,
+              "message_from_me": data?.message_from_user,
+              "status": data?.status,
+              "message": data?.message,
+              "timestamp": data?.timestamp,
+              "contact": 1,
+              "from_user": 1
+            } : message
+          ))
+        } else {
 
+          await setAllMessages([...allMessages,
+          {
+            "id": data?.message_id_server,
+            "message_from_me": data?.message_from_user,
+            "status": data?.status,
+            "message": data?.message,
+            "timestamp": data?.timestamp,
+            "contact": data?.contact,
+            "from_user": data?.from_user
+          }
+          ])
+        }
+
+        if (data.status !== 'seen' && data.message_from_user === false) {
+          window.onfocus = async () => {
+            if (messagesRef?.current) {
+              await MESSAGE_WS.send(JSON.stringify({ event: 'update_message_status', message_id: data.message_id_server, status: 'seen' }))
+            }
+          }
+        }
+        setTimeout(() => {
+          if (messagesRef.current) {
+
+            messagesRef.current.scrollTop = messagesRef.current?.scrollHeight;
+          }
+        }, 1);
+      } else if (data.event === "message_status_update") {
+        await setAllMessages(await allMessages.map(message => (message.id === data.message_id_server) ?
+          {
+            ...message,
+            "status": data?.status,
+          } : message
+        ))
+      }
+    }
+    addMessageHandler(handler)
+
+    return () => {
+      removeMessageHandler(handler)
+    }
+
+  })
 
   return (
     <>

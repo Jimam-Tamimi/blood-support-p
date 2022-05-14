@@ -109,4 +109,5 @@ export const logOut = () => async dispatch => {
    setTimeout(() => {
        dispatch(setProgress(100))
    }, 200);
+   window.location = '/'
 }
