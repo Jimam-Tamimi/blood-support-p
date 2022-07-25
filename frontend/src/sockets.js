@@ -14,9 +14,22 @@ MESSAGE_WS.onmessage = async (e) => {
     messageHandlers.forEach( async (handler) => await handler(e))
 } 
 
-
+const notificationHandlers = new Set()
+export const addNotificationHandler = (handler) => {
+  notificationHandlers.add(handler)
+}
+export const removeNotificationHandler = (handler) => {
+  notificationHandlers.delete(handler)
+}
 
 export const NOTIFICATION_WS = new WebSocket(`ws://localhost:8000/ws/notification/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
+
+NOTIFICATION_WS.onmessage = async (e) => { 
+    notificationHandlers.forEach( async (handler) => await handler(e))
+} 
+
+
+
 
 export const USER_WS = new WebSocket(`ws://localhost:8000/ws/account/users/?token=${JSON.parse(localStorage.getItem('auth'))?.access}`);
 

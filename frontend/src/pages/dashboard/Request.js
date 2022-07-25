@@ -113,18 +113,14 @@ export default function Request({ match }) {
   // hooks
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-
+  const location = useLocation()
   // call the apis and get request data
 
   // states
   const [requestData, setRequestData] = useState(null);
   const [requestorProfileData, setRequestorProfileData] = useState(null);
   const [totalDonorRequestGot, setTotalDonorRequestGot] = useState(0);
-  const [requestAlertInfo, setRequestAlertInfo] = useState({
-    type: "info",
-    message:
-      "You have submitted your donor request. Please wait until the blood requestor checks ur donor request and respond to it.",
-  });
+  const [requestAlertInfo, setRequestAlertInfo] = useState(null);
 
   // functions
   const getRequestData = async () => {
@@ -165,8 +161,10 @@ export default function Request({ match }) {
   };
 
   useEffect(async () => {
-    getRequestStatusInfo();
-  }, [requestData]);
+    if(requestData){
+      getRequestStatusInfo();
+    }
+  }, [location, requestData]);
 
   const checkHaveSentDonorRequest = async (bloodRequestId) => {
     if (bloodRequestId) {

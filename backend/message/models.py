@@ -1,3 +1,4 @@
+import contextlib
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
@@ -19,9 +20,9 @@ MESSAGE_STATUS = (
     ("seen", "seen"),
     ("removed", "removed"),
 )
- 
 
- 
+
+
 
 class Contact(models.Model):
     users = models.ManyToManyField(User, blank=False, null=False)
@@ -48,7 +49,8 @@ def send_message_update(sender, instance, created, **kwargs):
         instance.contact.timestamp = instance.timestamp
         instance.contact.save()
 
-    if(instance.status != instance.Message__original_status):
+    if (instance.status != instance.Message__original_status):
+
         data = {
             "event": "message_status_update",
             "message_id_server": instance.id,
@@ -57,14 +59,18 @@ def send_message_update(sender, instance, created, **kwargs):
 
         for user in instance.contact.users.all():
             # print(user)
-            try:
-                user_channel_name = Client.objects.get(user=user, type='MESSAGE')
-                data["status"] = instance.status 
-                async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
-                    "type": 'message.status.update',
-                    'payload': data
-                })
-            except Client.DoesNotExist:
-                continue
+            with contextlib.suppress(Client.DoesNotExist):
+                if(user != instance.from_user and instance.status == 'seen'):
+                    instance.contact.new_message_for.remove(user)
+                    instance.contact.save()
 
- 
+                user_channel_name = Client.objects.get(user=user, type='MESSAGE')
+                new_messages = Contact.objects.filter(users=user, new_message_for=user)       
+
+                data["new_messages_count"] = len(new_messages)
+                data['status'] = instance.status
+
+                async_to_sync(channel_layer.send)(user_channel_name.channel_name, {
+                    "type": "message.status.update",
+                    "payload": data
+                })

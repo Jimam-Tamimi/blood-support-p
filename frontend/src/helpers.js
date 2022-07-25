@@ -196,7 +196,6 @@ export const messageToUser = async (user_id, history) => {
 export const GetNotificationJSX = ({ notification }) => {
   const [data, setData] = useState(null) 
   let notification_data = notification.notification_data
-  console.log(notification)
   useEffect(async () => {
     if (["NEW_BLOOD_REQUEST", "DONOR_REQUEST_GOT", "BLOOD_REQUEST_UPDATED", "BLOOD_REQUEST_DELETED", "DONOR_REQUEST_ACCEPTED", "DONOR_REQUEST_NOT_ACCEPTED", "DONOR_REQUEST_REJECTED", "DONOR_REQUEST_CANCELED", "DONOR_REQUEST_RESTORED", "DONOR_REQUEST_DELETED", "DONOR_REQUEST_UPDATED", "DONOR_REQUEST_REVIEWED", "BLOOD_REQUEST_REVIEWED",].includes(notification_data.type)) {
       try {

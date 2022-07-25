@@ -35,7 +35,7 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
                         
                         user_channel_name = await database_sync_to_async(Client.objects.get)(user=user, type='MESSAGE')
                         new_messages = await database_sync_to_async(Contact.objects.filter)(users=user, new_message_for=user)
-                        data['new_message_count']  =  len(await queryset_to_list(new_messages))
+                        data['new_messages_count']  =  len(await queryset_to_list(new_messages))
                         await self.channel_layer.send(user_channel_name.channel_name, {
                             "type": 'message.send',
                             'payload': data
@@ -67,12 +67,12 @@ class MessageConsumer(AsyncJsonWebsocketConsumer):
 
             elif(content['status'] == "seen"):
                 messages = await get_not_seen_message_to_list(message)
+                await database_sync_to_async(message.contact.new_message_for.remove)(self.scope["user"])
+                await database_sync_to_async(message.contact.save)()
                 for msg in await queryset_to_list(messages):
                     msg.status = "seen"
                     await database_sync_to_async(msg.save)()
                 
-                await database_sync_to_async(message.contact.new_message_for.remove)(self.scope["user"])
-                await database_sync_to_async(message.contact.save)()
                 
 
     async def disconnect(self, code):

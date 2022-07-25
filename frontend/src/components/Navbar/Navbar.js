@@ -44,7 +44,7 @@ import { BeatLoader, PropagateLoader } from 'react-spinners'
 import InfiniteScroll from 'react-infinite-scroller';
 import { GetNotificationJSX } from "../../helpers";
 import updateInitialFrontendData from "../../redux/initialFrontendData/actions";
-import { addMessageHandler, removeMessageHandler } from "../../sockets";
+import { addMessageHandler, addNotificationHandler, removeMessageHandler, removeNotificationHandler } from "../../sockets";
 
 
 export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
@@ -103,7 +103,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
     if (message) {
       const res = await readAllNewMessages()
       if (res.status === 200) {
-        dispatch(updateInitialFrontendData({ new_message_count: 0 }))
+        dispatch(updateInitialFrontendData({ new_messages_count: 0 }))
       }
     }
   }, [message])
@@ -114,21 +114,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
     })
   }, [])
 
-
-  // window.MESSAGE_WS.onmessage = async (e) => {
-  //   const data = JSON.parse(e.data) 
-  //   if (data.event === 'message_send_success') {
-  //     if(data?.message_from_user != auth.user_id){
-  //       dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count}))
-  //     }
-  //   }  
-
-
-  // }
-  // useEffect(() => {
-  // }, [initialData])
-
-
+ 
 
   useEffect(() => {
 
@@ -136,10 +122,10 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
       const data = JSON.parse(e.data)
       console.log({data, messages, auth}) 
 
-      if (data.event === 'message_send_success') {
+      if (data.event === 'message_send_success' || data.event === 'message_status_update') {
         if (data?.from_user != auth.user_id) {
           if(!messages.includes(data.contact)){
-            dispatch(updateInitialFrontendData({ new_message_count: data.new_message_count }))
+            dispatch(updateInitialFrontendData({ new_messages_count: data.new_messages_count }))
           }
         }
       }
@@ -150,7 +136,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
       removeMessageHandler(handler)
     }
 
-  }, [auth, messages])
+  }, [])
 
 
 
@@ -190,7 +176,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
                   setMessage(!message);
                   setNotification(false);
                 }}
-                count={initialData?.new_message_count}
+                count={initialData?.new_messages_count}
 
               >
                 <BiMessageRoundedDots />
@@ -233,7 +219,7 @@ export default function Navbar({ toggleDash, setDarkMode, darkMode, show }) {
               scale
             >
               <NavNotificationCont ref={notRef}>
-                <NavNotificationSection setUnreadNotCount={setUnreadNotCount} notRef={notRef} />
+                <NavNotificationSection unreadNotCount={unreadNotCount} setUnreadNotCount={setUnreadNotCount} notRef={notRef} />
               </NavNotificationCont>
             </Transition>
           </NavNotificationWrap>
@@ -298,7 +284,7 @@ function NavMessageSection({ handleNavMsgClick, showComponent }) {
 }
 
 
-function NavNotificationSection({ notRef, setUnreadNotCount }) {
+function NavNotificationSection({ notRef, setUnreadNotCount, unreadNotCount }) {
   const [notification, setNotification] = useState(null)
 
   const getNotificationsData = async () => {
@@ -312,7 +298,6 @@ function NavNotificationSection({ notRef, setUnreadNotCount }) {
     }
   }
   const loadMoreNotifications = async () => {
-    console.log("first")
     try {
       const res = await getNotifications(notification.next);
       console.log(res)
@@ -327,16 +312,36 @@ function NavNotificationSection({ notRef, setUnreadNotCount }) {
     getNotificationsData()
   }, [])
 
-  useEffect(() => {
-    // window.NOTIFICATION_WS.onmessage = (e) => {
-    //   const data = JSON.parse(e.data)
-    //   if (data.event === "send_notification") {
-    //     setNotification({ ...notification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...notification.results] })
-    //     setUnreadNotCount(prev => prev + 1)
-    //   }
-    // }
-  })
+  // useEffect(() => {
+  //   window.NOTIFICATION_WS.onmessage = (e) => {
+  //     const data = JSON.parse(e.data)
+  //     if (data.event === "send_notification") {
+  //       setNotification({ ...notification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...notification.results] })
+  //       setUnreadNotCount(prev => prev + 1)
+  //     }
+  //   }
+  // })
 
+
+  useEffect(() => {
+    const handler = async e => {
+      const data = JSON.parse(e.data)
+      console.log({data})
+  
+      if (data.event === "send_notification") {
+        setNotification( prevNotification =>  ({ ...prevNotification, results: [{ notification_data: data.notification_data, timestamp: data.timestamp, is_read: data.is_read }, ...prevNotification?.results] }))
+        setUnreadNotCount(prev => prev + 1)
+      }
+    }
+
+
+    addNotificationHandler(handler)
+
+    return () => {
+      removeNotificationHandler(handler)
+    }
+
+  }, [])
 
 
   return (

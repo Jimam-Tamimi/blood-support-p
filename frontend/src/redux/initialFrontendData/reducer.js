@@ -1,7 +1,7 @@
 
 
 const  initialState = {
-    new_message_count: 0, 
+    new_messages_count: 0, 
 
 
 }
@@ -10,7 +10,6 @@ const  initialState = {
 const initialDataReducer = (state=initialState, action) => {
     const { type, payload } = action
     if(type === 'UPDATE_INITIAL_DATA'){
-        console.log("first")
         return {
             ...state,
             ...payload,
